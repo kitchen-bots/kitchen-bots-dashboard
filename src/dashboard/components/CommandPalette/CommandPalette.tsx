@@ -90,22 +90,22 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-gray-900/40 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-sm p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+          className="w-full max-w-2xl bg-popover text-popover-foreground rounded-xl shadow-2xl overflow-hidden border border-border"
           onClick={e => e.stopPropagation()}
         >
           {/* Search Input */}
-          <div className="relative border-b border-gray-100 p-4">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative border-b border-border p-4">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
             <input 
               ref={inputRef}
               type="text" 
               placeholder="Search products, orders, settings..."
-              className="w-full bg-transparent border-none outline-none text-lg pl-10 pr-4 text-gray-900 placeholder-gray-400 font-medium"
+              className="w-full bg-transparent border-none outline-none text-lg pl-10 pr-4 text-foreground placeholder:text-muted-foreground font-medium"
               value={query}
               onChange={e => {
                 setQuery(e.target.value);
@@ -113,17 +113,17 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
               }}
             />
             <div className="absolute right-6 top-1/2 -translate-y-1/2 flex gap-1">
-              <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs text-gray-500 font-sans font-medium">ESC</kbd>
+              <kbd className="px-2 py-1 bg-muted border border-border rounded text-xs text-muted-foreground font-sans font-medium">ESC</kbd>
             </div>
           </div>
 
           {/* Results List */}
           <div className="max-h-[60vh] overflow-y-auto p-2">
             {filteredItems.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Search className="w-8 h-8 mx-auto text-gray-300 mb-3" />
-                <p className="font-medium text-gray-900 mb-1">No results found</p>
-                <p className="text-sm">We couldn't find anything matching "{query}"</p>
+              <div className="p-8 text-center text-muted-foreground">
+                <Search className="w-8 h-8 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="font-medium text-foreground mb-1">No results found</p>
+                <p className="text-sm">We could not find anything matching "{query}"</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -134,7 +134,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
                   
                   return (
                     <div key={type} className="mb-4 last:mb-0">
-                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 py-2">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
                         {type}
                       </div>
                       <div className="space-y-1">
@@ -148,26 +148,26 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
                               key={item.id}
                               onClick={() => handleSelect(item)}
                               onMouseEnter={() => setSelectedIndex(globalIndex)}
-                              className={`w-full flex items-center justify-between px-3 py-3 rounded-xl transition-colors ${
-                                isSelected ? 'bg-emerald-50 text-emerald-900' : 'text-gray-700 hover:bg-gray-50'
+                              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                                isSelected ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-white shadow-sm text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
-                                  <Icon size={18} />
+                                <div className={`p-2 rounded-md ${isSelected ? 'bg-background border border-border text-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                  <Icon size={16} />
                                 </div>
                                 <div className="text-left">
-                                  <div className={`font-medium ${isSelected ? 'text-emerald-900' : 'text-gray-900'}`}>
+                                  <div className={`text-sm font-medium ${isSelected ? 'text-foreground' : 'text-foreground'}`}>
                                     {item.label}
                                   </div>
                                   {item.context && (
-                                    <div className={`text-xs mt-0.5 ${isSelected ? 'text-emerald-600/80' : 'text-gray-500'}`}>
+                                    <div className="text-xs text-muted-foreground mt-0.5">
                                       {item.context}
                                     </div>
                                   )}
                                 </div>
                               </div>
-                              {isSelected && <ArrowRight size={18} className="text-emerald-600" />}
+                              {isSelected && <ArrowRight size={16} className="text-primary" />}
                             </button>
                           );
                         })}
@@ -180,10 +180,10 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 border-t border-gray-100 p-3 px-4 flex items-center justify-between text-xs text-gray-500 font-medium">
+          <div className="bg-muted/40 border-t border-border p-3 px-4 flex items-center justify-between text-xs text-muted-foreground font-medium">
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded shadow-sm">↑</kbd><kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded shadow-sm">↓</kbd> to navigate</span>
-              <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded shadow-sm">↵</kbd> to select</span>
+              <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-background border border-border rounded shadow-sm">↑</kbd><kbd className="px-1.5 py-0.5 bg-background border border-border rounded shadow-sm">↓</kbd> to navigate</span>
+              <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-background border border-border rounded shadow-sm">↵</kbd> to select</span>
             </div>
             <div>KitchenBots Enterprise</div>
           </div>

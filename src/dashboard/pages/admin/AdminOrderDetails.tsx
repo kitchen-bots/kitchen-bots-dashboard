@@ -4,21 +4,37 @@ import { OrderService } from '../../services/sales/orderService';
 import { TimelineService } from '../../services/sales/timelineService';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ArrowLeft, Box, Truck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Box, Truck, CheckCircle, X, ShieldAlert } from 'lucide-react';
 import { OrderStatus } from '../../types/sales';
 import { Timeline } from '../../components/ui/Timeline';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 
 export const AdminOrderDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [order, setOrder] = useState(() => OrderService.getOrder(id || ''));
   const [events, setEvents] = useState(() => TimelineService.getEventsForEntity(id || ''));
+  const [showApproveDrawer, setShowApproveDrawer] = useState(false);
+  const [showShippingDrawer, setShowShippingDrawer] = useState(false);
+  const [notes, setNotes] = useState('');
 
   if (!order) {
-    return <div className="p-8">Order not found</div>;
+    return (
+      <PageContainer title="Order Not Found" breadcrumbs={[{ label: 'Orders', href: '/admin/orders' }, { label: 'Not Found' }]}>
+        <Card className="p-12 text-center">
+          <ShieldAlert className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-foreground">Order {id} could not be located</h2>
+          <p className="text-xs text-muted-foreground mt-1 mb-6">The requested order does not exist or has been removed.</p>
+          <Button onClick={() => navigate('/admin/orders')}>Back to Orders</Button>
+        </Card>
+      </PageContainer>
+    );
   }
 
   const handleStatusChange = (newStatus: OrderStatus) => {
@@ -31,10 +47,6 @@ export const AdminOrderDetails: React.FC = () => {
       toast.error(err.message);
     }
   };
-
-  const [showApproveDrawer, setShowApproveDrawer] = useState(false);
-  const [showShippingDrawer, setShowShippingDrawer] = useState(false);
-  const [notes, setNotes] = useState('');
 
   const handleApproveWithNotes = () => {
     try {
@@ -63,166 +75,229 @@ export const AdminOrderDetails: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6 relative">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{order.orderNumber}</h1>
-          <p className="text-sm text-gray-500">{order.companyName}</p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">
+    <PageContainer
+      title={order.orderNumber}
+      description={`Customer: ${order.companyName} (${order.contactPerson})`}
+      breadcrumbs={[
+        { label: 'Admin', href: '/admin' },
+        { label: 'Orders', href: '/admin/orders' },
+        { label: order.orderNumber },
+      ]}
+      actions={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')} className="gap-1.5">
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
+          <Badge
+            variant={
+              order.status === 'Draft'
+                ? 'secondary'
+                : order.status === 'Pending Approval'
+                ? 'warning'
+                : order.status === 'Approved'
+                ? 'info'
+                : order.status === 'Shipped' || order.status === 'Delivered'
+                ? 'default'
+                : 'secondary'
+            }
+          >
             {order.status}
-          </span>
-          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
+          </Badge>
+          <Badge variant="outline">
             Inv: {order.inventoryStatus}
-          </span>
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+          </Badge>
+          <Badge variant="outline">
             Ship: {order.shippingStatus}
-          </span>
+          </Badge>
         </div>
-      </div>
+      }
+      className="h-full"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Line items and financial summary */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Ordered Equipment & Line Items</CardTitle>
+              <CardDescription>Snapshotted contract line items</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y divide-border">
+                {order.items.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-3">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-foreground">{item.productName}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">SKU: {item.sku}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">
+                        ₹{item.pricing.unitPrice.toLocaleString('en-IN')} × {item.pricing.quantity}
+                      </p>
+                    </div>
+                    <div className="text-right font-semibold text-xs text-foreground">
+                      ₹{item.pricing.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Line Items</h2>
-            <div className="space-y-4">
-              {order.items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div>
-                    <p className="font-medium">{item.productName}</p>
-                    <p className="text-sm text-gray-500">SKU: {item.sku}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">₹{item.pricing.unitPrice} x {item.pricing.quantity}</p>
-                  </div>
-                  <div className="text-right font-semibold">
-                    ₹{item.pricing.total.toFixed(2)}
-                  </div>
+              <div className="mt-6 border-t border-border pt-4 space-y-2 text-right text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span>₹{order.subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 border-t pt-4 space-y-2 text-right">
-              <p className="text-gray-600">Subtotal: ₹{order.subtotal.toFixed(2)}</p>
-              <p className="text-gray-600">Tax: ₹{order.totalTax.toFixed(2)}</p>
-              <p className="text-lg font-semibold">Grand Total: ₹{order.grandTotal.toFixed(2)}</p>
-            </div>
-          </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Tax (GST)</span>
+                  <span>₹{order.totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between font-bold text-sm text-foreground pt-2 border-t border-border">
+                  <span>Grand Total</span>
+                  <span>₹{order.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Customer & Shipping Details */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Customer & Billing Information</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="space-y-1">
+                <span className="text-muted-foreground uppercase text-[10px] tracking-wider font-semibold">Contact Person</span>
+                <p className="font-medium text-foreground">{order.contactPerson}</p>
+                <p className="text-muted-foreground">{order.email}</p>
+                <p className="text-muted-foreground">{order.phone || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground uppercase text-[10px] tracking-wider font-semibold">Billing Address</span>
+                <p className="text-foreground">{order.billingAddress.street}</p>
+                <p className="text-muted-foreground">
+                  {order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.postalCode}
+                </p>
+                <p className="text-muted-foreground">{order.billingAddress.country}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
+        {/* Right 1 Col: Workflow Actions & Event Timeline */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Workflow Actions</h2>
-            <div className="space-y-3">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Workflow Actions</CardTitle>
+              <CardDescription>Order lifecycle state machine</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2.5">
               {order.status === 'Draft' && (
-                <button onClick={() => handleStatusChange('Pending Approval')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                <Button onClick={() => handleStatusChange('Pending Approval')} className="w-full text-xs">
                   Submit for Approval
-                </button>
+                </Button>
               )}
 
               {order.status === 'Pending Approval' && (
-                <button onClick={() => setShowApproveDrawer(true)} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                  <CheckCircle size={18} /> Approve Order
-                </button>
+                <Button onClick={() => setShowApproveDrawer(true)} className="w-full text-xs gap-2">
+                  <CheckCircle className="w-4 h-4" /> Approve Order
+                </Button>
               )}
-              
+
               {order.status === 'Approved' && (
-                <button onClick={() => handleStatusChange('Inventory Reserved')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  <Box size={18} /> Reserve Inventory
-                </button>
+                <Button onClick={() => handleStatusChange('Inventory Reserved')} className="w-full text-xs gap-2">
+                  <Box className="w-4 h-4" /> Reserve Inventory
+                </Button>
               )}
 
               {order.status === 'Inventory Reserved' && (
-                <button onClick={() => handleStatusChange('Packed')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                  <Box size={18} /> Mark Packed
-                </button>
+                <Button onClick={() => handleStatusChange('Packed')} className="w-full text-xs gap-2">
+                  <Box className="w-4 h-4" /> Mark Packed
+                </Button>
               )}
 
               {order.status === 'Packed' && (
-                <button onClick={() => setShowShippingDrawer(true)} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                  <Truck size={18} /> Mark Shipped (Deduct Stock)
-                </button>
+                <Button onClick={() => setShowShippingDrawer(true)} className="w-full text-xs gap-2">
+                  <Truck className="w-4 h-4" /> Mark Shipped (Deduct Stock)
+                </Button>
               )}
 
               {order.status === 'Shipped' && (
-                <button onClick={() => handleStatusChange('Delivered')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                  <CheckCircle size={18} /> Mark Delivered
-                </button>
+                <Button onClick={() => handleStatusChange('Delivered')} className="w-full text-xs gap-2">
+                  <CheckCircle className="w-4 h-4" /> Mark Delivered
+                </Button>
               )}
 
               {order.status === 'Delivered' && (
-                <button onClick={() => handleStatusChange('Closed')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900">
-                  <CheckCircle size={18} /> Close Order
-                </button>
+                <Button onClick={() => handleStatusChange('Closed')} variant="secondary" className="w-full text-xs gap-2">
+                  <CheckCircle className="w-4 h-4" /> Close Order
+                </Button>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Customer Info</h2>
-            <div className="space-y-2 text-sm">
-              <p><span className="text-gray-500">Contact:</span> {order.contactPerson}</p>
-              <p><span className="text-gray-500">Email:</span> {order.email}</p>
-              <p><span className="text-gray-500">Phone:</span> {order.phone || 'N/A'}</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Timeline</h2>
-            <Timeline events={events} />
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Audit Timeline</CardTitle>
+              <CardDescription>Immutable domain events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Timeline events={events} />
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Drawers */}
+      {/* Action Drawers */}
       {(showApproveDrawer || showShippingDrawer) && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-          <div className="w-96 bg-white h-full shadow-2xl p-6 flex flex-col animate-in slide-in-from-right">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xs z-50 flex justify-end">
+          <div className="w-full sm:w-96 bg-card border-l border-border h-full shadow-2xl p-6 flex flex-col animate-in slide-in-from-right">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-base font-semibold text-foreground">
                 {showApproveDrawer ? 'Approve Order' : 'Ship Order'}
               </h2>
-              <button 
+              <button
                 onClick={() => {
                   setShowApproveDrawer(false);
                   setShowShippingDrawer(false);
                   setNotes('');
-                }} 
-                className="text-gray-500 hover:text-gray-700"
+                }}
+                className="p-1 text-muted-foreground hover:text-foreground rounded-md"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="flex-1 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1.5">
                   {showApproveDrawer ? 'Approval Notes (Optional)' : 'Shipping Details & Tracking'}
                 </label>
                 <textarea
-                  className="w-full border rounded-lg p-2 min-h-[100px]"
-                  placeholder={showApproveDrawer ? "Any internal notes for this approval..." : "Carrier: FedEx, Tracking: 123..."}
+                  className="w-full bg-background border border-input text-foreground rounded-lg p-2.5 text-xs min-h-[120px] outline-hidden focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
+                  placeholder={
+                    showApproveDrawer
+                      ? 'Internal review notes regarding commercial terms...'
+                      : 'Carrier: Blue Dart, Tracking: BD-9281920...'
+                  }
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="mt-auto pt-4 border-t">
-              <button
+            <div className="mt-auto pt-4 border-t border-border">
+              <Button
                 onClick={showApproveDrawer ? handleApproveWithNotes : handleShipWithNotes}
-                className={`w-full py-2 rounded-lg text-white font-medium ${showApproveDrawer ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                className="w-full text-xs font-semibold"
               >
-                {showApproveDrawer ? 'Confirm Approval' : 'Confirm Shipping'}
-              </button>
+                {showApproveDrawer ? 'Confirm Approval' : 'Confirm Dispatch'}
+              </Button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
+
+export default AdminOrderDetails;

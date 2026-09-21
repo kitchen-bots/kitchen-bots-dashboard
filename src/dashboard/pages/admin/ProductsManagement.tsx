@@ -300,16 +300,16 @@ export function ProductsManagement() {
                 </div>
                 
                 <div className="flex items-center gap-3 justify-between md:justify-end">
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                  <div className="flex bg-muted p-1 rounded-lg border border-border">
                     <button 
                       onClick={() => setViewMode('list')}
-                      className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       <List size={18} />
                     </button>
                     <button 
                       onClick={() => setViewMode('grid')}
-                      className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
+                      className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       <LayoutGrid size={18} />
                     </button>
@@ -478,16 +478,16 @@ export function ProductsManagement() {
               {/* Variants */}
               {selectedProduct.variants && selectedProduct.variants.length > 0 && (
                 <div>
-                  <Text className="text-sm font-semibold mb-3 uppercase tracking-wider">Variants</Text>
+                  <Text className="text-sm font-semibold mb-3 uppercase tracking-wider text-foreground">Variants</Text>
                   <div className="space-y-2">
                     {selectedProduct.variants.map((variant) => (
-                      <div key={variant.id} className="flex justify-between items-center p-3 border border-border-default rounded-md bg-white">
+                      <div key={variant.id} className="flex justify-between items-center p-3 border border-border rounded-md bg-card">
                         <div>
-                          <Text className="font-medium text-sm">{variant.name || variant.sku}</Text>
+                          <Text className="font-medium text-sm text-foreground">{variant.name || variant.sku}</Text>
                           <Text variant="muted" className="text-xs">{variant.sku}</Text>
                         </div>
                         <div className="text-right flex items-center gap-4">
-                          <Text className="font-medium text-sm">₹{variant.price.toLocaleString('en-IN')}</Text>
+                          <Text className="font-medium text-sm text-foreground">₹{variant.price.toLocaleString('en-IN')}</Text>
                           <Badge variant={variant.status === 'Active' ? 'default' : 'secondary'} className="text-[10px]">
                             {variant.status}
                           </Badge>
@@ -501,12 +501,12 @@ export function ProductsManagement() {
               {/* Specifications */}
               {selectedProduct.specifications && selectedProduct.specifications.length > 0 && (
                 <div>
-                  <Text className="text-sm font-semibold mb-3 uppercase tracking-wider">Specifications</Text>
+                  <Text className="text-sm font-semibold mb-3 uppercase tracking-wider text-foreground">Specifications</Text>
                   <div className="grid grid-cols-2 gap-2">
                     {selectedProduct.specifications.map((spec) => (
-                      <div key={spec.id} className="flex justify-between p-2 bg-slate-50 border border-border-default rounded text-sm">
-                        <span className="text-slate-500">{spec.name}</span>
-                        <span className="font-medium">{spec.value}</span>
+                      <div key={spec.id} className="flex justify-between p-2 bg-muted/40 border border-border rounded text-sm">
+                        <span className="text-muted-foreground">{spec.name}</span>
+                        <span className="font-medium text-foreground">{spec.value}</span>
                       </div>
                     ))}
                   </div>
@@ -514,18 +514,18 @@ export function ProductsManagement() {
               )}
 
               {/* Quick Actions */}
-              <div className="pt-4 border-t border-border-default">
-                <Text className="text-sm font-semibold mb-3 uppercase tracking-wider">Actions</Text>
+              <div className="pt-4 border-t border-border">
+                <Text className="text-sm font-semibold mb-3 uppercase tracking-wider text-foreground">Actions</Text>
                 <div className="grid grid-cols-3 gap-3">
-                  <button onClick={() => handleEditProduct(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border-default bg-white hover:bg-slate-50 text-slate-700 transition-colors">
-                    <Edit size={18} className="mb-2 text-blue-500" />
+                  <button onClick={() => handleEditProduct(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                    <Edit size={18} className="mb-2 text-primary" />
                     <span className="text-xs font-medium">Edit Product</span>
                   </button>
-                  <button onClick={() => setIsInventoryModalOpen(true)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border-default bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+                  <button onClick={() => setIsInventoryModalOpen(true)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
                     <Package size={18} className="mb-2 text-emerald-500" />
                     <span className="text-xs font-medium">Inventory</span>
                   </button>
-                  <button onClick={() => handleDeleteClick(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-red-100 bg-white hover:bg-red-50 text-red-600 transition-colors">
+                  <button onClick={() => handleDeleteClick(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-destructive/20 bg-card hover:bg-destructive/10 text-destructive transition-colors">
                     <Trash2 size={18} className="mb-2" />
                     <span className="text-xs font-medium">Delete</span>
                   </button>

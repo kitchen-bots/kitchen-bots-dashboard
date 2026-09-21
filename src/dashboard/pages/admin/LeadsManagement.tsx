@@ -146,7 +146,7 @@ export function LeadsManagement() {
                 </Badge>
               </div>
               <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">{stat.title}</Text>
-              <Text className="text-2xl font-black text-slate-900 mt-1">{stat.value}</Text>
+              <Text className="text-2xl font-bold text-foreground mt-1">{stat.value}</Text>
             </CardContent>
           </Card>
         ))}
@@ -165,24 +165,24 @@ export function LeadsManagement() {
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center relative pt-4">
               {/* Connector Line (Desktop) */}
-              <div className="hidden md:block absolute top-8 left-0 right-0 h-1 bg-slate-100 z-0"></div>
+              <div className="hidden md:block absolute top-8 left-0 right-0 h-1 bg-border z-0"></div>
               
               {[
-                { stage: 'New', status: 'New', color: 'border-blue-500 text-blue-600' },
-                { stage: 'Contacted', status: 'Contacted', color: 'border-purple-500 text-purple-600' },
-                { stage: 'Reqs', status: 'Requirement Gathering', color: 'border-yellow-500 text-yellow-600' },
-                { stage: 'Proposal', status: 'Proposal Sent', color: 'border-indigo-500 text-indigo-600' },
-                { stage: 'Negotiation', status: 'Negotiation', color: 'border-orange-500 text-orange-600' },
-                { stage: 'Converted', status: 'Converted', color: 'border-green-500 text-green-600' },
+                { stage: 'New', status: 'New', color: 'border-blue-500 text-blue-500' },
+                { stage: 'Contacted', status: 'Contacted', color: 'border-purple-500 text-purple-500' },
+                { stage: 'Reqs', status: 'Requirement Gathering', color: 'border-amber-500 text-amber-500' },
+                { stage: 'Proposal', status: 'Proposal Sent', color: 'border-indigo-500 text-indigo-500' },
+                { stage: 'Negotiation', status: 'Negotiation', color: 'border-orange-500 text-orange-500' },
+                { stage: 'Converted', status: 'Converted', color: 'border-emerald-500 text-emerald-500' },
               ].map((step, idx) => {
                 const count = leads.filter(l => l.status === step.status).length;
                 const totalActive = leads.filter(l => l.status !== 'Lost').length || 1;
                 const percent = Math.round((count / totalActive) * 100) + '%';
                 
                 return (
-                  <div key={idx} className="relative z-10 flex flex-col items-center bg-white px-4">
-                    <div className={`w-16 h-16 rounded-full border-4 ${step.color} flex flex-col items-center justify-center bg-white shadow-sm mb-3`}>
-                      <span className="text-lg font-bold text-slate-900">{count}</span>
+                  <div key={idx} className="relative z-10 flex flex-col items-center bg-card px-4">
+                    <div className={`w-14 h-14 rounded-full border-2 ${step.color} flex flex-col items-center justify-center bg-card shadow-2xs mb-2.5`}>
+                      <span className="text-base font-bold text-foreground">{count}</span>
                     </div>
                     <Text className="text-xs font-semibold uppercase tracking-wide">{step.stage}</Text>
                     <Text variant="muted" className="text-xs mt-1">{percent} of total</Text>
@@ -252,7 +252,7 @@ export function LeadsManagement() {
                             {lead.firstName[0]}{lead.lastName[0]}
                           </div>
                           <div>
-                            <Text className="font-semibold text-slate-900">{lead.firstName} {lead.lastName}</Text>
+                            <Text className="font-semibold text-foreground">{lead.firstName} {lead.lastName}</Text>
                             <Text variant="muted" className="text-xs">{lead.companyName}</Text>
                           </div>
                         </div>
@@ -263,7 +263,7 @@ export function LeadsManagement() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Text className="text-sm text-slate-900 truncate max-w-[150px]">{lead.equipmentNeeded}</Text>
+                        <Text className="text-sm text-foreground truncate max-w-[150px]">{lead.equipmentNeeded}</Text>
                         <Text variant="muted" className="text-xs">Qty: {lead.quantity}</Text>
                       </TableCell>
                       <TableCell>
@@ -344,12 +344,12 @@ export function LeadsManagement() {
                     <div className="flex items-center justify-center w-8 h-8 rounded-full border border-white bg-slate-100 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 relative overflow-hidden">
                       {activity.user ? <img src={activity.user.avatar} alt="user" className="w-full h-full object-cover" /> : <div className="w-2 h-2 bg-slate-400 rounded-full" />}
                     </div>
-                    <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white p-3 rounded border border-slate-100 shadow-sm">
+                    <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-card p-3 rounded-lg border border-border shadow-xs">
                       <div className="flex items-center justify-between mb-1">
-                        <Text className="text-xs font-semibold">{activity.type}</Text>
-                        <time className="text-[10px] text-slate-400 font-medium">{activity.timestamp}</time>
+                        <Text className="text-xs font-semibold text-foreground">{activity.type}</Text>
+                        <time className="text-[10px] text-muted-foreground font-medium">{activity.timestamp}</time>
                       </div>
-                      <Text className="text-xs text-slate-600">{activity.message}</Text>
+                      <Text className="text-xs text-muted-foreground">{activity.message}</Text>
                     </div>
                   </div>
                 ))}
@@ -408,20 +408,20 @@ export function LeadsManagement() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
-                <Mail size={18} className="mb-2 text-blue-500" />
+              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                <Mail size={18} className="mb-2 text-primary" />
                 <span className="text-xs font-medium">Email</span>
               </button>
-              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
-                <PhoneCall size={18} className="mb-2 text-green-500" />
+              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                <PhoneCall size={18} className="mb-2 text-emerald-500" />
                 <span className="text-xs font-medium">Call</span>
               </button>
-              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
                 <FileText size={18} className="mb-2 text-purple-500" />
                 <span className="text-xs font-medium">Quote</span>
               </button>
-              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors">
-                <UserCheck size={18} className="mb-2 text-orange-500" />
+              <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                <UserCheck size={18} className="mb-2 text-amber-500" />
                 <span className="text-xs font-medium">Assign</span>
               </button>
             </div>
@@ -431,34 +431,34 @@ export function LeadsManagement() {
               <div>
                 <Heading level="h4" className="text-sm font-semibold mb-3 uppercase tracking-wider">Contact Info</Heading>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Email</Text>
-                    <Text className="text-sm font-medium text-slate-900">{selectedLead.email}</Text>
+                    <Text className="text-sm font-medium text-foreground">{selectedLead.email}</Text>
                   </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Phone</Text>
-                    <Text className="text-sm font-medium text-slate-900">{selectedLead.phone}</Text>
+                    <Text className="text-sm font-medium text-foreground">{selectedLead.phone}</Text>
                   </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Source</Text>
-                    <Text className="text-sm font-medium text-slate-900">{selectedLead.source}</Text>
+                    <Text className="text-sm font-medium text-foreground">{selectedLead.source}</Text>
                   </div>
                 </div>
               </div>
               <div>
                 <Heading level="h4" className="text-sm font-semibold mb-3 uppercase tracking-wider">Requirements</Heading>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Equipment</Text>
-                    <Text className="text-sm font-medium text-slate-900 truncate max-w-[150px]">{selectedLead.equipmentNeeded}</Text>
+                    <Text className="text-sm font-medium text-foreground truncate max-w-[150px]">{selectedLead.equipmentNeeded}</Text>
                   </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Quantity</Text>
-                    <Text className="text-sm font-medium text-slate-900">{selectedLead.quantity} Units</Text>
+                    <Text className="text-sm font-medium text-foreground">{selectedLead.quantity} Units</Text>
                   </div>
-                  <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                  <div className="flex justify-between items-center pb-2 border-b border-border">
                     <Text variant="muted" className="text-xs">Timeline</Text>
-                    <Text className="text-sm font-medium text-slate-900">{selectedLead.timeline}</Text>
+                    <Text className="text-sm font-medium text-foreground">{selectedLead.timeline}</Text>
                   </div>
                   <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                     <Text variant="muted" className="text-xs">Follow-up</Text>
@@ -487,11 +487,11 @@ export function LeadsManagement() {
             {selectedLead.assignedTo && (
               <div>
                 <Heading level="h4" className="text-sm font-semibold mb-3 uppercase tracking-wider">Assigned Rep</Heading>
-                <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-xs">
                   <div className="flex items-center gap-3">
                     <img src={selectedLead.assignedTo.avatar} alt="rep" className="w-10 h-10 rounded-full" />
                     <div>
-                      <Text className="text-sm font-bold">{selectedLead.assignedTo.name}</Text>
+                      <Text className="text-sm font-bold text-foreground">{selectedLead.assignedTo.name}</Text>
                       <Text variant="muted" className="text-xs">{selectedLead.assignedTo.email}</Text>
                     </div>
                   </div>
@@ -515,13 +515,13 @@ export function LeadsManagement() {
                 </Heading>
                 <div className="space-y-3">
                   {quotations.map(quote => (
-                    <div key={quote.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <div key={quote.id} className="flex items-center justify-between p-4 bg-muted/20 border border-border rounded-xl">
                       <div>
-                        <Text className="text-sm font-bold">{quote.id}</Text>
+                        <Text className="text-sm font-bold text-foreground">{quote.id}</Text>
                         <Text variant="muted" className="text-xs mt-1">Date: {new Date(quote.date).toLocaleDateString()}</Text>
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <Text className="text-sm font-bold text-slate-900">₹{quote.value.toLocaleString('en-IN')}</Text>
+                        <Text className="text-sm font-bold text-foreground">₹{quote.value.toLocaleString('en-IN')}</Text>
                         <Badge 
                           variant={getQuoteStatusVariant(quote.status)} 
                           className={`mt-1 ${getQuoteStatusClassName(quote.status)}`}

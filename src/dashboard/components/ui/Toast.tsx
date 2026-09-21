@@ -26,21 +26,21 @@ export const Toast: React.FC<ToastProps> = ({ id, title, description, type = 'in
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className="pointer-events-auto flex w-full max-w-md bg-white rounded-xl shadow-lg border border-slate-100 p-4 mb-3"
+      className="pointer-events-auto flex w-full max-w-md bg-card text-card-foreground rounded-lg shadow-lg border border-border p-3.5 mb-2"
     >
       <div className="flex-shrink-0 mr-3 mt-0.5">
         {icons[type]}
       </div>
       <div className="flex-1 mr-2">
-        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+        <h4 className="text-xs font-semibold text-foreground">{title}</h4>
         {description && (
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
         )}
       </div>
       <div className="flex-shrink-0">
         <button
           onClick={() => onClose(id)}
-          className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors hover:bg-slate-100"
+          className="text-muted-foreground hover:text-foreground rounded-md p-1 transition-colors hover:bg-muted"
         >
           <X className="w-4 h-4" />
         </button>

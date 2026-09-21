@@ -92,7 +92,7 @@ export const ServicesManagement = () => {
               <Badge variant="warning" className="bg-orange-100 text-orange-700 hover:bg-orange-100">+12%</Badge>
             </div>
             <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Open Tickets</Text>
-            <Text className="text-3xl font-black text-slate-900 mt-1">42</Text>
+            <Text className="text-2xl font-bold text-foreground mt-1">42</Text>
           </CardContent>
         </Card>
         
@@ -105,7 +105,7 @@ export const ServicesManagement = () => {
               <Badge variant="info" className="bg-blue-100 text-blue-700 hover:bg-blue-100">Stable</Badge>
             </div>
             <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Active Services</Text>
-            <Text className="text-3xl font-black text-slate-900 mt-1">156</Text>
+            <Text className="text-2xl font-bold text-foreground mt-1">156</Text>
           </CardContent>
         </Card>
         
@@ -118,7 +118,7 @@ export const ServicesManagement = () => {
               <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">8 Pending</Badge>
             </div>
             <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Pending Installations</Text>
-            <Text className="text-3xl font-black text-slate-900 mt-1">24</Text>
+            <Text className="text-2xl font-bold text-foreground mt-1">24</Text>
           </CardContent>
         </Card>
         
@@ -131,7 +131,7 @@ export const ServicesManagement = () => {
               <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">98%</Badge>
             </div>
             <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Resolved Requests</Text>
-            <Text className="text-3xl font-black text-slate-900 mt-1">892</Text>
+            <Text className="text-2xl font-bold text-foreground mt-1">892</Text>
           </CardContent>
         </Card>
       </motion.div>
@@ -194,16 +194,16 @@ export const ServicesManagement = () => {
                               {ticket.customerInitials}
                             </div>
                           )}
-                          <Text className="font-medium text-slate-900">{ticket.customerName}</Text>
+                          <Text className="font-medium text-foreground">{ticket.customerName}</Text>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Text className="text-sm text-slate-600">{ticket.productName}</Text>
+                        <Text className="text-sm text-muted-foreground">{ticket.productName}</Text>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${ticket.engineerColor}`}></div>
-                          <Text className="text-sm text-slate-900">{ticket.engineerName}</Text>
+                          <Text className="text-sm text-foreground">{ticket.engineerName}</Text>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -212,7 +212,7 @@ export const ServicesManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Text className="text-sm text-slate-600">{ticket.date}</Text>
+                        <Text className="text-sm text-muted-foreground">{ticket.date}</Text>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
@@ -262,17 +262,17 @@ export const ServicesManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="p-3 bg-rose-50 rounded-xl border border-rose-100">
+                <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
                   <div className="flex justify-between items-start mb-1">
-                    <Text className="font-bold text-slate-900">Main Freezer Leak</Text>
-                    <span className="text-[10px] font-bold text-rose-700 px-2 py-1 bg-white rounded-lg shadow-sm">0:14:22</span>
+                    <Text className="font-bold text-foreground">Main Freezer Leak</Text>
+                    <span className="text-[10px] font-bold text-rose-400 px-2 py-1 bg-card border border-border rounded-lg shadow-2xs">0:14:22</span>
                   </div>
                   <Text variant="muted" className="text-xs">Cloud Kitchen Delhi-NSR</Text>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-3 bg-muted/20 rounded-xl border border-border">
                   <div className="flex justify-between items-start mb-1">
-                    <Text className="font-bold text-slate-900">Gas Range Component</Text>
-                    <span className="text-[10px] font-bold text-rose-700 px-2 py-1 bg-white rounded-lg shadow-sm">1:02:45</span>
+                    <Text className="font-bold text-foreground">Gas Range Component</Text>
+                    <span className="text-[10px] font-bold text-rose-400 px-2 py-1 bg-card border border-border rounded-lg shadow-2xs">1:02:45</span>
                   </div>
                   <Text variant="muted" className="text-xs">Pizza Planet, G-Block</Text>
                 </div>
@@ -298,7 +298,7 @@ export const ServicesManagement = () => {
                       src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100"
                     />
                     <div>
-                      <Text className="font-bold text-slate-900">Vikram R.</Text>
+                      <Text className="font-bold text-foreground">Vikram R.</Text>
                       <Text variant="muted" className="text-[10px] uppercase tracking-wider">At Royal Tandoor</Text>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export const ServicesManagement = () => {
                       src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100"
                     />
                     <div>
-                      <Text className="font-bold text-slate-900">Priya D.</Text>
+                      <Text className="font-bold text-foreground">Priya D.</Text>
                       <Text variant="muted" className="text-[10px] uppercase tracking-wider">On Route (12m)</Text>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ export const ServicesManagement = () => {
                       src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100"
                     />
                     <div>
-                      <Text className="font-bold text-slate-900">Amit K.</Text>
+                      <Text className="font-bold text-foreground">Amit K.</Text>
                       <Text variant="muted" className="text-[10px] uppercase tracking-wider">Offline</Text>
                     </div>
                   </div>
@@ -344,29 +344,29 @@ export const ServicesManagement = () => {
               <CardTitle>Support Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+              <div className="relative space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
                 
                 <div className="relative pl-8">
-                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center border-4 border-white shadow-sm">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-4 border-background shadow-xs">
+                    <div className="w-2 h-2 bg-primary-foreground rounded-full"></div>
                   </div>
-                  <Text className="text-sm text-slate-900"><span className="font-bold">#SR-9821</span> was assigned to Vikram R.</Text>
+                  <Text className="text-sm text-foreground"><span className="font-bold">#SR-9821</span> was assigned to Vikram R.</Text>
                   <Text variant="muted" className="text-[10px] mt-0.5">2 mins ago</Text>
                 </div>
                 
                 <div className="relative pl-8">
-                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center border-4 border-white shadow-sm">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-background shadow-xs">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                  <Text className="text-sm text-slate-900"><span className="font-bold">#SR-9824</span> marked as completed</Text>
+                  <Text className="text-sm text-foreground"><span className="font-bold">#SR-9824</span> marked as completed</Text>
                   <Text variant="muted" className="text-[10px] mt-0.5">15 mins ago</Text>
                 </div>
                 
                 <div className="relative pl-8">
-                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center border-4 border-white shadow-sm">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center border-4 border-background shadow-xs">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                  <Text className="text-sm text-slate-900"><span className="font-bold">New Ticket</span> created by Cafe Bliss</Text>
+                  <Text className="text-sm text-foreground"><span className="font-bold">New Ticket</span> created by Cafe Bliss</Text>
                   <Text variant="muted" className="text-[10px] mt-0.5">1 hour ago</Text>
                 </div>
                 

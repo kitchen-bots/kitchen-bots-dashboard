@@ -1,296 +1,333 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { AlertTriangle, CheckCircle, ChevronDown, Edit2, Grid, ImageIcon, Info, List, Loader2, Package, Plus, Star, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  AlertTriangle,
+  CheckCircle,
+  Edit2,
+  Home,
+  ImageIcon,
+  Loader2,
+  Package,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { productService } from '../../services/productService';
 import { Product } from '../../types';
+import { useToast } from '../../context/ToastContext';
+import { PageContainer } from '../../components/layout/PageContainer';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 
-export const ProductManagement = () => {
+export const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
-  const basePath = isAdmin ? '/admin/products' : '/customer/products';
+  const navigate = useNavigate();
 
-  const fetchProducts = async () => {
-    try {
-      setIsLoading(true);
-      const data = await productService.getProducts();
-      setProducts(data?.data || (Array.isArray(data) ? data : []));
-    } catch (error) {
-      console.error("Failed to fetch products:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const isAdmin = location.pathname.startsWith('/admin');
+  const basePath = isAdmin ? '/admin/products' : '/dashboard/products';
+  const homePath = isAdmin ? '/admin' : '/dashboard';
+
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [stockFilter, setStockFilter] = useState('All');
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    let isMounted = true;
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        const data = await productService.getProducts();
+        if (isMounted) {
+          setProducts(data?.data || (Array.isArray(data) ? data : []));
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        if (isMounted) {
+          showToast('Error', 'Failed to load product catalog.', 'error');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, [showToast]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      try {
-        await productService.deleteProduct(id);
-        fetchProducts();
-      } catch (err) {
-        console.error("Failed to delete", err);
-      }
+    if (!window.confirm('Are you sure you want to remove this equipment item?')) return;
+    try {
+      await productService.deleteProduct(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      showToast('Success', 'Product removed successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      showToast('Error', 'Failed to delete product.', 'error');
     }
   };
 
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory = categoryFilter === 'All' || p.category === categoryFilter;
+    const matchesStock =
+      stockFilter === 'All' ||
+      (stockFilter === 'Low' && (p.stock ?? 0) <= 5) ||
+      (stockFilter === 'InStock' && (p.stock ?? 0) > 5);
+    return matchesCategory && matchesStock;
+  });
+
+  const lowStockCount = products.filter((p) => (p.stock ?? 0) <= 5).length;
+  const activeCount = products.filter((p) => p.status === 'Active').length;
+
   return (
-    <div className="p-4 lg:p-10">
-      {/* Top Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">Product Management</h2>
-          <p className="text-lg text-slate-500">Manage KitchenBots commercial kitchen products and inventory.</p>
+    <PageContainer
+      title="Commercial Equipment Catalog"
+      description="Manage automated kitchen hardware, pricing tiers, and warehouse inventory levels."
+      homeHref={homePath}
+      breadcrumbs={[
+        { label: isAdmin ? 'Admin' : 'Dashboard', href: homePath },
+        { label: 'Products' },
+      ]}
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(homePath)}
+            className="gap-1.5"
+            title="Return to Home Dashboard"
+          >
+            <Home className="w-4 h-4" />
+            <span className="hidden sm:inline">Home</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => navigate(`${basePath}/new`)}
+            className="gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Equipment</span>
+          </Button>
         </div>
-        <Link 
-          to={`${basePath}/new`}
-          className="mt-4 md:mt-0 bg-primary-500 text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-primary-600 transition-colors flex items-center gap-2 shadow-sm hover:shadow-sm hover:-translate-y-0.5"
-        >
-          <Plus className="w-5 h-5" />
-          Add Product
-        </Link>
+      }
+    >
+      {/* Top Analytics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Hardware
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <Package className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">{products.length}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Cataloged machinery units</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Low Stock Alerts
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-rose-500">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-rose-500">{lowStockCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">5 or fewer units in hub</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Active Listings
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-emerald-500">
+              <CheckCircle className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-emerald-500">{activeCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Available for order fulfillment</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Best Sellers
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-amber-500">
+              <Star className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">15</div>
+            <p className="text-[11px] text-muted-foreground mt-1">High-demand commercial units</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Analytics Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
-        {/* Total Products */}
-        <div className="bg-slate-200 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Products</span>
-            <div className="p-2 bg-surface rounded-full">
-              <Package className="w-5 h-5 text-primary-600" />
-            </div>
-          </div>
-          <div className="text-4xl font-bold text-slate-900">842</div>
-        </div>
-
-        {/* Low Stock */}
-        <div className="bg-error-container rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-error-container uppercase tracking-wider">Low Stock</span>
-            <div className="p-2 bg-white/50 rounded-full">
-              <AlertTriangle className="w-5 h-5 text-on-error-container" />
-            </div>
-          </div>
-          <div className="text-4xl font-bold text-on-error-container">12</div>
-        </div>
-
-        {/* Active Listings */}
-        <div className="bg-primary-500/10 rounded-2xl p-6 shadow-sm border border-primary/20">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-primary-600 uppercase tracking-wider">Active Listings</span>
-            <div className="p-2 bg-white rounded-full shadow-sm">
-              <CheckCircle className="w-5 h-5 text-primary-600" />
-            </div>
-          </div>
-          <div className="text-4xl font-bold text-primary-600">790</div>
-        </div>
-
-        {/* Best Sellers */}
-        <div className="bg-tertiary-fixed rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-tertiary-fixed-variant uppercase tracking-wider">Best Sellers</span>
-            <div className="p-2 bg-white/50 rounded-full">
-              <Star className="w-5 h-5 text-tertiary" />
-            </div>
-          </div>
-          <div className="text-4xl font-bold text-on-tertiary-fixed">15</div>
-        </div>
-      </div>
-
-      {/* Main Layout: Content + Right Panel */}
-      <div className="flex flex-col xl:flex-row gap-6">
-        {/* Left Column (Main Data) */}
-        <div className="flex-1 flex flex-col gap-6">
-          {/* Filters & Controls */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3 flex-1">
-              <div className="relative min-w-[160px]">
-                <select className="w-full appearance-none bg-slate-100 hover:bg-slate-100 text-slate-900 text-base px-4 py-2 pr-10 rounded-full border-none focus:ring-2 focus:ring-primary cursor-pointer transition-colors">
-                  <option>All Categories</option>
-                  <option>Industrial Ovens</option>
-                  <option>Prep Stations</option>
+      {/* Main Layout */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        {/* Left Column (Main Catalog) */}
+        <div className="flex-1 w-full space-y-4">
+          {/* Filters Bar */}
+          <Card className="p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="bg-background border border-input rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
+                >
+                  <option value="All">All Categories</option>
+                  <option value="Commercial Ranges">Commercial Ranges</option>
+                  <option value="Refrigeration Units">Refrigeration Units</option>
+                  <option value="Steam Cooking & Ovens">Steam Cooking & Ovens</option>
+                  <option value="Deep Fryers">Deep Fryers</option>
                 </select>
-                <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
-              </div>
-              <div className="relative min-w-[140px]">
-                <select className="w-full appearance-none bg-slate-100 hover:bg-slate-100 text-slate-900 text-base px-4 py-2 pr-10 rounded-full border-none focus:ring-2 focus:ring-primary cursor-pointer transition-colors">
-                  <option>Stock Status</option>
-                  <option>In Stock</option>
-                  <option>Low Stock</option>
+
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value)}
+                  className="bg-background border border-input rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
+                >
+                  <option value="All">All Stock Levels</option>
+                  <option value="InStock">In Stock (&gt; 5 units)</option>
+                  <option value="Low">Low Stock (≤ 5 units)</option>
                 </select>
-                <ChevronDown className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
               </div>
+
+              <span className="text-xs text-muted-foreground">
+                Showing {filteredProducts.length} items
+              </span>
             </div>
-            
-            <div className="flex items-center bg-slate-100 p-1 rounded-full">
-              <button className="p-2 bg-white text-primary-600 rounded-full shadow-sm flex items-center justify-center">
-                <Grid className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-slate-500 hover:text-primary-600 rounded-full flex items-center justify-center transition-colors">
-                <List className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          </Card>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {isLoading ? (
               <div className="col-span-full flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
-            ) : products.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-100">
-                <Package className="w-12 h-12 mb-4 text-slate-300" />
-                <p className="font-medium text-lg">No products found</p>
-                <p className="text-sm">Click "Add Product" to get started.</p>
+            ) : filteredProducts.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
+                <Package className="w-10 h-10 mb-2 opacity-50" />
+                <p className="font-semibold text-sm text-foreground">No equipment found</p>
+                <p className="text-xs text-muted-foreground mt-1">Adjust filters or register new products.</p>
               </div>
             ) : (
-              products.map((product) => (
-                <div key={product.id} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col border border-slate-100 relative">
-                  
-                  {/* Action Menu (Hover) */}
-                  <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-rose-500 hover:text-rose-600 hover:bg-white shadow-sm transition-colors"
-                      title="Delete Product"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="aspect-square bg-slate-50 relative flex items-center justify-center overflow-hidden">
+              filteredProducts.map((product) => (
+                <Card key={product.id} className="overflow-hidden group flex flex-col">
+                  <div className="aspect-video bg-muted/30 relative flex items-center justify-center overflow-hidden border-b border-border">
                     {product.image ? (
-                      <img 
-                        alt={product.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      <img
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         src={product.image}
                       />
                     ) : (
-                      <ImageIcon className="text-slate-300 w-16 h-16" />
+                      <ImageIcon className="text-muted-foreground w-10 h-10 opacity-40" />
                     )}
-                    <div className={`absolute top-3 left-3 text-sm font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm backdrop-blur-md ${
-                      product.status === 'Active' ? 'bg-white/90 text-primary-700' :
-                      product.status === 'Draft' ? 'bg-white/90 text-slate-700' :
-                      'bg-white/90 text-rose-700'
-                    }`}>
-                      <span className={`w-2 h-2 rounded-full ${
-                        product.status === 'Active' ? 'bg-primary-500' :
-                        product.status === 'Draft' ? 'bg-slate-400' :
-                        'bg-rose-500'
-                      }`}></span> 
-                      {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                    <div className="absolute top-2.5 left-2.5">
+                      <Badge
+                        variant={product.status === 'Active' ? 'default' : 'secondary'}
+                        className="text-[10px]"
+                      >
+                        {product.status}
+                      </Badge>
                     </div>
                   </div>
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-2">
+
+                  <CardContent className="p-4 flex flex-col flex-1">
+                    <p className="text-[11px] text-muted-foreground">{product.category}</p>
+                    <h3 className="font-semibold text-sm text-foreground line-clamp-1 mt-0.5">
+                      {product.name}
+                    </h3>
+                    <p className="font-mono text-[11px] text-muted-foreground mt-1">
+                      SKU: {product.sku}
+                    </p>
+
+                    <div className="mt-auto pt-3 border-t border-border flex items-end justify-between">
                       <div>
-                        <p className="text-sm font-medium text-slate-500 mb-1">{product.category}</p>
-                        <h3 className="text-2xl font-bold text-slate-900 text-[20px] line-clamp-1">{product.name}</h3>
-                      </div>
-                    </div>
-                    <p className="text-base text-slate-500 mb-4 font-mono text-xs mt-1">SKU: {product.sku}</p>
-                    <div className="mt-auto flex items-end justify-between">
-                      <div>
-                        <p className={`text-sm font-medium mb-1 ${(product.stock ?? 0) <= 5 ? 'text-rose-500' : 'text-slate-500'}`}>
-                          Stock: {product.stock ?? 0} units {(product.stock ?? 0) <= 5 && '(Low)'}
-                        </p>
-                        <p className="text-2xl font-bold text-primary-600">₹{(product.price ?? 0).toLocaleString('en-IN')}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link 
-                          to={`${basePath}/${product.id}`}
-                          className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 hover:text-primary-600 hover:border-primary-200 hover:bg-primary-50 transition-colors flex items-center justify-center"
-                          title="Edit Product"
+                        <p
+                          className={`text-[11px] font-medium ${
+                            (product.stock ?? 0) <= 5 ? 'text-rose-500' : 'text-muted-foreground'
+                          }`}
                         >
-                          <Edit2 className="w-4 h-4" />
+                          Stock: {product.stock ?? 0} units
+                        </p>
+                        <p className="text-base font-bold text-foreground">
+                          ₹{(product.price ?? 0).toLocaleString('en-IN')}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Link
+                          to={`${basePath}/${product.id}`}
+                          className="h-8 w-8 rounded-md border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
+                          title="Edit Equipment"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
                         </Link>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="h-8 w-8 rounded-md border border-border bg-muted/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors cursor-pointer"
+                          title="Delete Equipment"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>
         </div>
 
-        {/* Right Column (Sidebar Panels) */}
-        <div className="w-full xl:w-[340px] flex flex-col gap-6">
-          
-          {/* Inventory Alerts */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-slate-900 text-[18px]">Inventory Alerts</h3>
-              <button className="text-primary-600 text-sm font-medium hover:underline">View All</button>
-            </div>
-            
-            <div className="flex flex-col gap-4">
-              <div className="flex items-start gap-3 pb-4 border-b border-surface-variant/50 last:border-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
+        {/* Right Column (Alerts Panel) */}
+        <div className="w-full xl:w-72 space-y-4 shrink-0">
+          <Card>
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-sm font-semibold">Inventory Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-3 text-xs">
+              <div className="flex items-start gap-2.5 pb-3 border-b border-border">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-base text-slate-900 font-medium">FrostGuard 500</p>
-                  <p className="text-sm font-medium text-slate-500">Only 4 units left in main warehouse.</p>
-                  <button className="mt-2 text-primary-600 text-sm font-medium font-medium hover:text-primary-600-container transition-colors">Reorder Now</button>
+                  <p className="font-medium text-foreground">CoolFreeze Industrial</p>
+                  <p className="text-[11px] text-muted-foreground">Only 2 units remaining in hub</p>
                 </div>
               </div>
-              
-              <div className="flex items-start gap-3 pb-4 border-b border-surface-variant/50 last:border-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant flex items-center justify-center shrink-0">
-                  <Info className="w-5 h-5" />
-                </div>
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-base text-slate-900 font-medium">AutoFryer XL</p>
-                  <p className="text-sm font-medium text-slate-500">Reaching reorder point (15 units).</p>
+                  <p className="font-medium text-foreground">SteamPro Oven 5</p>
+                  <p className="text-[11px] text-muted-foreground">Reorder threshold reached (4 units)</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Top Products */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-slate-900 text-[18px]">Top Products</h3>
-            </div>
-            
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-                  <img 
-                    alt="GrillMaster 3000 thumbnail" 
-                    className="w-full h-full object-cover" 
-                    src="https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=800&q=80"
-                  />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base text-slate-900 font-medium leading-tight">GrillMaster 3000</p>
-                  <p className="text-sm font-medium text-slate-500">142 sold this month</p>
-                </div>
-                <span className="text-sm font-medium font-bold text-primary-600">#1</span>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
-                  <ImageIcon className="text-surface-dim w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base text-slate-900 font-medium leading-tight">ChefTable Pro</p>
-                  <p className="text-sm font-medium text-slate-500">98 sold this month</p>
-                </div>
-                <span className="text-sm font-medium font-bold text-slate-500">#2</span>
-              </div>
-            </div>
-          </div>
-          
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

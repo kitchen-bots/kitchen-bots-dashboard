@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '../ui/Button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -30,25 +31,25 @@ const ModalBase = ({ isOpen, onClose, title, children, footer, maxWidth = 'md' }
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-background/80 backdrop-blur-xs"
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className={`relative w-full ${maxWidthClasses[maxWidth]} bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col max-h-[90vh]`}
+          className={`relative w-full ${maxWidthClasses[maxWidth]} bg-card text-card-foreground rounded-xl shadow-xl border border-border flex flex-col max-h-[90vh] overflow-hidden`}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </Button>
           </div>
-          <div className="p-6 overflow-y-auto flex-1">
+          <div className="p-6 overflow-y-auto flex-1 text-sm text-foreground">
             {children}
           </div>
           {footer && (
-            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50/50 rounded-b-xl flex justify-end gap-3">
+            <div className="px-6 py-3.5 border-t border-border bg-muted/20 flex justify-end gap-2.5">
               {footer}
             </div>
           )}
@@ -81,30 +82,32 @@ export const ConfirmDeleteModal = ({
       maxWidth="sm"
       footer={
         <>
-          <button 
+          <Button 
+            variant="outline"
+            size="sm"
             onClick={onClose}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
           >
             Cancel
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant="destructive"
+            size="sm"
             onClick={onConfirm}
-            disabled={isDeleting}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center disabled:opacity-50"
+            isLoading={isDeleting}
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
+            Delete
+          </Button>
         </>
       }
     >
-      <div className="flex items-start text-red-600 mb-4">
-        <div className="p-2 bg-red-100 rounded-full mr-3">
-          <AlertTriangle className="w-6 h-6" />
+      <div className="flex items-start gap-3">
+        <div className="p-2 bg-destructive/10 text-destructive rounded-md shrink-0">
+          <AlertTriangle className="w-5 h-5" />
         </div>
         <div>
-          <p className="font-medium text-slate-900 mt-1">Are you sure you want to delete {itemName}?</p>
-          <p className="text-sm text-slate-500 mt-1">This action cannot be undone. All data associated with this item will be permanently removed.</p>
+          <p className="font-semibold text-sm text-foreground">Are you sure you want to delete {itemName}?</p>
+          <p className="text-xs text-muted-foreground mt-1">This action cannot be undone. All data associated with this item will be permanently removed.</p>
         </div>
       </div>
     </ModalBase>
@@ -119,16 +122,16 @@ export const CreateModal = ({ isOpen, onClose, title, children, onSubmit, isSubm
       title={title}
       footer={
         <>
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+          <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button 
+          </Button>
+          <Button 
+            size="sm"
             onClick={onSubmit} 
-            disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50"
+            isLoading={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Create'}
-          </button>
+            Create
+          </Button>
         </>
       }
     >
@@ -145,16 +148,16 @@ export const EditModal = ({ isOpen, onClose, title, children, onSubmit, isSubmit
       title={title}
       footer={
         <>
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
+          <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button 
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50"
+          </Button>
+          <Button 
+            size="sm"
+            onClick={onSubmit} 
+            isLoading={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
-          </button>
+            Save Changes
+          </Button>
         </>
       }
     >
