@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import { FirestoreClient } from './lib/firestore';
 import { createCatalogRouter } from './routes/catalog';
 import { createEnquiriesRouter } from './routes/enquiries';
+import { createOrdersRouter } from './routes/orders';
 
 export interface Env {
   ENVIRONMENT?: string;
@@ -175,6 +176,9 @@ export function createApp(envBindings: Partial<Env> = {}, services: AppServices 
 
   // Mount enquiries routes
   app.route('/v1/enquiries', createEnquiriesRouter(getFirestore));
+
+  // Mount orders routes
+  app.route('/v1/orders', createOrdersRouter(getFirestore));
 
   return app;
 }
