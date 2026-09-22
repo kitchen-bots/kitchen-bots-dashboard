@@ -244,7 +244,10 @@ export const apiErrorSchema = z.object({
 
 export type Product = z.infer<typeof productSchema>;
 export type PublicProduct = z.infer<typeof publicProductSchema>;
+export type Category = z.infer<typeof categorySchema>;
 export type EnquiryInput = z.infer<typeof enquiryInputSchema>;
 export type Enquiry = z.infer<typeof enquirySchema>;
 export type OrderCreateInput = z.infer<typeof orderCreateInputSchema>;
 export type Order = z.infer<typeof orderSchema>;
+export type IdempotencyRecord = z.infer<typeof idempotencyRecordSchema>;
+
