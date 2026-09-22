@@ -4,6 +4,7 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { FirestoreClient } from './lib/firestore';
 import { createCatalogRouter } from './routes/catalog';
+import { createEnquiriesRouter } from './routes/enquiries';
 
 export interface Env {
   ENVIRONMENT?: string;
@@ -171,6 +172,9 @@ export function createApp(envBindings: Partial<Env> = {}, services: AppServices 
 
   // Mount catalog routes
   app.route('/v1/catalog', createCatalogRouter(getFirestore));
+
+  // Mount enquiries routes
+  app.route('/v1/enquiries', createEnquiriesRouter(getFirestore));
 
   return app;
 }
