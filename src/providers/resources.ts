@@ -6,7 +6,6 @@ export const dashboardResources: IResourceItem[] = [
     list: '/admin/products',
     create: '/admin/products/new',
     edit: '/admin/products/:id',
-    show: '/admin/products/:id',
   },
   {
     name: 'quotes',
