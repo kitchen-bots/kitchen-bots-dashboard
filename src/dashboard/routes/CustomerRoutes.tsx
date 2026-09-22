@@ -20,16 +20,16 @@ const CustomerSettings = lazy(() => import('../pages/customer/CustomerSettings')
 
 // Placeholder components to be replaced by actual screen implementations
 const PlaceholderScreen = ({ name }: { name: string }) => (
-  <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-dashed border-gray-300">
-    <h2 className="text-xl font-medium text-gray-500">{name} Screen</h2>
-    <p className="text-sm text-gray-400 mt-2">Implementation pending</p>
+  <div className="flex flex-col items-center justify-center h-64 bg-card rounded-lg border border-dashed border-border">
+    <h2 className="text-lg font-medium text-foreground">{name} Screen</h2>
+    <p className="text-sm text-muted-foreground mt-1">Operational view</p>
   </div>
 );
 
 export const CustomerRoutes = () => {
   return (
     <>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-50"><div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" /></div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>}>
         <Routes>
           <Route path="/" element={<ProtectedRoute allowedRoles={CUSTOMER_ROLES}><CustomerLayout /></ProtectedRoute>}>
             <Route index element={<DashboardHome />} />

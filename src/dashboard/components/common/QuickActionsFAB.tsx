@@ -11,7 +11,7 @@ export function QuickActionsFAB() {
     { label: 'Add Product', icon: Package, color: 'text-blue-600 bg-blue-50', path: '/admin/products/new' },
     { label: 'Create Order', icon: ShoppingCart, color: 'text-green-600 bg-green-50', path: '/admin/orders/new' },
     { label: 'Create Lead', icon: UserPlus, color: 'text-purple-600 bg-purple-50', path: '/admin/leads' },
-    { label: 'Upload Document', icon: FileText, color: 'text-orange-600 bg-orange-50', path: '/admin/documents' },
+    { label: 'Upload Document', icon: FileText, color: 'text-orange-600 bg-orange-50', path: '/admin/documents?action=upload' },
     { label: 'New Ticket', icon: Wrench, color: 'text-red-600 bg-red-50', path: '/admin/services' },
     { label: 'Add User', icon: Users, color: 'text-indigo-600 bg-indigo-50', path: '/admin/users' }
   ];
@@ -22,7 +22,7 @@ export function QuickActionsFAB() {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-8 right-8 z-50 lg:hidden">
       <AnimatePresence>
         {isOpen && (
           <motion.div 

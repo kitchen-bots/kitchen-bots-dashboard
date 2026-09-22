@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 export const DashboardCard = ({ children, className = '' }: { children: ReactNode, className?: string }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-slate-200 p-6 ${className}`}>
+    <div className={`bg-card text-card-foreground rounded-lg border border-border p-6 shadow-sm ${className}`}>
       {children}
     </div>
   );
@@ -12,19 +12,19 @@ export const StatCard = ({ title, value, icon, trend, trendValue }: { title: str
   return (
     <DashboardCard className="flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-        <div className="p-2 bg-slate-50 rounded-lg text-slate-400">
+        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+        <div className="p-2 bg-muted rounded-md text-muted-foreground">
           {icon}
         </div>
       </div>
       <div className="mt-auto">
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
+        <div className="text-2xl font-bold text-foreground">{value}</div>
         {trend && trendValue && (
           <div className="mt-2 flex items-center text-xs">
-            <span className={`font-medium ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-slate-500'}`}>
+            <span className={`font-medium ${trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-rose-500' : 'text-muted-foreground'}`}>
               {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '•'} {trendValue}
             </span>
-            <span className="text-slate-400 ml-2">vs last month</span>
+            <span className="text-muted-foreground ml-2">vs last month</span>
           </div>
         )}
       </div>
@@ -36,7 +36,7 @@ export const AnalyticsCard = ({ title, children, action }: { title: string, chil
   return (
     <DashboardCard className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {action && <div>{action}</div>}
       </div>
       <div className="flex-1">
@@ -49,8 +49,8 @@ export const AnalyticsCard = ({ title, children, action }: { title: string, chil
 export const WidgetCard = ({ title, children }: { title: string, children: ReactNode }) => {
   return (
     <DashboardCard className="overflow-hidden p-0">
-      <div className="px-6 py-4 border-b border-slate-200">
-        <h3 className="font-semibold text-slate-900">{title}</h3>
+      <div className="px-6 py-4 border-b border-border">
+        <h3 className="font-semibold text-foreground">{title}</h3>
       </div>
       <div className="p-6">
         {children}

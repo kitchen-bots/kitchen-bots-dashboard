@@ -15,6 +15,14 @@ export const leadService = {
     return await leadsApi.getLeadById(id);
   },
 
+  createLead: async (data: Omit<Lead, 'id'>): Promise<Lead> => {
+    return await leadsApi.createLead(data);
+  },
+
+  updateLead: async (id: string, data: Partial<Lead>): Promise<Lead> => {
+    return await leadsApi.updateLead(id, data);
+  },
+
   updateLeadStatus: async (id: string, status: Lead['status']): Promise<Lead> => {
     return await leadsApi.updateLeadStatus(id, status);
   },

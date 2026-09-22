@@ -25,6 +25,7 @@ export interface Product extends Omit<z.infer<typeof schemas.ProductMasterSchema
   createdAt: string;
   updatedAt: string;
   specs: string[];
+  description?: string;
 }
 
 export type OrderItem = z.infer<typeof schemas.OrderItemSchema>;

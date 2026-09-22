@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { QuoteService } from '../../services/sales/quoteService';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { Plus, Trash2 } from 'lucide-react';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 export const AddQuote: React.FC = () => {
   const navigate = useNavigate();
@@ -73,85 +76,160 @@ export const AddQuote: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Create Quote</h1>
-          <p className="text-sm text-gray-500">Generate a new quotation for a customer</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <h2 className="text-lg font-medium mb-4">Customer Details</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-              <input required type="text" name="companyName" className="w-full border p-2 rounded" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
-              <input required type="text" name="contactPerson" className="w-full border p-2 rounded" value={formData.contactPerson} onChange={e => setFormData({...formData, contactPerson: e.target.value})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input required type="email" name="email" className="w-full border p-2 rounded" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input type="text" name="phone" className="w-full border p-2 rounded" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-            </div>
+    <PageContainer>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/admin/quotes')}
+              className="mb-2 -ml-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Quotes
+            </Button>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Create Quotation</h1>
+            <p className="text-sm text-muted-foreground mt-1">Generate a structured quotation for enterprise sales</p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium">Line Items</h2>
-            <button type="button" onClick={addItem} className="flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-700">
-              <Plus size={16} /> Add Item
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <div key={index} className="flex gap-4 items-center bg-gray-50 p-4 rounded-lg">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Product</label>
-                  <input type="text" className="w-full border p-2 rounded text-sm" value={item.productName} onChange={(e) => {
-                    const newItems = [...items];
-                    newItems[index].productName = e.target.value;
-                    setItems(newItems);
-                  }} />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Details</CardTitle>
+              <CardDescription>Primary recipient and contact person information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Company Name</label>
+                  <input 
+                    required 
+                    type="text" 
+                    name="companyName" 
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
+                    value={formData.companyName} 
+                    onChange={e => setFormData({...formData, companyName: e.target.value})} 
+                  />
                 </div>
-                <div className="w-24">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Qty</label>
-                  <input type="number" min="1" className="w-full border p-2 rounded text-sm" value={item.quantity} onChange={(e) => {
-                    const newItems = [...items];
-                    newItems[index].quantity = parseInt(e.target.value);
-                    setItems(newItems);
-                  }} />
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Contact Person</label>
+                  <input 
+                    required 
+                    type="text" 
+                    name="contactPerson" 
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
+                    value={formData.contactPerson} 
+                    onChange={e => setFormData({...formData, contactPerson: e.target.value})} 
+                  />
                 </div>
-                <div className="w-32">
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Unit Price</label>
-                  <input type="number" min="0" className="w-full border p-2 rounded text-sm" value={item.unitPrice} onChange={(e) => {
-                    const newItems = [...items];
-                    newItems[index].unitPrice = parseFloat(e.target.value);
-                    setItems(newItems);
-                  }} />
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
+                  <input 
+                    required 
+                    type="email" 
+                    name="email" 
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
+                    value={formData.email} 
+                    onChange={e => setFormData({...formData, email: e.target.value})} 
+                  />
                 </div>
-                <button type="button" onClick={() => removeItem(index)} className="mt-5 p-2 text-red-500 hover:bg-red-50 rounded">
-                  <Trash2 size={16} />
-                </button>
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Phone</label>
+                  <input 
+                    type="text" 
+                    name="phone" 
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
+                    value={formData.phone} 
+                    onChange={e => setFormData({...formData, phone: e.target.value})} 
+                  />
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </CardContent>
+          </Card>
 
-        <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => navigate('/admin/quotes')} className="px-6 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Cancel</button>
-          <button type="submit" className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Create Quote</button>
-        </div>
-      </form>
-    </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <div>
+                <CardTitle>Line Items</CardTitle>
+                <CardDescription>Equipment products and custom configurations</CardDescription>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                <Plus className="w-4 h-4 mr-1.5" /> Add Item
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {items.map((item, index) => (
+                  <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-muted/40 p-3 rounded-lg border border-border">
+                    <div className="flex-1 w-full">
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">Product Description</label>
+                      <input 
+                        type="text" 
+                        className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
+                        value={item.productName} 
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[index].productName = e.target.value;
+                          setItems(newItems);
+                        }} 
+                      />
+                    </div>
+                    <div className="w-full sm:w-28">
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">Quantity</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
+                        value={item.quantity} 
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[index].quantity = parseInt(e.target.value) || 1;
+                          setItems(newItems);
+                        }} 
+                      />
+                    </div>
+                    <div className="w-full sm:w-36">
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">Unit Price (₹)</label>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
+                        value={item.unitPrice} 
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[index].unitPrice = parseFloat(e.target.value) || 0;
+                          setItems(newItems);
+                        }} 
+                      />
+                    </div>
+                    <div className="pt-2 sm:pt-4">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeItem(index)} 
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={() => navigate('/admin/quotes')}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              Create Quote
+            </Button>
+          </div>
+        </form>
+      </div>
+    </PageContainer>
   );
 };

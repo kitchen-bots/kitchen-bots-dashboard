@@ -31,12 +31,12 @@ export const NotificationSystem = () => {
   };
 
   const getTypeClasses = (type: string, isRead: boolean) => {
-    if (isRead) return 'bg-gray-50/50 text-gray-500 border-gray-200';
+    if (isRead) return 'bg-muted/50 text-muted-foreground border-border';
     switch (type) {
-      case 'success': return 'bg-green-50 text-green-700 border-green-200';
-      case 'warning': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'error': return 'bg-red-50 text-red-700 border-red-200';
-      default: return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'success': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+      case 'warning': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+      case 'error': return 'bg-destructive/10 text-destructive border-destructive/20';
+      default: return 'bg-primary/10 text-primary border-primary/20';
     }
   };
 
@@ -44,11 +44,12 @@ export const NotificationSystem = () => {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+        aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full"></span>
         )}
       </button>
 
@@ -60,20 +61,20 @@ export const NotificationSystem = () => {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden"
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 mt-2 w-96 bg-popover text-popover-foreground rounded-lg shadow-xl border border-border z-50 overflow-hidden"
             >
-              <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900 text-lg">Notifications</h3>
+              <div className="p-4 border-b border-border bg-muted/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
                       <button 
                         onClick={markAllAsRead}
-                        className="text-xs font-medium text-emerald-600-600 hover:text-emerald-600-700 bg-emerald-500-50 px-2.5 py-1 rounded-md transition-colors"
+                        className="text-xs font-medium text-primary hover:text-primary/80 bg-primary/10 px-2 py-0.5 rounded-md transition-colors"
                       >
                         Mark all read
                       </button>
@@ -82,20 +83,20 @@ export const NotificationSystem = () => {
                 </div>
                 
                 {/* Filters */}
-                <div className="flex items-center gap-2 bg-gray-100/80 p-1 rounded-lg w-fit">
+                <div className="flex items-center gap-1 bg-muted p-0.5 rounded-md w-fit">
                   <button 
                     onClick={() => setActiveFilter('all')}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${activeFilter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${activeFilter === 'all' ? 'bg-background shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     All
                   </button>
                   <button 
                     onClick={() => setActiveFilter('unread')}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${activeFilter === 'unread' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1.5 ${activeFilter === 'unread' ? 'bg-background shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     Unread
                     {unreadCount > 0 && (
-                      <span className="bg-emerald-500-100 text-emerald-600-700 px-1.5 py-0.5 rounded-full text-[10px]">
+                      <span className="bg-primary/20 text-primary px-1 py-0.2 text-[10px] rounded-sm font-semibold">
                         {unreadCount}
                       </span>
                     )}
@@ -105,49 +106,46 @@ export const NotificationSystem = () => {
 
               <div className="max-h-[28rem] overflow-y-auto">
                 {filteredNotifications.length === 0 ? (
-                  <div className="p-12 text-center flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
-                      <Bell className="w-6 h-6 text-gray-300" />
+                  <div className="p-10 text-center flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center mb-3">
+                      <Bell className="w-5 h-5 text-muted-foreground" />
                     </div>
-                    <p className="font-medium text-gray-900 mb-1">All caught up!</p>
-                    <p className="text-sm text-gray-500">No {activeFilter === 'unread' ? 'unread' : ''} notifications to show.</p>
+                    <p className="font-medium text-foreground text-sm mb-1">All caught up</p>
+                    <p className="text-xs text-muted-foreground">No {activeFilter === 'unread' ? 'unread ' : ''}notifications to display.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-border">
                     {filteredNotifications.map(notification => (
                       <div 
                         key={notification.id} 
-                        className={`p-4 transition-colors relative group ${!notification.read ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                        className={`p-4 transition-colors relative group ${!notification.read ? 'bg-muted/40 hover:bg-muted/60' : 'hover:bg-muted/20'}`}
                       >
                         {!notification.read && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500-500" />
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary" />
                         )}
                         <div className="flex items-start gap-3">
-                          <div className={`flex-shrink-0 mt-1 p-2 rounded-lg border ${getTypeClasses(notification.type, notification.read)}`}>
+                          <div className={`flex-shrink-0 mt-0.5 p-2 rounded-md border ${getTypeClasses(notification.type, notification.read)}`}>
                             {getCategoryIcon(getNotificationCategory(notification.type))}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-1">
-                              <p className={`text-sm font-semibold truncate ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                              <p className={`text-xs font-semibold truncate ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
                                 {notification.message}
                               </p>
-                              <span className="text-[10px] font-medium text-gray-400 flex-shrink-0">
+                              <span className="text-[10px] text-muted-foreground flex-shrink-0">
                                 {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                               {notification.message}
                             </p>
                             {!notification.read && (
-                              <div className="mt-3 flex items-center gap-2">
-                                <button className="text-xs font-medium text-emerald-600-600 hover:text-emerald-600-700">
-                                  View details
-                                </button>
+                              <div className="mt-2.5 flex items-center gap-3">
                                 <button 
                                   onClick={() => markAsRead(notification.id)}
-                                  className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                                  className="text-xs font-medium text-primary hover:underline"
                                 >
-                                  Mark read
+                                  Mark as read
                                 </button>
                               </div>
                             )}
@@ -158,11 +156,8 @@ export const NotificationSystem = () => {
                   </div>
                 )}
               </div>
-              <div className="p-3 border-t border-gray-100 bg-gray-50 text-center hover:bg-gray-100 transition-colors cursor-pointer">
-                <button className="text-sm font-medium text-emerald-600-600 flex items-center justify-center gap-1.5 w-full">
-                  <Settings2 className="w-4 h-4" />
-                  Notification Preferences
-                </button>
+              <div className="p-2.5 border-t border-border bg-muted/20 text-center">
+                <span className="text-xs text-muted-foreground">KitchenBots Notification Center</span>
               </div>
             </motion.div>
           </>

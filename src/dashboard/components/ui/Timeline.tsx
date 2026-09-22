@@ -48,34 +48,39 @@ export const Timeline: React.FC<TimelineProps> = ({ events, className }) => {
   }
 
   return (
-    <div className={cn('relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent', className)}>
-      {events.map((event) => (
-        <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+    <div className={cn('relative space-y-4', className)}>
+      {events.map((event, idx) => (
+        <div key={event.id} className="relative flex items-start gap-3">
+          {/* Connecting Line */}
+          {idx < events.length - 1 && (
+            <span className="absolute left-[17px] top-8 -bottom-4 w-px bg-border" aria-hidden="true" />
+          )}
+
           {/* Icon */}
-          <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-white bg-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+          <div className="relative z-10 flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card shadow-xs shrink-0 mt-0.5">
             {getEventIcon(event.type)}
           </div>
           
           {/* Content */}
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border shadow-sm flex flex-col transition-all bg-white hover:shadow-md">
-             <div className="flex items-center justify-between space-x-2 mb-1">
-               <div className="font-bold text-slate-900">{event.type.replace(/_/g, ' ')}</div>
-               <time className="font-caveat font-medium text-indigo-500">{format(new Date(event.timestamp), 'MMM d, h:mm a')}</time>
+          <div className="flex-1 min-w-0 p-3.5 rounded-lg border border-border shadow-xs flex flex-col transition-colors bg-card text-card-foreground hover:bg-muted/20">
+             <div className="flex items-center justify-between gap-2 mb-1">
+               <div className="font-semibold text-xs text-foreground truncate">{event.type.replace(/_/g, ' ')}</div>
+               <time className="text-[11px] font-medium text-primary shrink-0 whitespace-nowrap">{format(new Date(event.timestamp), 'MMM d, h:mm a')}</time>
              </div>
-             <div className="text-slate-500 text-sm mb-2">{event.description}</div>
+             <div className="text-muted-foreground text-xs leading-relaxed break-words mb-2">{event.description}</div>
              {event.statusFrom && event.statusTo && (
-               <div className="flex items-center text-xs text-slate-500 bg-slate-50 rounded p-2 mt-2 border border-slate-100">
-                 <span className="font-medium px-2 py-0.5 rounded bg-slate-200">{event.statusFrom}</span>
-                 <Play className="h-3 w-3 mx-2 text-slate-400" />
-                 <span className="font-medium px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">{event.statusTo}</span>
+               <div className="flex items-center text-[11px] text-muted-foreground bg-muted/30 rounded p-1.5 mt-1 border border-border">
+                 <span className="font-medium px-1.5 py-0.5 rounded bg-muted text-foreground">{event.statusFrom}</span>
+                 <Play className="h-3 w-3 mx-1.5 text-muted-foreground shrink-0" />
+                 <span className="font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">{event.statusTo}</span>
                </div>
              )}
-             <div className="text-xs text-slate-400 mt-2 flex items-center">
+             <div className="text-[11px] text-muted-foreground mt-1.5 flex items-center">
                <span className="font-medium mr-1">By:</span> {event.userName}
              </div>
              {event.metadata && Object.keys(event.metadata).length > 0 && (
-               <div className="mt-2 text-xs bg-slate-50 p-2 rounded border border-slate-100 overflow-hidden text-ellipsis whitespace-nowrap">
-                 <span className="font-medium text-slate-600">Details: </span>
+               <div className="mt-1.5 text-[11px] bg-muted/30 p-1.5 rounded border border-border overflow-hidden text-ellipsis whitespace-nowrap">
+                 <span className="font-medium text-foreground">Details: </span>
                  {JSON.stringify(event.metadata)}
                </div>
              )}

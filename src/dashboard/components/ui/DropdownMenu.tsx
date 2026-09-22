@@ -54,7 +54,7 @@ export function DropdownMenu({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className={cn(
-              "absolute z-50 mt-2 w-56 rounded-xl border border-border-default bg-surface shadow-elevation-floating focus:outline-none overflow-hidden",
+              "absolute z-50 mt-2 w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-md focus:outline-none overflow-hidden",
               alignClasses[align],
               className
             )}
@@ -75,7 +75,7 @@ export const DropdownMenuItem = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-sm outline-none transition-colors hover:bg-slate-100 hover:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 mx-1",
+      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 mx-1",
       inset && "pl-8",
       className
     )}
@@ -90,7 +90,7 @@ export const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-border-default", className)}
+    className={cn("-mx-1 my-1 h-px bg-border", className)}
     {...props}
   />
 ));
@@ -103,7 +103,7 @@ export const DropdownMenuLabel = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "px-3 py-1.5 text-xs font-semibold text-slate-500",
+      "px-3 py-1.5 text-xs font-semibold text-muted-foreground",
       inset && "pl-8",
       className
     )}

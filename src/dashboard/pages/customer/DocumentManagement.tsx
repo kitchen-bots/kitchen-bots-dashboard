@@ -1,336 +1,629 @@
-import { Book, ChevronLeft, ChevronRight, Download, ExternalLink, Eye, FileText, FolderOpen, Maximize, Microwave, Plus, Receipt, Refrigerator, Share2, ShieldCheck, Upload, Wrench } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import {
+  Book,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileText,
+  FolderOpen,
+  Maximize2,
+  Receipt,
+  Search,
+  Share2,
+  Upload,
+  Wrench,
+  Filter,
+} from 'lucide-react';
+import { PageContainer } from '../../components/layout/PageContainer';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
+import { useToast } from '../../context/ToastContext';
+import {
+  UploadDocumentModal,
+  DocumentItem,
+} from '../../components/Modals/UploadDocumentModal';
 
-export const DocumentManagement = () => {
+const initialDocuments: DocumentItem[] = [
+  {
+    id: 'doc-1',
+    name: 'Maintenance_Guide_V2.pdf',
+    size: '4.2 MB',
+    type: 'MANUAL',
+    product: 'GrillMaster 3000 PRO',
+    date: 'Oct 24, 2023',
+    version: 'v2.1',
+    owner: 'Rahul Sharma',
+  },
+  {
+    id: 'doc-2',
+    name: 'Installation_Invoice_7721.pdf',
+    size: '1.8 MB',
+    type: 'INVOICE',
+    product: 'CoolFreeze Industrial',
+    date: 'Oct 22, 2023',
+    version: 'v1.0',
+    owner: 'Ops Billing',
+  },
+  {
+    id: 'doc-3',
+    name: 'ISO_9001_Certification.pdf',
+    size: '2.1 MB',
+    type: 'CERT',
+    product: 'Global Series Ranges',
+    date: 'Oct 15, 2023',
+    version: 'v3.0',
+    owner: 'Quality Assurance',
+  },
+  {
+    id: 'doc-4',
+    name: 'Quarterly_Service_Report_Q3.pdf',
+    size: '3.4 MB',
+    type: 'SERVICE',
+    product: 'SteamPro Commercial Oven',
+    date: 'Sep 30, 2023',
+    version: 'v1.1',
+    owner: 'Field Engineering',
+  },
+  {
+    id: 'doc-5',
+    name: 'Electrical_Schematics_RevC.pdf',
+    size: '5.6 MB',
+    type: 'MANUAL',
+    product: 'Induction Top Double-Burner',
+    date: 'Sep 18, 2023',
+    version: 'v2.4',
+    owner: 'Hardware Team',
+  },
+];
+
+export const DocumentManagement: React.FC = () => {
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isAdmin = location.pathname.startsWith('/admin');
+  const { showToast } = useToast();
+
+  const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('ALL');
+  const [selectedDoc, setSelectedDoc] = useState<DocumentItem>(initialDocuments[0]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const homePath = isAdmin ? '/admin' : '/dashboard';
+
+  // Handle URL action parameter (e.g. from Quick Actions or Dashboard navigation)
+  useEffect(() => {
+    if (searchParams.get('action') === 'upload') {
+      setIsUploadModalOpen(true);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('action');
+          return next;
+        },
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleDownload = (doc: DocumentItem) => {
+    if (doc.file) {
+      const url = URL.createObjectURL(doc.file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else if (doc.url) {
+      const a = document.createElement('a');
+      a.href = doc.url;
+      a.download = doc.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const content = [
+        'Kitchen Bots Commercial Asset Document',
+        '---------------------------------------',
+        `Document Name: ${doc.name}`,
+        `Classification: ${doc.type}`,
+        `Equipment Unit: ${doc.product}`,
+        `Revision Version: ${doc.version}`,
+        `Custodian / Owner: ${doc.owner}`,
+        `Date Logged: ${doc.date}`,
+        'Security Status: Operational Asset - Commercial Confidential',
+        '',
+        'This record was retrieved from the Kitchen Bots Document Repository.',
+      ].join('\n');
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name.endsWith('.pdf')
+        ? doc.name.replace(/\.pdf$/, '.txt')
+        : `${doc.name}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    showToast('Download Complete', `${doc.name} download initiated.`, 'success');
+  };
+
+  const handleShare = (doc: DocumentItem) => {
+    navigator.clipboard?.writeText?.(window.location.href);
+    showToast('Link Copied', `Secure access link copied for ${doc.name}`, 'success');
+  };
+
+  const handleUploadSuccess = (newDoc: DocumentItem) => {
+    setDocuments((prev) => [newDoc, ...prev]);
+    setSelectedDoc(newDoc);
+    showToast(
+      'Document Uploaded',
+      `${newDoc.name} has been added to the repository.`,
+      'success'
+    );
+  };
+
+  const filteredDocs = documents.filter((doc) => {
+    const matchesSearch =
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.product.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = selectedType === 'ALL' || doc.type === selectedType;
+    return matchesSearch && matchesType;
+  });
+
+  const totalCount = documents.length;
+  const invoiceCount = documents.filter((d) => d.type === 'INVOICE').length;
+  const manualCount = documents.filter((d) => d.type === 'MANUAL').length;
+  const serviceCount = documents.filter((d) => d.type === 'SERVICE').length;
+
+  const getTypeBadge = (type: DocumentItem['type']) => {
+    switch (type) {
+      case 'MANUAL':
+        return <Badge variant="secondary">Manual</Badge>;
+      case 'INVOICE':
+        return <Badge variant="outline">Invoice</Badge>;
+      case 'CERT':
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            Cert
+          </Badge>
+        );
+      case 'SERVICE':
+        return (
+          <Badge className="bg-blue-500/10 text-blue-500 border border-blue-500/20">
+            Service
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">{type}</Badge>;
+    }
+  };
+
   return (
-    <div className="p-4 lg:p-10 pb-24">
-      {/* Header Section */}
-      <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Documents</h1>
-          <p className="text-lg text-slate-500">Centralized repository for all kitchen equipment assets.</p>
-        </div>
-        <button className="bg-primary-500 text-white px-8 py-4 rounded-full text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:bg-primary-600 transition-all active:scale-95 w-full md:w-auto">
-          <Upload className="w-5 h-5" />
+    <PageContainer
+      title="Documents"
+      description="Centralized repository for commercial equipment assets, specifications, invoices, and service records."
+      homeHref={homePath}
+      breadcrumbs={[
+        { label: isAdmin ? 'Admin' : 'Dashboard', href: homePath },
+        { label: 'Documents' },
+      ]}
+      actions={
+        <Button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="gap-2 cursor-pointer"
+        >
+          <Upload className="w-4 h-4" />
           <span>Upload Document</span>
-        </button>
+        </Button>
+      }
+    >
+      {/* Top Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Documents
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <FolderOpen className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">{totalCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Managed assets across all fleets</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Invoices
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <Receipt className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">{invoiceCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Commercial transaction bills</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Manuals & Specs
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <Book className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">{manualCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Installation and user guides</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Service Reports
+            </span>
+            <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <Wrench className="w-4 h-4" />
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 pt-0">
+            <div className="text-2xl font-bold tracking-tight text-foreground">{serviceCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Maintenance logs and certificates</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Analytics Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 flex flex-col gap-2">
-          <div className="h-12 w-12 rounded-full bg-primary-500/10 text-primary-600 flex items-center justify-center mb-2">
-            <FolderOpen className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-slate-500">Total Documents</span>
-          <span className="text-3xl font-bold text-slate-900">2,450</span>
-        </div>
-        
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 flex flex-col gap-2">
-          <div className="h-12 w-12 rounded-full bg-blue-100/30 text-blue-600 flex items-center justify-center mb-2">
-            <Receipt className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-slate-500">Invoices</span>
-          <span className="text-3xl font-bold text-slate-900">1,120</span>
-        </div>
-        
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 flex flex-col gap-2">
-          <div className="h-12 w-12 rounded-full bg-orange-100/30 text-orange-600 flex items-center justify-center mb-2">
-            <Book className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-slate-500">Manuals</span>
-          <span className="text-3xl font-bold text-slate-900">840</span>
-        </div>
-        
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 flex flex-col gap-2">
-          <div className="h-12 w-12 rounded-full bg-red-100/30 text-red-600 flex items-center justify-center mb-2">
-            <Wrench className="w-6 h-6" />
-          </div>
-          <span className="text-sm font-medium text-slate-500">Service Reports</span>
-          <span className="text-3xl font-bold text-slate-900">490</span>
-        </div>
-      </section>
-
-      {/* Filters and Table Container */}
-      <div className="flex flex-col xl:flex-row gap-6">
-        
-        {/* Left Filter Panel */}
-        <aside className="w-full xl:w-64 flex flex-col gap-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200 h-fit">
-          <div>
-            <h4 className="font-bold text-slate-900 mb-3">Document Type</h4>
-            <div className="flex flex-col gap-3">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" defaultChecked className="w-5 h-5 rounded-md border-slate-300 text-primary-600 focus:ring-primary-600/20" />
-                <span className=" text-slate-900 group-hover:text-primary-600 transition-colors">Invoice</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" className="w-5 h-5 rounded-md border-slate-300 text-primary-600 focus:ring-primary-600/20" />
-                <span className=" text-slate-900 group-hover:text-primary-600 transition-colors">Manual</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" className="w-5 h-5 rounded-md border-slate-300 text-primary-600 focus:ring-primary-600/20" />
-                <span className=" text-slate-900 group-hover:text-primary-600 transition-colors">Certification</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" defaultChecked className="w-5 h-5 rounded-md border-slate-300 text-primary-600 focus:ring-primary-600/20" />
-                <span className=" text-slate-900 group-hover:text-primary-600 transition-colors">Service Report</span>
-              </label>
+      {/* Main Filter and Documents Area */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        {/* Filter Panel */}
+        <Card className="w-full xl:w-64 shrink-0">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold">Filter Documents</CardTitle>
             </div>
-          </div>
-          
-          <div className="h-px bg-slate-200 w-full"></div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 mb-3">Product Category</h4>
-            <select className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 focus:ring-primary-600/20 text-slate-900">
-              <option>All Equipment</option>
-              <option>Refrigeration</option>
-              <option>Cooking Ranges</option>
-              <option>Dishwashers</option>
-            </select>
-          </div>
-          
-          <div className="h-px bg-slate-200 w-full"></div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 mb-3">Upload Date</h4>
-            <div className="space-y-2">
-              <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 focus:ring-primary-600/20 text-slate-900" />
-              <p className="text-center text-slate-500 font-medium">to</p>
-              <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 focus:ring-primary-600/20 text-slate-900" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-2">
+                Document Type
+              </label>
+              <div className="space-y-1.5">
+                {[
+                  { label: 'All Types', value: 'ALL' },
+                  { label: 'Invoices', value: 'INVOICE' },
+                  { label: 'Manuals', value: 'MANUAL' },
+                  { label: 'Certifications', value: 'CERT' },
+                  { label: 'Service Reports', value: 'SERVICE' },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => setSelectedType(item.value)}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                      selectedType === item.value
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          <button className="w-full text-primary-600 font-bold py-3 hover:bg-primary-50 rounded-full transition-colors mt-2">
-            Reset All Filters
-          </button>
-        </aside>
 
-        {/* Document Table Section */}
-        <section className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
+            <div className="border-t border-border pt-4">
+              <label className="block text-xs font-medium text-muted-foreground mb-2">
+                Search File or Product
+              </label>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Filter name..."
+                  className="w-full pl-8 pr-3 py-1.5 bg-background border border-input rounded-md text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-ring"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs cursor-pointer"
+                onClick={() => {
+                  setSelectedType('ALL');
+                  setSearchQuery('');
+                }}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Documents Table */}
+        <Card className="flex-1 overflow-hidden">
+          <CardHeader className="border-b border-border pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-semibold">Repository Files</CardTitle>
+                <CardDescription className="text-xs">
+                  Showing {filteredDocs.length} matching asset records
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+            <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="p-6 font-bold text-slate-500">File Name</th>
-                  <th className="p-4 font-bold text-slate-500">Type</th>
-                  <th className="p-4 font-bold text-slate-500">Related Product</th>
-                  <th className="p-4 font-bold text-slate-500">Date</th>
-                  <th className="p-4 font-bold text-slate-500 text-right">Actions</th>
+                <tr className="border-b border-border bg-muted/20 text-xs font-medium text-muted-foreground">
+                  <th className="p-3 pl-4 whitespace-nowrap">File Name</th>
+                  <th className="p-3 whitespace-nowrap">Type</th>
+                  <th className="p-3 whitespace-nowrap">Related Product</th>
+                  <th className="p-3 whitespace-nowrap">Date</th>
+                  <th className="p-3 pr-4 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                
-                {/* Row 1 */}
-                <tr className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                  <td className="p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                        <FileText className="w-5 h-5" />
+              <tbody className="divide-y divide-border">
+                {filteredDocs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <p>No documents match your filter criteria.</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsUploadModalOpen(true)}
+                          className="gap-2 mt-1 cursor-pointer"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload New Document</span>
+                        </Button>
                       </div>
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors line-clamp-1">Maintenance_Guide_V2.pdf</p>
-                        <p className="font-medium text-slate-500">4.2 MB</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-blue-100/30 text-secondary px-3 py-1 rounded-full text-[12px] font-bold">MANUAL</span>
-                  </td>
-                  <td className="p-4">
-                    <span className=" text-slate-900">GrillMaster 3000 PRO</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="font-medium text-slate-500">Oct 24, 2023</span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Download className="w-5 h-5" />
-                      </button>
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Row 2 */}
-                <tr className="bg-slate-50/20 hover:bg-slate-50/50 transition-colors group cursor-pointer border-l-4 border-primary">
-                  <td className="p-6 pl-[20px]">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors line-clamp-1">Installation_Invoice_7721.pdf</p>
-                        <p className="font-medium text-slate-500">1.8 MB</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-primary-500/10 text-primary-600 px-3 py-1 rounded-full text-[12px] font-bold">INVOICE</span>
-                  </td>
-                  <td className="p-4">
-                    <span className=" text-slate-900">CoolFreeze Industrial</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="font-medium text-slate-500">Oct 22, 2023</span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Download className="w-5 h-5" />
-                      </button>
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Row 3 */}
-                <tr className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                  <td className="p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                        <ShieldCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors line-clamp-1">ISO_9001_Certification.pdf</p>
-                        <p className="font-medium text-slate-500">2.1 MB</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-tertiary-fixed-dim/40 text-on-tertiary-fixed px-3 py-1 rounded-full text-[12px] font-bold">CERT</span>
-                  </td>
-                  <td className="p-4">
-                    <span className=" text-slate-900">Global Series Ranges</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="font-medium text-slate-500">Oct 15, 2023</span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Download className="w-5 h-5" />
-                      </button>
-                      <button className="h-10 w-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-500 hover:text-primary-600">
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDocs.map((doc) => {
+                    const isSelected = selectedDoc.id === doc.id;
+                    return (
+                      <tr
+                        key={doc.id}
+                        onClick={() => setSelectedDoc(doc)}
+                        className={`transition-colors cursor-pointer hover:bg-muted/30 ${
+                          isSelected ? 'bg-muted/40 font-medium' : ''
+                        }`}
+                      >
+                        <td className="p-3 pl-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground shrink-0">
+                              <FileText className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-xs text-foreground hover:text-primary transition-colors">
+                                {doc.name}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">{doc.size}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 whitespace-nowrap">{getTypeBadge(doc.type)}</td>
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {doc.product}
+                        </td>
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {doc.date}
+                        </td>
+                        <td className="p-3 pr-4 text-right whitespace-nowrap">
+                          <div
+                            className="flex justify-end gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                              onClick={() => handleDownload(doc)}
+                              title="Download document"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                              onClick={() => handleShare(doc)}
+                              title="Share document link"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
-          
-          <div className="p-6 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="font-medium text-slate-500">Showing 1-10 of 2,450 results</p>
-            <div className="flex gap-2">
-              <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-900">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button className="h-10 w-10 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-md font-bold">1</button>
-              <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-900 font-bold">2</button>
-              <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-900 font-bold">3</button>
-              <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-900">
-                <ChevronRight className="w-5 h-5" />
-              </button>
+          <div className="p-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              Showing 1 to {filteredDocs.length} of {documents.length} files
+            </span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" className="h-7 px-2" disabled>
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 px-2" disabled>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
-        </section>
+        </Card>
 
-        {/* Right Preview Panel (Visible on Desktop/XL) */}
-        <aside className="hidden 2xl:flex w-[340px] flex-col gap-6 bg-white p-6 rounded-lg shadow-lg border border-slate-200/30">
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="font-bold text-slate-900">Document Preview</h3>
-              <button className="text-slate-500 hover:text-primary-600 transition-colors">
-                <Maximize className="w-5 h-5" />
-              </button>
+        {/* Right Preview Panel */}
+        <Card className="hidden 2xl:flex w-[320px] shrink-0 flex-col">
+          <CardHeader className="pb-3 border-b border-border">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Document Metadata</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => setIsPreviewModalOpen(true)}
+                title="Full Preview"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </Button>
             </div>
-            
-            <div className="aspect-[3/4] rounded-lg bg-slate-100 mb-6 relative overflow-hidden border border-slate-200 group">
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                <img 
-                  alt="Document Preview" 
-                  className="w-full h-full object-cover opacity-80" 
-                  src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=400"
-                />
-                <div className="absolute inset-0 bg-black/5 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-all opacity-0 group-hover:opacity-100">
-                  <div className="bg-surface/90 p-4 rounded-full shadow-lg scale-90 group-hover:scale-110 transition-transform">
-                    <Eye className="w-6 h-6 text-primary-600" />
-                  </div>
-                </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4 text-xs">
+            <div className="space-y-2">
+              <div className="flex justify-between py-1 border-b border-border/50">
+                <span className="text-muted-foreground">File</span>
+                <span className="font-semibold text-foreground truncate max-w-[160px]">
+                  {selectedDoc.name}
+                </span>
               </div>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 mb-3">Metadata</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-slate-200/30">
-                <span className="font-medium text-slate-500">Size</span>
-                <span className="font-medium text-slate-900 font-bold">1.8 MB</span>
+              <div className="flex justify-between py-1 border-b border-border/50">
+                <span className="text-muted-foreground">Size</span>
+                <span className="font-medium text-foreground">{selectedDoc.size}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-200/30">
-                <span className="font-medium text-slate-500">Version</span>
-                <span className="font-medium text-slate-900 font-bold">v1.2 (Latest)</span>
+              <div className="flex justify-between py-1 border-b border-border/50">
+                <span className="text-muted-foreground">Version</span>
+                <span className="font-medium text-foreground">{selectedDoc.version}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-200/30">
-                <span className="font-medium text-slate-500">Owner</span>
-                <span className="font-medium text-slate-900 font-bold">Rahul Sharma</span>
+              <div className="flex justify-between py-1 border-b border-border/50">
+                <span className="text-muted-foreground">Owner</span>
+                <span className="font-medium text-foreground">{selectedDoc.owner}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-200/30">
-                <span className="font-medium text-slate-500">Permissions</span>
-                <div className="flex -space-x-2">
-                  <div className="h-6 w-6 rounded-full border-2 border-surface-container-lowest bg-blue-500 flex items-center justify-center text-white text-[10px]">RS</div>
-                  <div className="h-6 w-6 rounded-full border-2 border-surface-container-lowest bg-green-500 flex items-center justify-center text-white text-[10px]">AK</div>
-                  <div className="h-6 w-6 rounded-full bg-slate-100 border-2 border-surface-container-lowest flex items-center justify-center text-[10px] text-slate-900 font-bold">+3</div>
-                </div>
+              <div className="flex justify-between py-1 border-b border-border/50">
+                <span className="text-muted-foreground">Hardware Unit</span>
+                <span className="font-medium text-foreground truncate max-w-[160px]">
+                  {selectedDoc.product}
+                </span>
               </div>
             </div>
-          </div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 mb-3 mt-4">Related Products</h4>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200/20 hover:border-primary/30 transition-all cursor-pointer">
-                <div className="h-10 w-10 rounded bg-white flex items-center justify-center shrink-0">
-                  <Refrigerator className="w-5 h-5 text-slate-500" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 font-bold">CoolFreeze Industrial</p>
-                  <p className="text-[12px] text-slate-500">Ref No: CF-2023-A9</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200/20 hover:border-primary/30 transition-all cursor-pointer">
-                <div className="h-10 w-10 rounded bg-white flex items-center justify-center shrink-0">
-                  <Microwave className="w-5 h-5 text-slate-500" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 font-bold">SteamPro Oven 5</p>
-                  <p className="text-[12px] text-slate-500">Ref No: SP-2024-X1</p>
-                </div>
-              </div>
+
+            <div className="pt-2">
+              <Button
+                onClick={() => handleDownload(selectedDoc)}
+                className="w-full gap-1.5 cursor-pointer"
+                size="sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download {selectedDoc.name}</span>
+              </Button>
             </div>
-          </div>
-          
-          <div className="mt-auto pt-6">
-            <button className="w-full bg-primary-500 text-white py-4 rounded-full font-bold shadow-md flex items-center justify-center gap-2 hover:bg-primary-500-container transition-all">
-              <ExternalLink className="w-5 h-5" />
-              <span>View Full Doc</span>
-            </button>
-          </div>
-        </aside>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Contextual FAB (Only for Document Management) */}
-      <button className="fixed bottom-10 right-10 h-16 w-16 bg-blue-100 text-blue-700 rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-110 active:scale-95 transition-all">
-        <Plus className="w-8 h-8" strokeWidth={3} />
-      </button>
-    </div>
+      {/* Upload Document Modal */}
+      <UploadDocumentModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* Document Full Preview Modal */}
+      <Modal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        title={selectedDoc.name}
+        description={`Classification: ${selectedDoc.type} | Hardware: ${selectedDoc.product}`}
+      >
+        <div className="space-y-4 py-2">
+          {selectedDoc.file && selectedDoc.file.type.startsWith('image/') ? (
+            <div className="rounded-lg overflow-hidden border border-border bg-muted/20 p-2 flex items-center justify-center">
+              <img
+                src={selectedDoc.url}
+                alt={selectedDoc.name}
+                className="max-h-80 object-contain rounded"
+              />
+            </div>
+          ) : (
+            <div className="p-6 rounded-lg border border-border bg-muted/20 flex flex-col items-center justify-center text-center space-y-3">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{selectedDoc.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {selectedDoc.size} • {selectedDoc.version}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                This document is managed under the Kitchen Bots commercial equipment repository and
+                assigned to {selectedDoc.owner}.
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Equipment Unit</span>
+              <span className="font-semibold text-foreground">{selectedDoc.product}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Custodian</span>
+              <span className="font-semibold text-foreground">{selectedDoc.owner}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Version</span>
+              <span className="font-semibold text-foreground">{selectedDoc.version}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Date Indexed</span>
+              <span className="font-semibold text-foreground">{selectedDoc.date}</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPreviewModalOpen(false)}
+              className="cursor-pointer"
+            >
+              Close
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => handleDownload(selectedDoc)}
+              className="gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download File</span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </PageContainer>
   );
 };
 

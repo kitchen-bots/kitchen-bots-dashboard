@@ -49,8 +49,8 @@ export function ActivityTimeline({ activities, compact = false }: ActivityTimeli
 
   if (activities.length === 0) {
     return (
-      <div className="py-8 text-center text-gray-500">
-        <Info className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+      <div className="py-8 text-center text-muted-foreground">
+        <Info className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
         <p className="text-sm">No recent activity</p>
       </div>
     );
@@ -58,24 +58,24 @@ export function ActivityTimeline({ activities, compact = false }: ActivityTimeli
 
   return (
     <div className="relative">
-      <div className="absolute left-6 top-3 bottom-3 w-px bg-gray-200 -z-10" />
+      <div className="absolute left-5 top-3 bottom-3 w-px bg-border -z-10" />
       <div className="space-y-6">
-        {activities.map((activity, _index) => (
+        {activities.map((activity) => (
           <div key={activity.id} className="flex gap-4">
-            <div className={`relative flex-shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center bg-white ${getIconBg(activity.type)}`}>
+            <div className={`relative flex-shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center bg-card ${getIconBg(activity.type)}`}>
               {getIcon(activity.type)}
             </div>
-            <div className={`flex-1 ${compact ? 'pt-1.5' : 'pt-1 bg-white p-4 rounded-xl border border-gray-100 shadow-sm'}`}>
+            <div className={`flex-1 ${compact ? 'pt-1' : 'pt-1 bg-card p-4 rounded-lg border border-border shadow-xs'}`}>
               <div className="flex items-center justify-between gap-4 mb-1">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   <span className="font-semibold">{activity.user.name}</span> {activity.title}
                 </p>
-                <span className="text-xs font-medium text-gray-400 whitespace-nowrap">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {activity.timestamp}
                 </span>
               </div>
               {activity.description && (
-                <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
               )}
             </div>
           </div>

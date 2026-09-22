@@ -18,9 +18,9 @@ export function DataGridTable<TData>({
   onRowClick,
 }: DataGridTableProps<TData>) {
   return (
-    <div className="rounded-md border border-neutral-border bg-white overflow-hidden">
-      <table className="w-full text-sm text-left text-neutral-body">
-        <thead className="text-xs text-neutral-heading uppercase bg-neutral-surface border-b border-neutral-border">
+    <div className="rounded-md border border-border bg-card overflow-hidden">
+      <table className="w-full text-sm text-left text-foreground">
+        <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -33,7 +33,7 @@ export function DataGridTable<TData>({
                     <div
                       className={`flex items-center gap-1 ${
                         header.column.getCanSort()
-                          ? 'cursor-pointer select-none hover:text-brand-primary transition-colors'
+                          ? 'cursor-pointer select-none hover:text-foreground transition-colors'
                           : ''
                       }`}
                       onClick={header.column.getToggleSortingHandler()}
@@ -67,7 +67,7 @@ export function DataGridTable<TData>({
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className={`bg-white border-b border-neutral-border hover:bg-neutral-surface transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                className={`bg-card border-b border-border hover:bg-muted/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                 onClick={() => onRowClick && onRowClick(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (

@@ -33,8 +33,8 @@ const DocumentManagement = lazy(() => import('../pages/customer/DocumentManageme
 const LoadingSpinner = () => (
   <div className="flex h-full min-h-[400px] items-center justify-center">
     <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-      <p className="text-sm text-gray-400 font-medium">Loading...</p>
+      <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
+      <p className="text-sm text-muted-foreground font-medium">Loading...</p>
     </div>
   </div>
 );
@@ -42,7 +42,7 @@ const LoadingSpinner = () => (
 export const AdminRoutes = () => {
   return (
     <>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-50"><LoadingSpinner /></div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background"><LoadingSpinner /></div>}>
         <Routes>
           <Route path="/" element={<ProtectedRoute allowedRoles={ADMIN_ROLES}><AdminLayout /></ProtectedRoute>}>
             <Route index element={<AdminDashboard />} />

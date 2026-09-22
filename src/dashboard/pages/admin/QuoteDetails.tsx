@@ -4,6 +4,10 @@ import { QuoteService } from '../../services/sales/quoteService';
 import { OrderService } from '../../services/sales/orderService';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 import { ArrowLeft, CheckCircle, Send, XCircle, ShoppingBag } from 'lucide-react';
 import { QuoteStatus } from '../../types/sales';
 import { TimelineService } from '../../services/sales/timelineService';
@@ -20,7 +24,11 @@ export const QuoteDetails: React.FC = () => {
   const [events, setEvents] = useState(() => TimelineService.getEventsForEntity(id || ''));
 
   if (!quote) {
-    return <div className="p-8">Quote not found</div>;
+    return (
+      <PageContainer>
+        <div className="p-8 text-center text-muted-foreground">Quote not found</div>
+      </PageContainer>
+    );
   }
 
   const handleStatusChange = (newStatus: QuoteStatus) => {
@@ -48,96 +56,130 @@ export const QuoteDetails: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/quotes')} className="p-2 hover:bg-gray-100 rounded-lg">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{quote.quoteNumber}</h1>
-          <p className="text-sm text-gray-500">Version {quote.versionNumber} • {quote.companyName}</p>
+    <PageContainer>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => navigate('/admin/quotes')}
+              className="h-9 w-9"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{quote.quoteNumber}</h1>
+                <Badge variant="outline">{quote.status}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">Version {quote.versionNumber} • {quote.companyName}</p>
+            </div>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-            {quote.status}
-          </span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Line Items</h2>
-            <div className="space-y-4">
-              {quote.items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div>
-                    <p className="font-medium">{item.productName}</p>
-                    <p className="text-sm text-gray-500">SKU: {item.sku}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Line Items</CardTitle>
+                <CardDescription>Configured products and pricing details</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-border">
+                  {quote.items.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{item.productName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">SKU: {item.sku}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-foreground">₹{item.pricing.unitPrice.toLocaleString()} × {item.pricing.quantity}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Tax: ₹{item.pricing.taxAmount.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right text-sm font-semibold text-foreground">
+                        ₹{item.pricing.total.toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 border-t border-border pt-4 space-y-1.5 text-right text-sm">
+                  <p className="text-muted-foreground">Subtotal: <span className="font-medium text-foreground">₹{quote.subtotal.toFixed(2)}</span></p>
+                  <p className="text-muted-foreground">Tax (18%): <span className="font-medium text-foreground">₹{quote.totalTax.toFixed(2)}</span></p>
+                  <p className="text-base font-bold text-foreground pt-1 border-t border-border/50">Grand Total: ₹{quote.grandTotal.toFixed(2)}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+                <CardDescription>Pipeline workflow management</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2.5">
+                  {quote.status === 'Draft' && (
+                    <Button onClick={() => handleStatusChange('Sent to Customer')} className="w-full">
+                      <Send className="w-4 h-4 mr-2" /> Send to Customer
+                    </Button>
+                  )}
+                  
+                  {['Sent to Customer', 'Customer Viewed'].includes(quote.status) && (
+                    <>
+                      <Button onClick={() => handleStatusChange('Customer Accepted')} className="w-full">
+                        <CheckCircle className="w-4 h-4 mr-2" /> Mark Accepted
+                      </Button>
+                      <Button onClick={() => handleStatusChange('Customer Rejected')} variant="destructive" className="w-full">
+                        <XCircle className="w-4 h-4 mr-2" /> Mark Rejected
+                      </Button>
+                    </>
+                  )}
+
+                  {quote.status === 'Customer Accepted' && (
+                    <Button onClick={handleConvertToOrder} className="w-full">
+                      <ShoppingBag className="w-4 h-4 mr-2" /> Convert to Order
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Contact:</span>
+                    <span className="font-medium text-foreground">{quote.contactPerson}</span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">₹{item.pricing.unitPrice} x {item.pricing.quantity}</p>
-                    <p className="text-sm text-gray-500">Tax: ₹{item.pricing.taxAmount.toFixed(2)}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium text-foreground">{quote.email}</span>
                   </div>
-                  <div className="text-right font-semibold">
-                    ₹{item.pricing.total.toFixed(2)}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span className="font-medium text-foreground">{quote.phone || 'N/A'}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 border-t pt-4 space-y-2 text-right">
-              <p className="text-gray-600">Subtotal: ₹{quote.subtotal.toFixed(2)}</p>
-              <p className="text-gray-600">Tax: ₹{quote.totalTax.toFixed(2)}</p>
-              <p className="text-lg font-semibold">Grand Total: ₹{quote.grandTotal.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
+              </CardContent>
+            </Card>
 
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Actions</h2>
-            <div className="space-y-3">
-              {quote.status === 'Draft' && (
-                <button onClick={() => handleStatusChange('Sent to Customer')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  <Send size={18} /> Send to Customer
-                </button>
-              )}
-              
-              {['Sent to Customer', 'Customer Viewed'].includes(quote.status) && (
-                <>
-                  <button onClick={() => handleStatusChange('Customer Accepted')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                    <CheckCircle size={18} /> Mark Accepted
-                  </button>
-                  <button onClick={() => handleStatusChange('Customer Rejected')} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                    <XCircle size={18} /> Mark Rejected
-                  </button>
-                </>
-              )}
-
-              {quote.status === 'Customer Accepted' && (
-                <button onClick={handleConvertToOrder} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                  <ShoppingBag size={18} /> Convert to Order
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Customer Info</h2>
-            <div className="space-y-2 text-sm">
-              <p><span className="text-gray-500">Contact:</span> {quote.contactPerson}</p>
-              <p><span className="text-gray-500">Email:</span> {quote.email}</p>
-              <p><span className="text-gray-500">Phone:</span> {quote.phone || 'N/A'}</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <h2 className="text-lg font-medium mb-4">Timeline</h2>
-            <Timeline events={events} />
+            <Card>
+              <CardHeader>
+                <CardTitle>Activity Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Timeline events={events} />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
