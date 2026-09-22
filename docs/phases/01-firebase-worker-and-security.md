@@ -29,6 +29,16 @@ Remaining infrastructure configuration:
 - Run catalog seed migration against production Firestore when live credentials are bound.
 - Deploying the Worker without those secrets exposes only the health endpoint as operational. Catalog, enquiry, and order flows must not be treated as live until the secrets and seed are completed.
 
+Current Cloudflare deployment checkpoint:
+
+- Worker: `kitchen-bots-api`
+- URL: `https://kitchen-bots-api.workofcharan.workers.dev`
+- Version: `670d8e30-0555-48e0-816f-7872d48ed226`
+- `/health`: verified HTTP 200
+- Catalog: intentionally not ready; production credentials and catalog seed are missing
+- Enquiries: fail closed with HTTP 503 until Turnstile is configured
+- Orders: forged bearer token verified as rejected with HTTP 401
+
 - Cloudflare account with Worker, R2, DNS, and Turnstile permissions
 - Approved public, portal, API, and asset domains
 - A second Firebase project if development and production are to remain isolated
