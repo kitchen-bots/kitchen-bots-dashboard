@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../app';
 import type { FirestoreClient } from '../lib/firestore';
+import type { VerifiedFirebaseUser } from '../lib/firebase-auth';
 import {
   type IdempotencyRecord,
   type Order,
@@ -28,25 +29,10 @@ function generateOrderReference(): string {
   return `ORD-${year}-${rand}`;
 }
 
-function extractUserIdFromToken(token: string): string | null {
-  if (!token) return null;
-  if (token.startsWith('test-')) {
-    return token;
-  }
-  try {
-    const parts = token.split('.');
-    if (parts.length >= 2) {
-      const payload = JSON.parse(atob(parts[1]));
-      return payload.sub || payload.user_id || null;
-    }
-  } catch {
-    // If not a valid JWT format
-    return null;
-  }
-  return null;
-}
-
-export function createOrdersRouter(getFirestore: (c: { env: Env }) => FirestoreClient) {
+export function createOrdersRouter(
+  getFirestore: (c: { env: Env }) => FirestoreClient,
+  verifyIdToken: (c: { env: Env }, token: string) => Promise<VerifiedFirebaseUser>,
+) {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   // POST /v1/orders
@@ -70,8 +56,10 @@ export function createOrdersRouter(getFirestore: (c: { env: Env }) => FirestoreC
     }
 
     const token = authHeader.slice(7).trim();
-    const userId = extractUserIdFromToken(token);
-    if (!userId) {
+    let user: VerifiedFirebaseUser;
+    try {
+      user = await verifyIdToken(c, token);
+    } catch {
       return c.json(
         {
           error: {
@@ -83,9 +71,10 @@ export function createOrdersRouter(getFirestore: (c: { env: Env }) => FirestoreC
         401
       );
     }
+    const userId = user.uid;
 
     // 2. Parse request body
-    let rawBody = '';
+    let rawBody: string;
     let parsedJson: unknown;
     try {
       rawBody = await c.req.text();

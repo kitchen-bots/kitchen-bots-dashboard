@@ -3,6 +3,10 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { FirestoreClient } from './lib/firestore';
+import {
+  createFirebaseIdTokenVerifier,
+  type FirebaseIdTokenVerifier,
+} from './lib/firebase-auth';
 import { createCatalogRouter } from './routes/catalog';
 import { createEnquiriesRouter } from './routes/enquiries';
 import { createOrdersRouter } from './routes/orders';
@@ -24,6 +28,7 @@ export type Variables = {
 
 export interface AppServices {
   firestore?: FirestoreClient;
+  verifyIdToken?: FirebaseIdTokenVerifier;
 }
 
 export function createApp(envBindings: Partial<Env> = {}, services: AppServices = {}) {
@@ -171,6 +176,19 @@ export function createApp(envBindings: Partial<Env> = {}, services: AppServices 
     });
   };
 
+  let defaultIdTokenVerifier: FirebaseIdTokenVerifier | undefined;
+  let verifierProjectId: string | undefined;
+  const verifyIdToken = async (c: { env: Env }, token: string) => {
+    if (services.verifyIdToken) return services.verifyIdToken(token);
+    const projectId = c.env?.FIREBASE_PROJECT_ID || envBindings.FIREBASE_PROJECT_ID;
+    if (!projectId) throw new Error('FIREBASE_PROJECT_ID is not configured.');
+    if (!defaultIdTokenVerifier || verifierProjectId !== projectId) {
+      defaultIdTokenVerifier = createFirebaseIdTokenVerifier(projectId);
+      verifierProjectId = projectId;
+    }
+    return defaultIdTokenVerifier(token);
+  };
+
   // Mount catalog routes
   app.route('/v1/catalog', createCatalogRouter(getFirestore));
 
@@ -178,7 +196,7 @@ export function createApp(envBindings: Partial<Env> = {}, services: AppServices 
   app.route('/v1/enquiries', createEnquiriesRouter(getFirestore));
 
   // Mount orders routes
-  app.route('/v1/orders', createOrdersRouter(getFirestore));
+  app.route('/v1/orders', createOrdersRouter(getFirestore, verifyIdToken));
 
   return app;
 }

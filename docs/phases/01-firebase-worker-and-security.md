@@ -12,20 +12,22 @@
 
 ## Status
 
-**Updated on 2026-09-22. Phase 01 Worker vertical slice and core schemas complete.**
+**Updated on 2026-09-22. Phase 01 Worker vertical slice is implemented and locally verified. Production activation is blocked on credentials, Turnstile configuration, and catalog seeding.**
 
 Completed items:
 1. Canonical schemas: Defined in `worker/src/schemas/index.ts` and verified by unit tests in `worker/tests/schemas.test.ts`.
 2. Worker foundation: Hono worker scaffolded with `wrangler.jsonc`, zero-dependency Web Crypto Firestore REST client (`worker/src/lib/firestore.ts`), strict CORS, request ID middleware, structured error handler, and 128KB body limits (`worker/tests/app.test.ts`, `worker/tests/firestore.test.ts`).
 3. Public catalog API: Implemented in `worker/src/routes/catalog.ts` (`GET /v1/catalog/products` and `GET /v1/catalog/products/:slug`) with category filtering, search, pagination bounds, CDN asset resolution, and cache headers (`worker/tests/catalog.test.ts`).
 4. Public enquiries API: Implemented in `worker/src/routes/enquiries.ts` (`POST /v1/enquiries`) with server-side Turnstile verification, request idempotency, and atomic Firestore batch writes (`worker/tests/enquiries.test.ts`).
-5. Authenticated orders API: Implemented in `worker/src/routes/orders.ts` (`POST /v1/orders`) with Bearer token authentication, server-side price recalculation from Firestore, rejection of quote-only/draft items, and atomic transaction commits (`worker/tests/orders.test.ts`).
+5. Authenticated orders API: Implemented in `worker/src/routes/orders.ts` (`POST /v1/orders`) with Firebase ID token signature and claims verification, verified-email enforcement, server-side price recalculation from Firestore, rejection of quote-only/draft items, and atomic transaction commits (`worker/tests/firebase-auth.test.ts`, `worker/tests/orders.test.ts`).
 6. Catalog migration/seed script: Created in `scripts/seed-catalog.ts` and verified by `worker/tests/seed-catalog.test.ts`.
 7. Storefront integration: Connected in `ecommerce-api-inventory` via `src/lib/api.ts`, updating `BulkEnquiryPage.tsx`, `ContactPage.tsx`, `ProductsPage.tsx`, and `ProductDetailPage.tsx` with real states, error retries, and zero simulated success.
 
 Remaining infrastructure configuration:
-- Configure production Cloudflare Worker secrets: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, `TURNSTILE_SECRET_KEY`.
+- Configure production Cloudflare Worker secrets: `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and `TURNSTILE_SECRET_KEY`. `FIREBASE_PROJECT_ID` is a non-secret Worker variable.
+- Create a Turnstile widget and configure its public site key in the storefront as `VITE_TURNSTILE_SITE_KEY`.
 - Run catalog seed migration against production Firestore when live credentials are bound.
+- Deploying the Worker without those secrets exposes only the health endpoint as operational. Catalog, enquiry, and order flows must not be treated as live until the secrets and seed are completed.
 
 - Cloudflare account with Worker, R2, DNS, and Turnstile permissions
 - Approved public, portal, API, and asset domains
@@ -119,10 +121,15 @@ VITE_API_BASE_URL
 VITE_TURNSTILE_SITE_KEY
 ```
 
-Worker secrets and bindings:
+Worker variables:
 
 ```text
 FIREBASE_PROJECT_ID
+```
+
+Worker secrets and bindings:
+
+```text
 FIREBASE_CLIENT_EMAIL
 FIREBASE_PRIVATE_KEY
 TURNSTILE_SECRET_KEY

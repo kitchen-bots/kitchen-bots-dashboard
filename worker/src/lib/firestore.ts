@@ -141,7 +141,7 @@ export class GoogleServiceAccountAuth {
 
   constructor(clientEmail: string, privateKeyPem: string, fetchFn: typeof fetch = fetch) {
     this.clientEmail = clientEmail;
-    this.privateKeyPem = privateKeyPem;
+    this.privateKeyPem = privateKeyPem.replace(/\\n/g, '\n');
     this.fetchFn = fetchFn;
   }
 

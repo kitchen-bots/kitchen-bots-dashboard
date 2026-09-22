@@ -85,7 +85,17 @@ describe('Orders API Endpoints', () => {
     {
       ENVIRONMENT: 'test',
     },
-    { firestore }
+    {
+      firestore,
+      verifyIdToken: async (token) => {
+        if (token !== 'valid-test-token') throw new Error('Invalid token');
+        return {
+          uid: 'test-user-id-123',
+          email: 'buyer@example.com',
+          emailVerified: true,
+        };
+      },
+    }
   );
 
   const validOrderPayload = {
@@ -101,12 +111,27 @@ describe('Orders API Endpoints', () => {
     idempotencyKey: 'order-test-key-12345678',
   };
 
-  const validAuthHeader = 'Bearer test-user-id-123';
+  const validAuthHeader = 'Bearer valid-test-token';
 
   it('POST /v1/orders rejects request without authorization header with 401', async () => {
     const res = await app.request('/v1/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validOrderPayload),
+    });
+
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('POST /v1/orders rejects an unverified or forged bearer token', async () => {
+    const res = await app.request('/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer forged.jwt.payload',
+      },
       body: JSON.stringify(validOrderPayload),
     });
 

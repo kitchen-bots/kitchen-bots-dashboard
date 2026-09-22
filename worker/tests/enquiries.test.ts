@@ -48,7 +48,10 @@ describe('Enquiries API Endpoints', () => {
 
     const res = await app.request('/v1/enquiries', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'idem-create-enquiry-12345',
+      },
       body: JSON.stringify(validPayload),
     });
 
@@ -62,7 +65,7 @@ describe('Enquiries API Endpoints', () => {
     expect(body.data.status).toBe('new');
 
     // Verify atomic commit contains enquiry, auditEvent, and mailOutbox
-    expect(committedWrites.length).toBe(3);
+    expect(committedWrites.length).toBe(4);
     const collections = committedWrites.map((w) => w.set?.collection);
     expect(collections).toContain('enquiries');
     expect(collections).toContain('auditEvents');
@@ -72,7 +75,10 @@ describe('Enquiries API Endpoints', () => {
   it('POST /v1/enquiries rejects invalid input with 400', async () => {
     const res = await app.request('/v1/enquiries', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'idem-invalid-enquiry-123',
+      },
       body: JSON.stringify({
         name: 'R', // too short (<2 chars)
         email: 'not-an-email',
@@ -89,7 +95,10 @@ describe('Enquiries API Endpoints', () => {
   it('POST /v1/enquiries rejects failed turnstile token', async () => {
     const res = await app.request('/v1/enquiries', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'idem-turnstile-enquiry-123',
+      },
       body: JSON.stringify({
         ...validPayload,
         turnstileToken: 'test-fail-token',
@@ -99,6 +108,34 @@ describe('Enquiries API Endpoints', () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe('INVALID_TURNSTILE_TOKEN');
+  });
+
+  it('POST /v1/enquiries requires an idempotency key', async () => {
+    const res = await app.request('/v1/enquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(validPayload),
+    });
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('MISSING_IDEMPOTENCY_KEY');
+  });
+
+  it('POST /v1/enquiries fails closed when Turnstile is not configured', async () => {
+    const unconfiguredApp = createApp({ ENVIRONMENT: 'production' }, { firestore });
+    const res = await unconfiguredApp.request('/v1/enquiries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': 'idem-no-turnstile-secret',
+      },
+      body: JSON.stringify(validPayload),
+    });
+
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('TURNSTILE_NOT_CONFIGURED');
   });
 
   it('POST /v1/enquiries enforces idempotency on replay with same key and payload', async () => {

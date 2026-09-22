@@ -12,7 +12,9 @@
     "check": "npm run typecheck && npm run test",
     "dev": "wrangler dev",
     "deploy": "npm run check && wrangler deploy",
-    "deploy:dry-run": "npm run check && wrangler deploy --dry-run"
+    "deploy:dry-run": "npm run check && wrangler deploy --dry-run",
+    "seed:catalog": "tsx ../scripts/seed-catalog.ts",
+    "seed:catalog:dry-run": "tsx ../scripts/seed-catalog.ts --dry-run"
   },
   "dependencies": {
     "hono": "^4.13.8",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260922.1",
     "typescript": "^5.9.3",
+    "tsx": "^4.20.6",
     "vitest": "^5.0.1",
     "wrangler": "^4.136.2"
   }

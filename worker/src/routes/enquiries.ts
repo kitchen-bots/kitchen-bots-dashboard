@@ -16,12 +16,13 @@ async function sha256(message: string): Promise<string> {
 }
 
 async function verifyTurnstile(
-  secretKey: string | undefined,
+  secretKey: string,
   token: string,
   remoteIp?: string,
+  isTestEnvironment = false,
   fetchFn: typeof fetch = fetch
 ): Promise<boolean> {
-  if (!secretKey || secretKey === 'test-turnstile-secret') {
+  if (isTestEnvironment && secretKey === 'test-turnstile-secret') {
     return token !== 'test-fail-token';
   }
 
@@ -65,7 +66,7 @@ export function createEnquiriesRouter(getFirestore: (c: { env: Env }) => Firesto
     const reqId = c.get('requestId') || crypto.randomUUID();
     const firestore = getFirestore(c);
 
-    let rawBody = '';
+    let rawBody: string;
     let parsedJson: unknown;
     try {
       rawBody = await c.req.text();
@@ -101,37 +102,60 @@ export function createEnquiriesRouter(getFirestore: (c: { env: Env }) => Firesto
     const input = parseResult.data;
     const idempotencyKey = c.req.header('idempotency-key')?.trim();
 
-    // Check idempotency if key is present
-    let requestHash = '';
-    if (idempotencyKey) {
-      requestHash = await sha256(rawBody);
-      const existing = await firestore.getDocument<IdempotencyRecord>(
-        'idempotencyRecords',
-        idempotencyKey
-      );
-
-      if (existing) {
-        if (existing.requestHash === requestHash) {
-          return c.json(existing.responseBody, existing.responseStatus as any);
-        }
-        return c.json(
-          {
-            error: {
-              code: 'IDEMPOTENCY_CONFLICT',
-              message: 'Idempotency key has already been used with a different request payload.',
-              requestId: reqId,
-            },
+    if (!idempotencyKey) {
+      return c.json(
+        {
+          error: {
+            code: 'MISSING_IDEMPOTENCY_KEY',
+            message: 'Idempotency-Key header is required.',
+            requestId: reqId,
           },
-          409
-        );
+        },
+        400
+      );
+    }
+
+    if (!c.env.TURNSTILE_SECRET_KEY) {
+      return c.json(
+        {
+          error: {
+            code: 'TURNSTILE_NOT_CONFIGURED',
+            message: 'Enquiry verification is temporarily unavailable.',
+            requestId: reqId,
+          },
+        },
+        503
+      );
+    }
+
+    const requestHash = await sha256(rawBody);
+    const existing = await firestore.getDocument<IdempotencyRecord>(
+      'idempotencyRecords',
+      idempotencyKey
+    );
+
+    if (existing) {
+      if (existing.requestHash === requestHash) {
+        return c.json(existing.responseBody, existing.responseStatus as any);
       }
+      return c.json(
+        {
+          error: {
+            code: 'IDEMPOTENCY_CONFLICT',
+            message: 'Idempotency key has already been used with a different request payload.',
+            requestId: reqId,
+          },
+        },
+        409
+      );
     }
 
     // Verify Turnstile
     const isTokenValid = await verifyTurnstile(
       c.env.TURNSTILE_SECRET_KEY,
       input.turnstileToken,
-      c.req.header('cf-connecting-ip')
+      c.req.header('cf-connecting-ip'),
+      c.env.ENVIRONMENT === 'test'
     );
 
     if (!isTokenValid) {
@@ -242,26 +266,24 @@ export function createEnquiriesRouter(getFirestore: (c: { env: Env }) => Firesto
       },
     ];
 
-    if (idempotencyKey) {
-      const idempotencyRecord = {
-        id: idempotencyKey,
-        scope: 'enquiries.create',
-        actorId: 'public',
-        requestHash,
-        responseStatus: 201,
-        responseBody: responsePayload,
-        expiresAt: new Date(Date.now() + 86400 * 1000).toISOString(),
-        createdAt: now,
-      };
+    const idempotencyRecord = {
+      id: idempotencyKey,
+      scope: 'enquiries.create',
+      actorId: 'public',
+      requestHash,
+      responseStatus: 201,
+      responseBody: responsePayload,
+      expiresAt: new Date(Date.now() + 86400 * 1000).toISOString(),
+      createdAt: now,
+    };
 
-      writes.push({
-        set: {
-          collection: 'idempotencyRecords',
-          id: idempotencyKey,
-          data: idempotencyRecord,
-        },
-      });
-    }
+    writes.push({
+      set: {
+        collection: 'idempotencyRecords',
+        id: idempotencyKey,
+        data: idempotencyRecord,
+      },
+    });
 
     await firestore.commit(writes);
 

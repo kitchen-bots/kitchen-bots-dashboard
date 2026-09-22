@@ -328,10 +328,14 @@ export async function seedCatalog(options: { dryRun?: boolean } = {}) {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   if (!projectId) {
-    console.log(
-      'FIREBASE_PROJECT_ID not found in environment. Provide credentials or run with --dry-run.'
-    );
-    return;
+    throw new Error('FIREBASE_PROJECT_ID is required. Use --dry-run to validate without writing.');
+  }
+  if (!process.env.FIRESTORE_EMULATOR_HOST) {
+    if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+      throw new Error(
+        'FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY are required for production seeding.'
+      );
+    }
   }
 
   const client = new FirestoreClient({
