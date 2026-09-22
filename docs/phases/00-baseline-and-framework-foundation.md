@@ -10,6 +10,41 @@
 
 ---
 
+## Status
+
+**Implementation complete on `codex/phase-00-foundation`. Integration pending.**
+
+Verified working:
+
+- Production build passes.
+- 55 tests across 11 test files pass.
+- React Router, TanStack Query, TanStack Table, React Hook Form, Zod, Radix, and existing UI primitives are present.
+
+Completed work:
+
+- Fixed 3 conditional-hook errors in `AdminOrderDetails.tsx`.
+- Pinned Node 22 and added explicit `typecheck` and aggregate `check` scripts.
+- Added pull-request and main-branch CI.
+- Mounted Refine v5 with current React Router bindings without replacing existing routes.
+- Added stable resource definitions and provider contract interfaces.
+- Added resource contract tests.
+- Added semantic component inventory and a development-only `/__ui` showcase.
+- Split production vendor chunks so no generated JavaScript chunk exceeds 500 kB.
+- Registered 36 existing warnings in `docs/LINT_WARNING_REGISTER.md` without weakening ESLint.
+- Production audit has zero high or critical findings and one low transitive finding.
+- Mock authentication, mock data, fake metrics, avatar URLs, and Google Apps Script paths remain for removal in Phases 01-02.
+- Backend assessment: `../../../kitchen-bots-ecommerce/docs/reports/BACKEND_STATUS_REPORT.md`.
+
+Verification on 22 September 2026:
+
+- Typecheck passed.
+- Lint passed with zero errors and 36 registered warnings.
+- 57 tests across 12 files passed.
+- Production build passed.
+- High-severity production audit gate passed.
+
+Remaining integration gate: review and merge pull request `revanthlol/kitchen-bots-dashboard#2`, with Node 22 CI verification.
+
 ### Task 1: Stabilize the repository
 
 1. Pin Node 22 and compatible npm.
@@ -19,6 +54,7 @@
 5. Triage warnings into fixes or named later migrations.
 6. Upgrade vulnerable production dependencies without `npm audit fix --force`.
 7. Confirm all existing tests and production build pass.
+8. Record remaining warnings by file and owner. Do not hide warnings by weakening ESLint rules.
 
 ### Task 2: Establish design tokens and primitives
 
@@ -46,6 +82,12 @@
 2. Block deployment on failures.
 3. Avoid uploading environment files or test data containing customer information.
 4. Record build artifacts only when needed for diagnostics.
+
+### Execution split
+
+- Codex owns repository scripts, hook fixes, Refine provider architecture, tests, and CI.
+- Antigravity may own one isolated component-showcase or token task only after Codex freezes its file list.
+- Antigravity must not touch auth, data providers, permissions, routing, package files, or backend contracts.
 
 ## Acceptance Criteria
 

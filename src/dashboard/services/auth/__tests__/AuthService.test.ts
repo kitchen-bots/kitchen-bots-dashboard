@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MockAuthService } from '../AuthService';
 import { LocalStorageAdapter } from '../StorageAdapter';
+import { userService } from '../../userService';
 
 describe('AuthService', () => {
   let authService: MockAuthService;
@@ -8,8 +9,13 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(userService, 'getUsers').mockResolvedValue({ data: [], total: 0 });
     mockStorage = new LocalStorageAdapter();
     authService = new MockAuthService(mockStorage);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should initialize with INITIALIZING state', () => {
