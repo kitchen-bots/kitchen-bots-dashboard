@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { FirestoreClient } from './lib/firestore';
+import { createCatalogRouter } from './routes/catalog';
 
 export interface Env {
   ENVIRONMENT?: string;
@@ -18,8 +20,18 @@ export type Variables = {
   requestId: string;
 };
 
-export function createApp(envBindings: Partial<Env> = {}) {
+export interface AppServices {
+  firestore?: FirestoreClient;
+}
+
+export function createApp(envBindings: Partial<Env> = {}, services: AppServices = {}) {
   const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+  // Ensure c.env is merged with default envBindings
+  app.use('*', async (c, next) => {
+    c.env = { ...envBindings, ...(c.env || {}) };
+    await next();
+  });
 
   // 1. Request ID middleware
   app.use('*', async (c, next) => {
@@ -122,7 +134,10 @@ export function createApp(envBindings: Partial<Env> = {}) {
     }
 
     // Never leak stack traces to callers
-    const isDev = c.env?.ENVIRONMENT === 'development';
+    const isDev = c.env?.ENVIRONMENT === 'development' || c.env?.ENVIRONMENT === 'test';
+    if (isDev) {
+      console.error('App error caught:', err);
+    }
     return c.json(
       {
         error: {
@@ -144,5 +159,19 @@ export function createApp(envBindings: Partial<Env> = {}) {
     });
   });
 
+  const getFirestore = (c: { env: Env }): FirestoreClient => {
+    if (services.firestore) return services.firestore;
+    return new FirestoreClient({
+      projectId: c.env?.FIREBASE_PROJECT_ID || envBindings.FIREBASE_PROJECT_ID || 'kitchen-bots',
+      clientEmail: c.env?.FIREBASE_CLIENT_EMAIL || envBindings.FIREBASE_CLIENT_EMAIL,
+      privateKey: c.env?.FIREBASE_PRIVATE_KEY || envBindings.FIREBASE_PRIVATE_KEY,
+      emulatorHost: c.env?.FIRESTORE_EMULATOR_HOST || envBindings.FIRESTORE_EMULATOR_HOST,
+    });
+  };
+
+  // Mount catalog routes
+  app.route('/v1/catalog', createCatalogRouter(getFirestore));
+
   return app;
 }
+
