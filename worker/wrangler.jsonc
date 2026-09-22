@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kitchen-bots-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "FIREBASE_PROJECT_ID": "kitchen-bots",
+    "ALLOWED_ORIGINS": "https://kitchenbots.in,https://portal.kitchenbots.in,http://localhost:5173,http://localhost:5174",
+    "ASSETS_BASE_URL": "https://pub-a4b0711cb441484fbb54bc792d2312b5.r2.dev"
+  }
+}
