@@ -16,6 +16,9 @@ export const AdminOrderDetails: React.FC = () => {
   
   const [order, setOrder] = useState(() => OrderService.getOrder(id || ''));
   const [events, setEvents] = useState(() => TimelineService.getEventsForEntity(id || ''));
+  const [showApproveDrawer, setShowApproveDrawer] = useState(false);
+  const [showShippingDrawer, setShowShippingDrawer] = useState(false);
+  const [notes, setNotes] = useState('');
 
   if (!order) {
     return <div className="p-8">Order not found</div>;
@@ -31,10 +34,6 @@ export const AdminOrderDetails: React.FC = () => {
       toast.error(err.message);
     }
   };
-
-  const [showApproveDrawer, setShowApproveDrawer] = useState(false);
-  const [showShippingDrawer, setShowShippingDrawer] = useState(false);
-  const [notes, setNotes] = useState('');
 
   const handleApproveWithNotes = () => {
     try {
