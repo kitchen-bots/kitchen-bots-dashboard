@@ -10,6 +10,12 @@
 
 ---
 
+## Status
+
+**Blocked by Phases 01-02. Not started.**
+
+No production customer authorization, private R2 document flow, transactional email outbox, migration tooling, deployment pipeline, monitoring, backup procedure, or operational runbook is verified. Existing customer screens are interface scaffolding only.
+
 ### Task 1: Complete customer portal
 
 1. Show only the signed-in customer or selected authorized organization.
