@@ -8,36 +8,48 @@ export const GlobalSearch = ({ isOpen, onOpenChange }: { isOpen: boolean, onOpen
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [isOpen]);
 
-  // Handle Cmd/Ctrl + K to open search/command palette
+  // Handle Escape key to close search
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        onOpenChange(true);
-      }
       if (e.key === 'Escape') {
         onOpenChange(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onOpenChange]);
+  }, [isOpen, onOpenChange]);
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm">
+      <div 
+        className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/75 backdrop-blur-md transition-all select-none p-4"
+        onClick={() => onOpenChange(false)}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-2xl bg-popover text-popover-foreground rounded-xl shadow-2xl overflow-hidden border border-border"
+          className="w-full max-w-2xl bg-popover text-popover-foreground rounded-xl shadow-2xl overflow-hidden border border-border select-auto"
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center px-4 py-3 border-b border-border">
             <Search className="w-5 h-5 text-muted-foreground mr-3" />

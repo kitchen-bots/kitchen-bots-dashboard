@@ -120,7 +120,7 @@ export function AdminDashboard() {
           Refresh Data
         </Button>
       }
-      className="h-full"
+      className="h-full pb-10"
     >
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1"
@@ -261,26 +261,31 @@ export function AdminDashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent className="flex-1 p-0">
-                  <Table>
+                  <Table wrapperClassName="overflow-x-hidden">
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Order ID</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Customer</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Status</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentOrders.map((order) => (
-                        <TableRow key={order.id} className="group">
+                        <TableRow key={order.id} className="group border-b border-border/50 hover:bg-muted/30">
                           <TableCell
-                            className="font-mono text-xs font-medium text-primary cursor-pointer hover:underline"
+                            className="py-2.5 px-3 font-mono text-xs font-medium text-primary cursor-pointer hover:underline whitespace-nowrap"
                             onClick={() => navigate(`/admin/orders`)}
                           >
                             {order.id}
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-xs font-medium">{order.customer}</TableCell>
-                          <TableCell>
+                          <TableCell
+                            className="py-2.5 px-3 text-muted-foreground text-xs font-medium whitespace-nowrap truncate max-w-[120px]"
+                            title={order.customer}
+                          >
+                            {order.customer}
+                          </TableCell>
+                          <TableCell className="py-2.5 px-3 whitespace-nowrap">
                             <Badge
                               variant={
                                 order.status === 'Pending'
@@ -295,7 +300,7 @@ export function AdminDashboard() {
                               {order.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="py-2.5 px-3 text-right">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -330,28 +335,32 @@ export function AdminDashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent className="flex-1 p-0">
-                  <Table>
+                  <Table wrapperClassName="overflow-x-hidden">
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
+                      <TableRow className="border-b border-border hover:bg-transparent">
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Contact</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Company</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold">Status</TableHead>
+                        <TableHead className="h-8 px-3 text-xs font-semibold text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentLeads.map((lead) => (
-                        <TableRow key={lead.id} className="group">
+                        <TableRow key={lead.id} className="group border-b border-border/50 hover:bg-muted/30">
                           <TableCell
-                            className="font-medium text-xs text-primary cursor-pointer hover:underline"
+                            className="py-2.5 px-3 font-medium text-xs text-primary cursor-pointer hover:underline whitespace-nowrap truncate max-w-[100px]"
                             onClick={() => navigate('/admin/leads')}
+                            title={lead.name}
                           >
                             {lead.name}
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-xs truncate max-w-[120px]" title={lead.company}>
+                          <TableCell
+                            className="py-2.5 px-3 text-muted-foreground text-xs whitespace-nowrap truncate max-w-[110px]"
+                            title={lead.company}
+                          >
                             {lead.company}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="py-2.5 px-3 whitespace-nowrap">
                             <Badge
                               variant={
                                 lead.status === 'New'
@@ -366,7 +375,7 @@ export function AdminDashboard() {
                               {lead.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="py-2.5 px-3 text-right">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -416,7 +425,7 @@ export function AdminDashboard() {
                   <QuickActionButton
                     icon={<Upload className="w-4 h-4" />}
                     label="Upload Doc"
-                    onClick={() => navigate('/admin/documents')}
+                    onClick={() => navigate('/admin/documents?action=upload')}
                   />
                   <QuickActionButton
                     icon={<ShoppingCart className="w-4 h-4" />}

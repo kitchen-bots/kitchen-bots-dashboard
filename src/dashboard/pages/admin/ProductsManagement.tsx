@@ -129,6 +129,27 @@ export function ProductsManagement() {
     return `₹${min.toLocaleString('en-IN')} - ₹${max.toLocaleString('en-IN')}`;
   };
 
+  const ProductThumbnail = ({ src, alt, className = "w-12 h-12 rounded-md object-cover border border-border shrink-0" }: { src: string; alt: string; className?: string }) => {
+    const [hasError, setHasError] = React.useState(false);
+
+    if (hasError || !src) {
+      return (
+        <div className={`bg-muted flex items-center justify-center border border-border text-muted-foreground ${className}`}>
+          <Package size={20} />
+        </div>
+      );
+    }
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setHasError(true)}
+        className={className}
+      />
+    );
+  };
+
   const columns = React.useMemo<ColumnDef<CommerceProduct>[]>(
     () => [
       {
@@ -137,15 +158,15 @@ export function ProductsManagement() {
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="flex items-center gap-4">
-              <img src={getPrimaryImage(product)} alt={product.name} className="w-12 h-12 rounded-md object-cover border border-border-default" />
-              <div>
-                <Text className="font-semibold">{product.name}</Text>
+            <div className="flex items-center gap-3">
+              <ProductThumbnail src={getPrimaryImage(product)} alt={product.name} />
+              <div className="min-w-0">
+                <Text className="font-semibold truncate">{product.name}</Text>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="default" className="text-[10px] px-2 py-0.5">
+                  <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono whitespace-nowrap shrink-0">
                     {product.sku}
                   </Badge>
-                  <Text variant="muted" className="text-xs truncate max-w-[120px]">{product.variants.length} Variants</Text>
+                  <Text variant="muted" className="text-xs whitespace-nowrap shrink-0">{product.variants.length} Variants</Text>
                 </div>
               </div>
             </div>
@@ -249,13 +270,13 @@ export function ProductsManagement() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {[
-            { title: 'Total Products', value: products.length.toString(), icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { title: 'Active Products', value: products.filter(p => p.status === 'Active').length.toString(), icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
-            { title: 'Draft Products', value: products.filter(p => p.status === 'Draft').length.toString(), icon: Edit, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-            { title: 'Categories', value: categoryStats.length.toString(), icon: List, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { title: 'Total Products', value: products.length.toString(), icon: Package, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10' },
+            { title: 'Active Products', value: products.filter(p => p.status === 'Active').length.toString(), icon: CheckCircle2, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10' },
+            { title: 'Draft Products', value: products.filter(p => p.status === 'Draft').length.toString(), icon: Edit, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
+            { title: 'Categories', value: categoryStats.length.toString(), icon: List, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-500/10' },
           ].map((stat, index) => (
             <Card key={index} className="flex flex-col justify-between">
               <CardContent className="p-5 flex flex-col h-full justify-between gap-4">
@@ -273,15 +294,15 @@ export function ProductsManagement() {
           ))}
         </motion.div>
 
-        {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+        {/* Main Layout - 4-column aligned grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 relative">
           
-          {/* Left Column (Toolbar & Table/Grid) */}
+          {/* Left Column (Toolbar & Table/Grid) - 75% */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2 flex flex-col gap-4"
+            className="lg:col-span-3 min-w-0 flex flex-col gap-6"
           >
             {/* Toolbar */}
             <Card>
@@ -328,6 +349,7 @@ export function ProductsManagement() {
                 <DataGrid 
                   columns={columns} 
                   data={products} 
+                  total={products.length}
                   onRowClick={(product) => setSelectedProduct(product)} 
                   isLoading={loadingProducts}
                 />
@@ -335,8 +357,8 @@ export function ProductsManagement() {
                 <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {products.map(product => (
                     <div key={product.id} onClick={() => setSelectedProduct(product)} className="border border-border-default rounded-lg overflow-hidden hover:shadow-elevation-sm transition-shadow cursor-pointer bg-surface flex flex-col">
-                      <div className="h-40 relative flex-shrink-0">
-                        <img src={getPrimaryImage(product)} alt={product.name} className="w-full h-full object-cover" />
+                      <div className="h-40 relative flex-shrink-0 bg-muted flex items-center justify-center">
+                        <ProductThumbnail src={getPrimaryImage(product)} alt={product.name} className="w-full h-full object-cover" />
                         <div className="absolute top-2 right-2 flex gap-2">
                           <button 
                             onClick={(e) => handleToggleFeatured(e, product.id)}
@@ -367,12 +389,12 @@ export function ProductsManagement() {
             </Card>
           </motion.div>
 
-          {/* Right Column (Widgets) */}
+          {/* Right Column (Widgets) - 25% */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col gap-6"
+            className="lg:col-span-1 min-w-0 flex flex-col gap-6"
           >
             {/* Categories Donut Chart */}
             <Card>
@@ -400,11 +422,14 @@ export function ProductsManagement() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mt-4">
+                <div className="flex flex-col gap-2.5 mt-4 border-t border-border pt-4">
                   {categoryStats.map((stat, idx) => (
-                    <div key={stat.name} className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                      <Text className="text-xs truncate">{stat.name} ({stat.value})</Text>
+                    <div key={stat.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                        <span className="truncate text-foreground font-medium">{stat.name}</span>
+                      </div>
+                      <span className="text-muted-foreground font-mono shrink-0 ml-2">{stat.value}</span>
                     </div>
                   ))}
                 </div>

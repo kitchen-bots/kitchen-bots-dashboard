@@ -48,25 +48,30 @@ export const Timeline: React.FC<TimelineProps> = ({ events, className }) => {
   }
 
   return (
-    <div className={cn('relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent', className)}>
-      {events.map((event) => (
-        <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+    <div className={cn('relative space-y-4', className)}>
+      {events.map((event, idx) => (
+        <div key={event.id} className="relative flex items-start gap-3">
+          {/* Connecting Line */}
+          {idx < events.length - 1 && (
+            <span className="absolute left-[17px] top-8 -bottom-4 w-px bg-border" aria-hidden="true" />
+          )}
+
           {/* Icon */}
-          <div className="flex items-center justify-center w-9 h-9 rounded-md border border-border bg-card shadow-xs shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+          <div className="relative z-10 flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card shadow-xs shrink-0 mt-0.5">
             {getEventIcon(event.type)}
           </div>
           
           {/* Content */}
-          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-3.5 rounded-lg border border-border shadow-xs flex flex-col transition-colors bg-card text-card-foreground hover:bg-muted/20">
-             <div className="flex items-center justify-between space-x-2 mb-1">
-               <div className="font-semibold text-xs text-foreground">{event.type.replace(/_/g, ' ')}</div>
-               <time className="text-[11px] font-medium text-primary">{format(new Date(event.timestamp), 'MMM d, h:mm a')}</time>
+          <div className="flex-1 min-w-0 p-3.5 rounded-lg border border-border shadow-xs flex flex-col transition-colors bg-card text-card-foreground hover:bg-muted/20">
+             <div className="flex items-center justify-between gap-2 mb-1">
+               <div className="font-semibold text-xs text-foreground truncate">{event.type.replace(/_/g, ' ')}</div>
+               <time className="text-[11px] font-medium text-primary shrink-0 whitespace-nowrap">{format(new Date(event.timestamp), 'MMM d, h:mm a')}</time>
              </div>
-             <div className="text-muted-foreground text-xs mb-2">{event.description}</div>
+             <div className="text-muted-foreground text-xs leading-relaxed break-words mb-2">{event.description}</div>
              {event.statusFrom && event.statusTo && (
                <div className="flex items-center text-[11px] text-muted-foreground bg-muted/30 rounded p-1.5 mt-1 border border-border">
                  <span className="font-medium px-1.5 py-0.5 rounded bg-muted text-foreground">{event.statusFrom}</span>
-                 <Play className="h-3 w-3 mx-1.5 text-muted-foreground" />
+                 <Play className="h-3 w-3 mx-1.5 text-muted-foreground shrink-0" />
                  <span className="font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">{event.statusTo}</span>
                </div>
              )}

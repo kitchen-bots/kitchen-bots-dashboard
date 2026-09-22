@@ -60,6 +60,7 @@ const ModalBase = ({ isOpen, onClose, title, children, footer, maxWidth = 'md' }
 };
 
 export * from './InventoryModal';
+export * from './UploadDocumentModal';
 
 export const ConfirmDeleteModal = ({ 
   isOpen, 

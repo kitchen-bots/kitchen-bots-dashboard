@@ -39,7 +39,7 @@ export function DataGridPagination<TData>({
             </span>{' '}
             of{' '}
             <span className="font-medium text-neutral-heading">
-              {table.getPageCount() === 0 ? 1 : table.getPageCount()}
+              {table.getPageCount() <= 0 ? 1 : table.getPageCount()}
             </span>
           </>
         )}

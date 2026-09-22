@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, ChefHat, Lock, User } from 'lucide-react';
+import { ArrowRight, Lock, User } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -68,9 +68,11 @@ export function Login() {
       <div className="w-full max-w-md relative z-10">
         <div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-xl border border-border p-8 sm:p-10">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30 mb-4">
-              <ChefHat className="w-8 h-8 text-white" />
-            </div>
+            <img
+              src="/kitchenbots-icon.svg"
+              alt="KitchenBots"
+              className="w-16 h-16 rounded-2xl shadow-md mb-4 object-contain"
+            />
             <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
             <p className="text-muted mt-2 text-center">Enter your credentials to access the dashboard</p>
           </div>

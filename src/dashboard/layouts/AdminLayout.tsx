@@ -36,10 +36,17 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
       >
         <Header
           toggleSidebar={toggleMobileSidebar}
-          onSearchOpen={() => setGlobalSearchOpen(true)}
+          onSearchOpen={() => setCommandPaletteOpen(true)}
         />
 
-        <main className="flex-1 p-4 lg:p-6 w-full max-w-7xl mx-auto overflow-y-auto custom-scrollbar">
+        <main
+          className={cn(
+            'flex-1 p-4 lg:p-6 w-full max-w-7xl mx-auto custom-scrollbar',
+            isGlobalSearchOpen || isCommandPaletteOpen
+              ? 'overflow-hidden select-none pointer-events-none'
+              : 'overflow-y-auto'
+          )}
+        >
           <AnimatedPage>
             {children || <Outlet />}
           </AnimatedPage>

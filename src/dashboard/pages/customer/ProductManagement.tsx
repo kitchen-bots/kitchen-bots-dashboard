@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle,
+  ChevronDown,
   Edit2,
   Home,
   ImageIcon,
@@ -122,7 +123,7 @@ export const ProductManagement: React.FC = () => {
       }
     >
       {/* Top Analytics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -185,44 +186,52 @@ export const ProductManagement: React.FC = () => {
       </div>
 
       {/* Main Layout */}
-      <div className="flex flex-col xl:flex-row gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Left Column (Main Catalog) */}
-        <div className="flex-1 w-full space-y-4">
+        <div className="lg:col-span-3 min-w-0 space-y-6">
           {/* Filters Bar */}
           <Card className="p-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="bg-background border border-input rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
-                >
-                  <option value="All">All Categories</option>
-                  <option value="Commercial Ranges">Commercial Ranges</option>
-                  <option value="Refrigeration Units">Refrigeration Units</option>
-                  <option value="Steam Cooking & Ovens">Steam Cooking & Ovens</option>
-                  <option value="Deep Fryers">Deep Fryers</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    aria-label="Filter by Category"
+                    className="appearance-none bg-background border border-input rounded-md pl-3 pr-8 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    <option value="All">All Categories</option>
+                    <option value="Commercial Ranges">Commercial Ranges</option>
+                    <option value="Refrigeration Units">Refrigeration Units</option>
+                    <option value="Steam Cooking & Ovens">Steam Cooking & Ovens</option>
+                    <option value="Deep Fryers">Deep Fryers</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
 
-                <select
-                  value={stockFilter}
-                  onChange={(e) => setStockFilter(e.target.value)}
-                  className="bg-background border border-input rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
-                >
-                  <option value="All">All Stock Levels</option>
-                  <option value="InStock">In Stock (&gt; 5 units)</option>
-                  <option value="Low">Low Stock (≤ 5 units)</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value)}
+                    aria-label="Filter by Stock Level"
+                    className="appearance-none bg-background border border-input rounded-md pl-3 pr-8 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    <option value="All">All Stock Levels</option>
+                    <option value="InStock">In Stock (&gt; 5 units)</option>
+                    <option value="Low">Low Stock (≤ 5 units)</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
 
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
                 Showing {filteredProducts.length} items
               </span>
             </div>
           </Card>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
               <div className="col-span-full flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -303,7 +312,7 @@ export const ProductManagement: React.FC = () => {
         </div>
 
         {/* Right Column (Alerts Panel) */}
-        <div className="w-full xl:w-72 space-y-4 shrink-0">
+        <div className="lg:col-span-1 min-w-0 space-y-6">
           <Card>
             <CardHeader className="pb-3 border-b border-border">
               <CardTitle className="text-sm font-semibold">Inventory Alerts</CardTitle>

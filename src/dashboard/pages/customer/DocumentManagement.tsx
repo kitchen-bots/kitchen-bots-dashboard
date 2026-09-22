@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   Book,
   ChevronLeft,
@@ -25,20 +25,14 @@ import {
 } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../context/ToastContext';
+import {
+  UploadDocumentModal,
+  DocumentItem,
+} from '../../components/Modals/UploadDocumentModal';
 
-interface DocumentItem {
-  id: string;
-  name: string;
-  size: string;
-  type: 'MANUAL' | 'INVOICE' | 'CERT' | 'SERVICE';
-  product: string;
-  date: string;
-  version: string;
-  owner: string;
-}
-
-const mockDocuments: DocumentItem[] = [
+const initialDocuments: DocumentItem[] = [
   {
     id: 'doc-1',
     name: 'Maintenance_Guide_V2.pdf',
@@ -93,18 +87,79 @@ const mockDocuments: DocumentItem[] = [
 
 export const DocumentManagement: React.FC = () => {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = location.pathname.startsWith('/admin');
   const { showToast } = useToast();
 
+  const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
-  const [selectedDoc, setSelectedDoc] = useState<DocumentItem>(mockDocuments[0]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentItem>(initialDocuments[0]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const homePath = isAdmin ? '/admin' : '/dashboard';
 
+  // Handle URL action parameter (e.g. from Quick Actions or Dashboard navigation)
+  useEffect(() => {
+    if (searchParams.get('action') === 'upload') {
+      setIsUploadModalOpen(true);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('action');
+          return next;
+        },
+        { replace: true }
+      );
+    }
+  }, [searchParams, setSearchParams]);
+
   const handleDownload = (doc: DocumentItem) => {
-    showToast('Download Initiated', `Downloading ${doc.name}`, 'info');
+    if (doc.file) {
+      const url = URL.createObjectURL(doc.file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else if (doc.url) {
+      const a = document.createElement('a');
+      a.href = doc.url;
+      a.download = doc.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const content = [
+        'Kitchen Bots Commercial Asset Document',
+        '---------------------------------------',
+        `Document Name: ${doc.name}`,
+        `Classification: ${doc.type}`,
+        `Equipment Unit: ${doc.product}`,
+        `Revision Version: ${doc.version}`,
+        `Custodian / Owner: ${doc.owner}`,
+        `Date Logged: ${doc.date}`,
+        'Security Status: Operational Asset - Commercial Confidential',
+        '',
+        'This record was retrieved from the Kitchen Bots Document Repository.',
+      ].join('\n');
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name.endsWith('.pdf')
+        ? doc.name.replace(/\.pdf$/, '.txt')
+        : `${doc.name}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    showToast('Download Complete', `${doc.name} download initiated.`, 'success');
   };
 
   const handleShare = (doc: DocumentItem) => {
@@ -112,21 +167,28 @@ export const DocumentManagement: React.FC = () => {
     showToast('Link Copied', `Secure access link copied for ${doc.name}`, 'success');
   };
 
-  const handleUploadClick = () => {
-    setIsUploading(true);
-    setTimeout(() => {
-      setIsUploading(false);
-      showToast('Document Upload', 'Document uploaded and indexed successfully.', 'success');
-    }, 800);
+  const handleUploadSuccess = (newDoc: DocumentItem) => {
+    setDocuments((prev) => [newDoc, ...prev]);
+    setSelectedDoc(newDoc);
+    showToast(
+      'Document Uploaded',
+      `${newDoc.name} has been added to the repository.`,
+      'success'
+    );
   };
 
-  const filteredDocs = mockDocuments.filter((doc) => {
+  const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
       doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.product.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = selectedType === 'ALL' || doc.type === selectedType;
     return matchesSearch && matchesType;
   });
+
+  const totalCount = documents.length;
+  const invoiceCount = documents.filter((d) => d.type === 'INVOICE').length;
+  const manualCount = documents.filter((d) => d.type === 'MANUAL').length;
+  const serviceCount = documents.filter((d) => d.type === 'SERVICE').length;
 
   const getTypeBadge = (type: DocumentItem['type']) => {
     switch (type) {
@@ -161,14 +223,17 @@ export const DocumentManagement: React.FC = () => {
         { label: 'Documents' },
       ]}
       actions={
-        <Button onClick={handleUploadClick} isLoading={isUploading} className="gap-2">
+        <Button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="gap-2 cursor-pointer"
+        >
           <Upload className="w-4 h-4" />
           <span>Upload Document</span>
         </Button>
       }
     >
       {/* Top Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -179,7 +244,7 @@ export const DocumentManagement: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold tracking-tight text-foreground">2,450</div>
+            <div className="text-2xl font-bold tracking-tight text-foreground">{totalCount}</div>
             <p className="text-[11px] text-muted-foreground mt-1">Managed assets across all fleets</p>
           </CardContent>
         </Card>
@@ -194,7 +259,7 @@ export const DocumentManagement: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold tracking-tight text-foreground">1,120</div>
+            <div className="text-2xl font-bold tracking-tight text-foreground">{invoiceCount}</div>
             <p className="text-[11px] text-muted-foreground mt-1">Commercial transaction bills</p>
           </CardContent>
         </Card>
@@ -209,7 +274,7 @@ export const DocumentManagement: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold tracking-tight text-foreground">840</div>
+            <div className="text-2xl font-bold tracking-tight text-foreground">{manualCount}</div>
             <p className="text-[11px] text-muted-foreground mt-1">Installation and user guides</p>
           </CardContent>
         </Card>
@@ -224,7 +289,7 @@ export const DocumentManagement: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold tracking-tight text-foreground">490</div>
+            <div className="text-2xl font-bold tracking-tight text-foreground">{serviceCount}</div>
             <p className="text-[11px] text-muted-foreground mt-1">Maintenance logs and certificates</p>
           </CardContent>
         </Card>
@@ -257,7 +322,7 @@ export const DocumentManagement: React.FC = () => {
                     key={item.value}
                     type="button"
                     onClick={() => setSelectedType(item.value)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       selectedType === item.value
                         ? 'bg-primary text-primary-foreground font-semibold'
                         : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -289,7 +354,7 @@ export const DocumentManagement: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs"
+                className="w-full text-xs cursor-pointer"
                 onClick={() => {
                   setSelectedType('ALL');
                   setSearchQuery('');
@@ -317,18 +382,29 @@ export const DocumentManagement: React.FC = () => {
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="border-b border-border bg-muted/20 text-xs font-medium text-muted-foreground">
-                  <th className="p-3 pl-4">File Name</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Related Product</th>
-                  <th className="p-3">Date</th>
-                  <th className="p-3 pr-4 text-right">Actions</th>
+                  <th className="p-3 pl-4 whitespace-nowrap">File Name</th>
+                  <th className="p-3 whitespace-nowrap">Type</th>
+                  <th className="p-3 whitespace-nowrap">Related Product</th>
+                  <th className="p-3 whitespace-nowrap">Date</th>
+                  <th className="p-3 pr-4 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredDocs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
-                      No documents match your filter criteria.
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <p>No documents match your filter criteria.</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsUploadModalOpen(true)}
+                          className="gap-2 mt-1 cursor-pointer"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload New Document</span>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -342,7 +418,7 @@ export const DocumentManagement: React.FC = () => {
                           isSelected ? 'bg-muted/40 font-medium' : ''
                         }`}
                       >
-                        <td className="p-3 pl-4">
+                        <td className="p-3 pl-4 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-md border border-border bg-muted/40 flex items-center justify-center text-muted-foreground shrink-0">
                               <FileText className="w-4 h-4 text-primary" />
@@ -355,15 +431,22 @@ export const DocumentManagement: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="p-3">{getTypeBadge(doc.type)}</td>
-                        <td className="p-3 text-xs text-muted-foreground">{doc.product}</td>
-                        <td className="p-3 text-xs text-muted-foreground">{doc.date}</td>
-                        <td className="p-3 pr-4 text-right">
-                          <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <td className="p-3 whitespace-nowrap">{getTypeBadge(doc.type)}</td>
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {doc.product}
+                        </td>
+                        <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                          {doc.date}
+                        </td>
+                        <td className="p-3 pr-4 text-right whitespace-nowrap">
+                          <div
+                            className="flex justify-end gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
                               onClick={() => handleDownload(doc)}
                               title="Download document"
                             >
@@ -372,7 +455,7 @@ export const DocumentManagement: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
                               onClick={() => handleShare(doc)}
                               title="Share document link"
                             >
@@ -388,7 +471,9 @@ export const DocumentManagement: React.FC = () => {
             </table>
           </div>
           <div className="p-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-            <span>Showing 1 to {filteredDocs.length} of {mockDocuments.length} files</span>
+            <span>
+              Showing 1 to {filteredDocs.length} of {documents.length} files
+            </span>
             <div className="flex gap-1">
               <Button variant="outline" size="sm" className="h-7 px-2" disabled>
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -408,8 +493,8 @@ export const DocumentManagement: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => showToast('Full View', selectedDoc.name, 'info')}
+                className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => setIsPreviewModalOpen(true)}
                 title="Full Preview"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
@@ -447,7 +532,7 @@ export const DocumentManagement: React.FC = () => {
             <div className="pt-2">
               <Button
                 onClick={() => handleDownload(selectedDoc)}
-                className="w-full gap-1.5"
+                className="w-full gap-1.5 cursor-pointer"
                 size="sm"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -457,6 +542,87 @@ export const DocumentManagement: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Upload Document Modal */}
+      <UploadDocumentModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* Document Full Preview Modal */}
+      <Modal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        title={selectedDoc.name}
+        description={`Classification: ${selectedDoc.type} | Hardware: ${selectedDoc.product}`}
+      >
+        <div className="space-y-4 py-2">
+          {selectedDoc.file && selectedDoc.file.type.startsWith('image/') ? (
+            <div className="rounded-lg overflow-hidden border border-border bg-muted/20 p-2 flex items-center justify-center">
+              <img
+                src={selectedDoc.url}
+                alt={selectedDoc.name}
+                className="max-h-80 object-contain rounded"
+              />
+            </div>
+          ) : (
+            <div className="p-6 rounded-lg border border-border bg-muted/20 flex flex-col items-center justify-center text-center space-y-3">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{selectedDoc.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {selectedDoc.size} • {selectedDoc.version}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground max-w-sm">
+                This document is managed under the Kitchen Bots commercial equipment repository and
+                assigned to {selectedDoc.owner}.
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Equipment Unit</span>
+              <span className="font-semibold text-foreground">{selectedDoc.product}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Custodian</span>
+              <span className="font-semibold text-foreground">{selectedDoc.owner}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Version</span>
+              <span className="font-semibold text-foreground">{selectedDoc.version}</span>
+            </div>
+            <div className="p-3 rounded-lg border border-border bg-muted/30">
+              <span className="text-muted-foreground block mb-1">Date Indexed</span>
+              <span className="font-semibold text-foreground">{selectedDoc.date}</span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPreviewModalOpen(false)}
+              className="cursor-pointer"
+            >
+              Close
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => handleDownload(selectedDoc)}
+              className="gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download File</span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </PageContainer>
   );
 };

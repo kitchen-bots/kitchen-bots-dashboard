@@ -61,8 +61,17 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
     if (isOpen) {
       setQuery('');
       setSelectedIndex(0);
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
       setTimeout(() => inputRef.current?.focus(), 100);
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -90,12 +99,15 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-sm p-4">
+      <div 
+        className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/75 backdrop-blur-md p-4 select-none transition-all"
+        onClick={() => onOpenChange(false)}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-2xl bg-popover text-popover-foreground rounded-xl shadow-2xl overflow-hidden border border-border"
+          className="w-full max-w-2xl bg-popover text-popover-foreground rounded-xl shadow-2xl overflow-hidden border border-border select-auto"
           onClick={e => e.stopPropagation()}
         >
           {/* Search Input */}

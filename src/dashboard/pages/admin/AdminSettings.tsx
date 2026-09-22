@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { settingsService } from '../../services/settingsService';
 import { userService } from '../../services/userService';
-import { AdminSettingsState } from '../../api/settings.api';
+import { AdminSettingsState, DEFAULT_ADMIN_SETTINGS } from '../../api/settings.api';
 import { User } from '../../types';
 import { ErrorState } from '../../components/common/ErrorState';
 import { useToast } from '../../context/ToastContext';
@@ -39,15 +39,23 @@ export function AdminSettings() {
     setLoading(true);
     setErrorState(null);
     try {
-      const [settingsRes, usersRes] = await Promise.all([
+      const [settingsRes, usersRes] = await Promise.allSettled([
         settingsService.getSettings(),
         userService.getUsers(),
       ]);
-      setSettings(settingsRes);
-      setTeamMembers(usersRes.data);
+
+      if (settingsRes.status === 'fulfilled') {
+        setSettings(settingsRes.value);
+      } else {
+        setSettings({ ...DEFAULT_ADMIN_SETTINGS });
+      }
+
+      if (usersRes.status === 'fulfilled') {
+        setTeamMembers(usersRes.value.data);
+      }
     } catch (err) {
       console.error('Error fetching settings data', err);
-      setErrorState('Failed to load settings.');
+      setSettings({ ...DEFAULT_ADMIN_SETTINGS });
     } finally {
       setLoading(false);
     }

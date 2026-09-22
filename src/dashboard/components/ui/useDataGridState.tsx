@@ -92,7 +92,7 @@ export function useDataGridState<TData, TValue>({
   const table = useReactTable({
     data,
     columns: finalColumns,
-    pageCount: pageCount ?? -1,
+    ...(pageCount !== undefined ? { pageCount } : {}),
     state: {
       pagination: isControlledPagination ? controlledPagination : internalPagination,
       sorting: isControlledSorting ? controlledSorting : internalSorting,
