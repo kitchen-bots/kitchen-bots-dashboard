@@ -40,7 +40,7 @@ export const GlobalSearch = ({ isOpen, onOpenChange }: { isOpen: boolean, onOpen
 
   return (
     <AnimatePresence>
-      <div 
+      <div
         className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/75 backdrop-blur-md transition-all select-none p-4"
         onClick={() => onOpenChange(false)}
       >
@@ -68,7 +68,7 @@ export const GlobalSearch = ({ isOpen, onOpenChange }: { isOpen: boolean, onOpen
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           <div className="max-h-[60vh] overflow-y-auto p-2">
             {/* Search results would go here */}
             {query.length > 0 ? (

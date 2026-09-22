@@ -266,7 +266,7 @@ export const OrdersManagement = () => {
                 </div>
               </div>
             )}
-            
+
             <CardContent className="p-0 flex-1 flex flex-col">
               <div className="overflow-x-auto">
                 <Table>
@@ -361,7 +361,7 @@ export const OrdersManagement = () => {
                   </TableBody>
                 </Table>
               </div>
-              
+
               <div className="p-4 border-t border-border flex justify-center mt-auto">
                 <Button
                   variant="ghost"
@@ -392,7 +392,7 @@ export const OrdersManagement = () => {
                   <span className="text-muted-foreground mt-0.5">Logistics delayed at Bangalore Hub.</span>
                 </div>
               </div>
-              
+
               <div className="flex gap-2.5 p-2.5 bg-muted/40 border border-border rounded-lg">
                 <Clock size={16} className="text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex flex-col">
@@ -400,7 +400,7 @@ export const OrdersManagement = () => {
                   <span className="text-muted-foreground mt-0.5">Pending address verification for Mumbai delivery.</span>
                 </div>
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"

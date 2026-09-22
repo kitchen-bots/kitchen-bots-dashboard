@@ -190,7 +190,7 @@ export const ServicesManagement = () => {
     >
       <div className="flex flex-col gap-6">
         {/* Analytics Cards */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -208,7 +208,7 @@ export const ServicesManagement = () => {
               <Text className="text-2xl font-bold text-foreground mt-1">{openCount}</Text>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-3">
@@ -221,7 +221,7 @@ export const ServicesManagement = () => {
               <Text className="text-2xl font-bold text-foreground mt-1">{inProgressCount}</Text>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-3">
@@ -234,7 +234,7 @@ export const ServicesManagement = () => {
               <Text className="text-2xl font-bold text-foreground mt-1">{assignedCount}</Text>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-3">
@@ -251,9 +251,9 @@ export const ServicesManagement = () => {
 
         {/* Two Columns Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-          
+
           {/* Main Table Column (75% / cols 1-3) */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -263,20 +263,20 @@ export const ServicesManagement = () => {
               <CardHeader className="border-b border-border pb-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <CardTitle>Service Records</CardTitle>
-                  
+
                   {/* Toolbar */}
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-                      <Input 
-                        type="text" 
-                        placeholder="Search tickets, customers, equipment..." 
+                      <Input
+                        type="text"
+                        placeholder="Search tickets, customers, equipment..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9 w-full sm:w-64 text-xs h-9"
                       />
                     </div>
-                    
+
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
@@ -291,7 +291,7 @@ export const ServicesManagement = () => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -314,8 +314,8 @@ export const ServicesManagement = () => {
                       </TableRow>
                     ) : (
                       paginatedTickets.map((ticket) => (
-                        <TableRow 
-                          key={ticket.id} 
+                        <TableRow
+                          key={ticket.id}
                           className="hover:bg-muted/40 border-b border-border/50 cursor-pointer"
                           onClick={() => handleCycleStatus(ticket)}
                         >
@@ -349,7 +349,7 @@ export const ServicesManagement = () => {
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3 whitespace-nowrap">
-                            <Badge 
+                            <Badge
                               variant={getStatusVariant(ticket.status)}
                               className="cursor-pointer hover:opacity-80"
                               title="Click to advance status"
@@ -423,7 +423,7 @@ export const ServicesManagement = () => {
           </motion.div>
 
           {/* Right Sidebar (25% / col 4) */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -469,7 +469,7 @@ export const ServicesManagement = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Engineer Schedules Widget */}
             <Card>
               <CardHeader className="pb-3">
@@ -489,9 +489,9 @@ export const ServicesManagement = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img 
-                        alt="Engineer Avatar" 
-                        className="w-9 h-9 rounded-full object-cover shrink-0" 
+                      <img
+                        alt="Engineer Avatar"
+                        className="w-9 h-9 rounded-full object-cover shrink-0"
                         src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100"
                       />
                       <div className="min-w-0">
@@ -501,12 +501,12 @@ export const ServicesManagement = () => {
                     </div>
                     <span className="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img 
-                        alt="Engineer Avatar" 
-                        className="w-9 h-9 rounded-full object-cover shrink-0" 
+                      <img
+                        alt="Engineer Avatar"
+                        className="w-9 h-9 rounded-full object-cover shrink-0"
                         src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100"
                       />
                       <div className="min-w-0">
@@ -516,12 +516,12 @@ export const ServicesManagement = () => {
                     </div>
                     <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between opacity-50">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img 
-                        alt="Engineer Avatar" 
-                        className="w-9 h-9 rounded-full object-cover shrink-0" 
+                      <img
+                        alt="Engineer Avatar"
+                        className="w-9 h-9 rounded-full object-cover shrink-0"
                         src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100"
                       />
                       <div className="min-w-0">
@@ -534,7 +534,7 @@ export const ServicesManagement = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Support Activity Feed */}
             <Card className="flex-1">
               <CardHeader className="pb-3">
@@ -549,7 +549,7 @@ export const ServicesManagement = () => {
                     <Text className="text-sm text-foreground"><span className="font-bold">#SR-9821</span> was assigned to Vikram R.</Text>
                     <Text variant="muted" className="text-[10px] mt-0.5">2 mins ago</Text>
                   </div>
-                  
+
                   <div className="relative pl-7">
                     <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-background shadow-xs">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -557,7 +557,7 @@ export const ServicesManagement = () => {
                     <Text className="text-sm text-foreground"><span className="font-bold">#SR-9824</span> marked as completed</Text>
                     <Text variant="muted" className="text-[10px] mt-0.5">15 mins ago</Text>
                   </div>
-                  
+
                   <div className="relative pl-7">
                     <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center border-4 border-background shadow-xs">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -568,7 +568,7 @@ export const ServicesManagement = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
           </motion.div>
         </div>
       </div>

@@ -13,10 +13,10 @@ const SEARCHABLE_ITEMS = [
   { id: 'nav_5', type: 'navigation', label: 'Go to Documents', path: '/admin/documents', icon: FileText },
   { id: 'nav_6', type: 'navigation', label: 'Go to Settings', path: '/admin/settings', icon: Settings },
   { id: 'nav_7', type: 'navigation', label: 'Go to Services', path: '/admin/services', icon: Wrench },
-  
+
   { id: 'act_1', type: 'action', label: 'Add New Product', path: '/admin/products/new', icon: Package },
   { id: 'act_2', type: 'action', label: 'Invite User', path: '/admin/users/new', icon: Users },
-  
+
   // Mock data that would normally come from an API search
   { id: 'data_1', type: 'product', label: 'Industrial Stand Mixer Pro', path: '/admin/products', icon: Package, context: 'SKU: MIX-2000' },
   { id: 'data_2', type: 'order', label: 'Order #ORD-2024-001', path: '/admin/orders', icon: ShoppingCart, context: '₹45,000 - Delivered' },
@@ -77,7 +77,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
   useEffect(() => {
     const handleNavigation = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
+
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex(prev => (prev + 1) % filteredItems.length);
@@ -99,7 +99,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
 
   return (
     <AnimatePresence>
-      <div 
+      <div
         className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/75 backdrop-blur-md p-4 select-none transition-all"
         onClick={() => onOpenChange(false)}
       >
@@ -113,9 +113,9 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
           {/* Search Input */}
           <div className="relative border-b border-border p-4">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <input 
+            <input
               ref={inputRef}
-              type="text" 
+              type="text"
               placeholder="Search products, orders, settings..."
               className="w-full bg-transparent border-none outline-none text-lg pl-10 pr-4 text-foreground placeholder:text-muted-foreground font-medium"
               value={query}
@@ -143,7 +143,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
                 {['navigation', 'action', 'product', 'order', 'lead'].map(type => {
                   const typeItems = filteredItems.filter(i => i.type === type);
                   if (typeItems.length === 0) return null;
-                  
+
                   return (
                     <div key={type} className="mb-4 last:mb-0">
                       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
@@ -154,7 +154,7 @@ export const CommandPalette = ({ isOpen, onOpenChange }: { isOpen: boolean, onOp
                           const globalIndex = filteredItems.indexOf(item);
                           const isSelected = selectedIndex === globalIndex;
                           const Icon = item.icon;
-                          
+
                           return (
                             <button
                               key={item.id}

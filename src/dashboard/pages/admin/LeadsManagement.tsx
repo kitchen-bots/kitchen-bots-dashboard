@@ -341,7 +341,7 @@ export function LeadsManagement() {
       default: return 'secondary';
     }
   };
-  
+
   const getQuoteStatusClassName = (status: string) => {
     switch(status) {
       case 'Approved': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
@@ -387,7 +387,7 @@ export function LeadsManagement() {
       }
     >
       {/* Top Analytics Section (6 KPI Cards) */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -419,7 +419,7 @@ export function LeadsManagement() {
       </motion.div>
 
       {/* Lead Pipeline Overview (Funnel) */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -432,7 +432,7 @@ export function LeadsManagement() {
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center relative pt-4">
               <div className="hidden md:block absolute top-8 left-0 right-0 h-1 bg-border z-0"></div>
-              
+
               {[
                 { stage: 'New', status: 'New', color: 'border-blue-500 text-blue-500' },
                 { stage: 'Contacted', status: 'Contacted', color: 'border-purple-500 text-purple-500' },
@@ -444,7 +444,7 @@ export function LeadsManagement() {
                 const count = leads.filter(l => l.status === step.status).length;
                 const totalActive = leads.filter(l => l.status !== 'Lost').length || 1;
                 const percent = Math.round((count / totalActive) * 100) + '%';
-                
+
                 return (
                   <button
                     key={idx}
@@ -468,9 +468,9 @@ export function LeadsManagement() {
 
       {/* Main Four-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 relative">
-        
+
         {/* Left Column (Table) - 75% */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
@@ -490,14 +490,14 @@ export function LeadsManagement() {
                     </Badge>
                   )}
                 </div>
-                
+
                 {/* Toolbar */}
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-                    <Input 
-                      type="text" 
-                      placeholder="Search leads, companies..." 
+                    <Input
+                      type="text"
+                      placeholder="Search leads, companies..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9 w-full sm:w-64 text-xs h-9"
@@ -564,8 +564,8 @@ export function LeadsManagement() {
                     </TableRow>
                   ) : (
                     filteredLeads.map((lead) => (
-                      <TableRow 
-                        key={lead.id} 
+                      <TableRow
+                        key={lead.id}
                         className="cursor-pointer hover:bg-muted/40 border-b border-border/50"
                         onClick={() => handleLeadSelect(lead)}
                       >
@@ -590,7 +590,7 @@ export function LeadsManagement() {
                           <Text variant="muted" className="text-xs">Qty: {lead.quantity}</Text>
                         </TableCell>
                         <TableCell className="px-4 py-3 whitespace-nowrap">
-                          <Badge 
+                          <Badge
                             variant={getStatusBadgeVariant(lead.status)}
                             className={getStatusBadgeClassName(lead.status)}
                           >
@@ -598,8 +598,8 @@ export function LeadsManagement() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right px-4 py-3 whitespace-nowrap">
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             className="h-8 w-8 cursor-pointer"
                             onClick={(e) => { e.stopPropagation(); handleLeadSelect(lead); }}
@@ -618,13 +618,13 @@ export function LeadsManagement() {
         </motion.div>
 
         {/* Right Column (Widgets) - 25% */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
           className="lg:col-span-1 min-w-0 flex flex-col gap-6"
         >
-          
+
           {/* CRM Activity Timeline */}
           <Card>
             <CardHeader className="border-b border-border pb-3">
@@ -721,7 +721,7 @@ export function LeadsManagement() {
       >
         {selectedLead && (
           <div className="space-y-6">
-            
+
             {/* Status Header */}
             <div className="flex items-center justify-between bg-muted/30 p-4 rounded-xl border border-border">
               <div className="flex items-center gap-4">
@@ -737,7 +737,7 @@ export function LeadsManagement() {
                         </span>
                       </div>
                     )}
-                   <Badge 
+                   <Badge
                       variant={getStatusBadgeVariant(selectedLead.status)}
                       className={getStatusBadgeClassName(selectedLead.status)}
                     >
@@ -922,8 +922,8 @@ export function LeadsManagement() {
                       </div>
                       <div className="text-right flex flex-col items-end">
                         <Text className="text-sm font-bold text-foreground">₹{quote.value.toLocaleString('en-IN')}</Text>
-                        <Badge 
-                          variant={getQuoteStatusVariant(quote.status)} 
+                        <Badge
+                          variant={getQuoteStatusVariant(quote.status)}
                           className={`mt-1 ${getQuoteStatusClassName(quote.status)}`}
                         >
                           {quote.status}
