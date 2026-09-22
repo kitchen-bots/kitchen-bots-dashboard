@@ -10,6 +10,20 @@
 
 ---
 
+## Status
+
+**Blocked by Phase 00. No production backend exists yet.**
+
+Current repository has Google Apps Script clients, Google Sheets CRUD modules, mock authentication, and in-memory services. These are legacy or development paths, not substitutes for this phase. No `worker/`, Wrangler configuration, Firebase project configuration, Firestore Rules, emulator suite, canonical contract package, or Turnstile enforcement is present.
+
+External access needed before tasks 2-7:
+
+- Firebase development and production projects
+- Cloudflare account with Worker, R2, DNS, and Turnstile permissions
+- Approved public, portal, API, and asset domains
+
+No MCP is required. Firebase and Cloudflare CLIs plus project credentials are sufficient. An MCP may improve inspection, but it does not replace environment access or security review.
+
 ### Task 1: Define canonical schemas
 
 **Files:**

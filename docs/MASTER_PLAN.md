@@ -35,6 +35,9 @@ The ecommerce repository owns storefront presentation, cart, quote/order forms, 
 - [Phase 02: Refine CMS and CRM](phases/02-refine-cms-crm.md)
 - [Phase 03: Portal, Integrations, and Deployment](phases/03-portal-integrations-and-deployment.md)
 - [Phase 04: Payment Integration Last](phases/04-payment-integration-last.md)
+- [Backend Status and Implementation Report](../../kitchen-bots-ecommerce/docs/reports/BACKEND_STATUS_REPORT.md)
+- [UI Component Inventory](UI_COMPONENT_INVENTORY.md)
+- [Lint Warning Register](LINT_WARNING_REGISTER.md)
 
 ## Delivery Order
 
@@ -45,6 +48,16 @@ The ecommerce repository owns storefront presentation, cart, quote/order forms, 
 | 02 | Production-backed CMS, CRM, and operational workflows | Phase 01 |
 | 03 | Customer portal, emails, migration, deployment, runbooks | Phases 01-02 |
 | 04 | Real payments and webhook reconciliation | Phase 03 and merchant approval |
+
+## Current Phase State
+
+| Phase | State | Verified blocker or next gate |
+|---|---|---|
+| 00 | Implementation complete; verification passed | Review and merge Phase 00 branch under Node 22 CI |
+| 01 | Blocked | Phase 00 acceptance gate and Firebase/Cloudflare project access |
+| 02 | Blocked | Phase 01 schemas, Auth, Rules, and Worker API |
+| 03 | Blocked | Production-backed CMS/CRM workflows |
+| 04 | Deferred | Phase 03 completion and merchant approval |
 
 ## Canonical API
 

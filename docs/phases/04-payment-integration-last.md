@@ -10,6 +10,12 @@
 
 ---
 
+## Status
+
+**Deferred. Do not start.**
+
+No payment provider or merchant account is approved. Phase 04 remains outside active work until Phase 03 passes and leadership confirms provider, settlement, refund, deposit, and compliance requirements.
+
 ## Entry Gate
 
 - All Phase 03 criteria pass.

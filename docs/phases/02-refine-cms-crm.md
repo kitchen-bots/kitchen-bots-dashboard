@@ -10,6 +10,18 @@
 
 ---
 
+## Status
+
+**Blocked by Phase 01. Not started.**
+
+Report-driven migration inventory:
+
+- Replace `MockAuthService`, fixed development credentials, local mock JWT, and client-controlled roles.
+- Replace in-memory product, inventory, content, notification, permission, activity, and dashboard datasets.
+- Replace Google Apps Script API consumers only after canonical Firestore/Worker parity and data export.
+- Replace fake KPIs, revenue, orders, leads, tickets, activity, avatars, and product statistics with real queries or deliberate empty states.
+- Correct current-user resolution. Never select the first user record as identity.
+
 ### Task 1: Implement production providers
 
 1. Implement Firebase `authProvider` for login, Google sign-in, logout, identity, registration, verification, and password reset.
