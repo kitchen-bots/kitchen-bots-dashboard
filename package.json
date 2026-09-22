@@ -33,6 +33,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "firebase": "^12.19.0",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.395.0",
     "nanoid": "^3.3.18",

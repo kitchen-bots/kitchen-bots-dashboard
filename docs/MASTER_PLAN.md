@@ -54,7 +54,7 @@ The ecommerce repository owns storefront presentation, cart, quote/order forms, 
 | Phase | State | Verified blocker or next gate |
 |---|---|---|
 | 00 | Implementation complete; PR #2 open | Review and merge under Node 22 CI |
-| 01 | Blocked | Phase 00 acceptance gate and Firebase/Cloudflare project access |
+| 01 | Started; security baseline deployed | Enable Auth providers, decide Firebase environment split and Firestore region, then implement schemas and Rules tests |
 | 02 | Blocked | Phase 01 schemas, Auth, Rules, and Worker API |
 | 03 | Blocked | Production-backed CMS/CRM workflows |
 | 04 | Deferred | Phase 03 completion and merchant approval |

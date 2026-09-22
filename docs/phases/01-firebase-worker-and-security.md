@@ -12,15 +12,18 @@
 
 ## Status
 
-**Blocked by Phase 00. No production backend exists yet.**
+**Started on 2026-09-22. Production backend implementation is not complete.**
 
-Current repository has Google Apps Script clients, Google Sheets CRUD modules, mock authentication, and in-memory services. These are legacy or development paths, not substitutes for this phase. No `worker/`, Wrangler configuration, Firebase project configuration, Firestore Rules, emulator suite, canonical contract package, or Turnstile enforcement is present.
+Firebase project `kitchen-bots` is associated with this repository. The web SDK, public environment contract, Auth and Firestore emulator ports, and deny-by-default Firestore Rules are configured. The rules and empty index definition were deployed successfully on 2026-09-22. The default Firestore database was created in `nam5` and must be reviewed before real data is added.
+
+The application still uses mock authentication, Google Apps Script clients, Google Sheets CRUD modules, and in-memory services. These remain legacy or development paths. Authentication providers, separate development and production Firebase projects, Rules tests, canonical schemas, the Worker, Wrangler, R2 bindings, and Turnstile enforcement are not implemented.
 
 External access needed before tasks 2-7:
 
-- Firebase development and production projects
 - Cloudflare account with Worker, R2, DNS, and Turnstile permissions
 - Approved public, portal, API, and asset domains
+- A second Firebase project if development and production are to remain isolated
+- Firebase Console access to enable email/password and Google sign-in providers
 
 No MCP is required. Firebase and Cloudflare CLIs plus project credentials are sufficient. An MCP may improve inspection, but it does not replace environment access or security review.
 
@@ -36,12 +39,21 @@ Use integer paise, server timestamps, R2 object keys, immutable line/address sna
 
 ### Task 2: Configure Firebase environments
 
-1. Create separate development and production Firebase projects.
-2. Enable email/password and Google authentication.
-3. Register storefront and portal web applications.
-4. Configure Auth and Firestore emulators.
+1. [ ] Create separate development and production Firebase projects. One initial project, `kitchen-bots`, exists.
+2. [ ] Enable email/password and Google authentication in Firebase Console.
+3. [ ] Register and verify separate storefront and portal web applications. The supplied web app configuration is currently wired into the dashboard environment.
+4. [x] Configure Auth and Firestore emulators.
 5. Keep service-account credentials in Worker secrets only.
-6. Document public Firebase web variables separately from secrets.
+6. [x] Document public Firebase web variables separately from secrets.
+
+Current deployed baseline:
+
+- Project: `kitchen-bots`
+- Firestore database: `(default)` in `nam5`
+- Rules: deny all reads and writes until tested collection rules replace the baseline
+- Indexes: empty
+- Emulator ports: Auth `9099`, Firestore `8080`, UI `4000`
+- Analytics: available through an explicit consent-gated initializer; not started automatically
 
 ### Task 3: Implement Firestore Rules with tests
 
