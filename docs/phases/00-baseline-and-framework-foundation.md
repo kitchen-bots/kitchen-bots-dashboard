@@ -43,7 +43,7 @@ Verification on 22 September 2026:
 - Production build passed.
 - High-severity production audit gate passed.
 
-Remaining integration gate: review, push, open a pull request, and let Node 22 CI verify the branch.
+Remaining integration gate: review and merge pull request `revanthlol/kitchen-bots-dashboard#2`, with Node 22 CI verification.
 
 ### Task 1: Stabilize the repository
 
