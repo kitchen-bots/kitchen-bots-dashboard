@@ -1,5 +1,6 @@
-import { createContext, useContext, ReactNode } from 'react';
-import { authService, IAuthService } from '../services/auth/AuthService';
+import { createContext, useContext, useMemo, ReactNode } from 'react';
+import { FirebaseAuthService } from '../services/auth/FirebaseAuthService';
+import type { IAuthService } from '../services/auth/AuthService';
 import { ThemeService } from '../services/theme/ThemeService';
 import { ToastService } from '../services/toast/ToastService';
 import { DialogService } from '../services/dialog/DialogService';
@@ -13,8 +14,14 @@ export interface PlatformServices {
   events: typeof eventBus;
 }
 
+/**
+ * Production auth service (Phase 02): Firebase session management with role
+ * claims. Tests can inject a mock IAuthService via the `services` prop.
+ */
+export const firebaseAuthService = new FirebaseAuthService();
+
 const defaultServices: PlatformServices = {
-  auth: authService,
+  auth: firebaseAuthService,
   theme: ThemeService,
   toast: ToastService,
   dialog: DialogService,
@@ -24,8 +31,9 @@ const defaultServices: PlatformServices = {
 const PlatformContext = createContext<PlatformServices>(defaultServices);
 
 export function PlatformProvider({ children, services = defaultServices }: { children: ReactNode, services?: PlatformServices }) {
+  const value = useMemo(() => services, [services]);
   return (
-    <PlatformContext.Provider value={services}>
+    <PlatformContext.Provider value={value}>
       {children}
     </PlatformContext.Provider>
   );

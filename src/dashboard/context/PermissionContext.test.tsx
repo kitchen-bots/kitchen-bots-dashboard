@@ -14,6 +14,9 @@ const createWrapper = (user: any, isLoading: boolean) => {
       isAuthenticated: !!user,
       state: { status: user ? 'LOGGED_IN' : 'LOGGED_OUT', user: user || null, error: null },
       login: vi.fn(),
+      loginWithGoogle: vi.fn(),
+      register: vi.fn(),
+      resetPassword: vi.fn(),
       logout: vi.fn(),
       switchOrganization: vi.fn(),
       switchRole: vi.fn()

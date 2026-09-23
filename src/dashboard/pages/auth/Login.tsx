@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, ChefHat, Lock, User } from 'lucide-react';
+import { ArrowRight, ChefHat, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,16 +18,21 @@ import { Button } from '../../components/ui/Button';
 import { Alert } from '../../components/ui/Alert';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
+  email: z.string().email('Enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/**
+ * Production login (Phase 02, Task 1): Firebase email/password plus Google
+ * sign-in. No fixed credentials. Redirects follow the authenticated role.
+ */
 export function Login() {
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const [notice, setNotice] = useState('');
+  const { login, loginWithGoogle, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,22 +43,53 @@ export function Login() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
       rememberMe: false,
     },
   });
 
-  const onSubmit = async (data: any) => {
+  const navigateAfterAuth = (role: string | null | undefined) => {
+    const defaultDashboard = role === 'admin' || role === 'SystemAdmin' ? '/admin' : '/dashboard';
+    navigate(redirect || stateFrom || defaultDashboard, { replace: true });
+  };
+
+  const onSubmit = async (data: LoginFormValues) => {
     setError('');
-    
+    setNotice('');
+
     try {
-      const user = await login(data.username, data.password);
-      const defaultDashboard = user.role === 'admin' ? '/admin' : '/customer';
-      const navigateTo = redirect || stateFrom || defaultDashboard;
-      navigate(navigateTo, { replace: true });
+      const user = await login(data.email, data.password);
+      navigateAfterAuth(user.role);
     } catch (err: any) {
       setError(err.message || 'Failed to login');
+    }
+  };
+
+  const onGoogleSignIn = async () => {
+    setError('');
+    setNotice('');
+    try {
+      const user = await loginWithGoogle();
+      navigateAfterAuth(user.role);
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google');
+    }
+  };
+
+  const onForgotPassword = async () => {
+    setError('');
+    setNotice('');
+    const email = form.getValues('email');
+    if (!email) {
+      setError('Enter your email address first, then click "Forgot password".');
+      return;
+    }
+    try {
+      await resetPassword(email);
+      setNotice('If an account exists for that address, a reset link has been sent.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email');
     }
   };
 
@@ -72,7 +108,7 @@ export function Login() {
               <ChefHat className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted mt-2 text-center">Enter your credentials to access the dashboard</p>
+            <p className="text-muted mt-2 text-center">Sign in to your Kitchen Bots account</p>
           </div>
 
           <Form {...form}>
@@ -82,17 +118,24 @@ export function Login() {
                   {error}
                 </Alert>
               )}
-              
+              {notice && (
+                <Alert>
+                  {notice}
+                </Alert>
+              )}
+
               <FormField
                 control={form.control as any}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter username"
-                        leftIcon={<User className="h-5 w-5" />}
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        leftIcon={<Mail className="h-5 w-5" />}
                         {...field}
                       />
                     </FormControl>
@@ -110,6 +153,7 @@ export function Login() {
                     <FormControl>
                       <Input
                         type="password"
+                        autoComplete="current-password"
                         placeholder="••••••••"
                         leftIcon={<Lock className="h-5 w-5" />}
                         {...field}
@@ -141,11 +185,13 @@ export function Login() {
                   )}
                 />
 
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                    Forgot password?
-                  </a>
-                </div>
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Forgot password?
+                </button>
               </div>
 
               <Button
@@ -156,11 +202,36 @@ export function Login() {
                 Sign in
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              
-              <div className="mt-6 text-center text-sm text-muted bg-secondary/50 rounded-lg p-3 border border-border">
-                <p>Test Credentials:</p>
-                <p className="font-medium text-foreground mt-1">Admin / 123456</p>
+
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted">or</span>
+                </div>
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onGoogleSignIn}
+                disabled={isLoading}
+                className="w-full"
+              >
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M21.35 11.1H12v2.8h5.35c-.25 1.45-1.7 4.25-5.35 4.25-3.2 0-5.8-2.65-5.8-5.9s2.6-5.9 5.8-5.9c1.85 0 3.05.8 3.75 1.45l2.55-2.5C16.75 3.75 14.6 2.8 12 2.8 6.95 2.8 2.9 6.85 2.9 11.9s4.05 9.1 9.1 9.1c5.25 0 8.75-3.7 8.75-8.9 0-.6-.05-1-.15-1z"
+                  />
+                </svg>
+                Sign in with Google
+              </Button>
+
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-muted">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Accounts must have a verified email address before sign-in.
+              </p>
             </form>
           </Form>
         </div>
