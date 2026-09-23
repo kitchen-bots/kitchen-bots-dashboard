@@ -139,10 +139,12 @@ export class GoogleServiceAccountAuth {
   private tokenExpiresAt = 0;
   private fetchFn: typeof fetch;
 
-  constructor(clientEmail: string, privateKeyPem: string, fetchFn: typeof fetch = fetch) {
+  constructor(clientEmail: string, privateKeyPem: string, fetchFn?: typeof fetch) {
     this.clientEmail = clientEmail;
     this.privateKeyPem = privateKeyPem.replace(/\\n/g, '\n');
-    this.fetchFn = fetchFn;
+    this.fetchFn = fetchFn
+      ? (input, init) => fetchFn(input, init)
+      : (input, init) => fetch(input, init);
   }
 
   async getAccessToken(): Promise<string> {
@@ -208,7 +210,10 @@ export class FirestoreClient {
 
   constructor(config: FirestoreClientConfig) {
     this.projectId = config.projectId;
-    this.fetchFn = config.fetch || fetch;
+    const customFetch = config.fetch;
+    this.fetchFn = customFetch
+      ? (input, init) => customFetch(input, init)
+      : (input, init) => fetch(input, init);
 
     if (config.emulatorHost) {
       const host = config.emulatorHost.startsWith('http')

@@ -20,8 +20,12 @@ async function verifyTurnstile(
   token: string,
   remoteIp?: string,
   isTestEnvironment = false,
-  fetchFn: typeof fetch = fetch
+  fetchFn?: typeof fetch
 ): Promise<boolean> {
+  const safeFetch: typeof fetch = fetchFn
+    ? (input, init) => fetchFn(input, init)
+    : (input, init) => fetch(input, init);
+
   if (isTestEnvironment && secretKey === 'test-turnstile-secret') {
     return token !== 'test-fail-token';
   }
@@ -34,7 +38,7 @@ async function verifyTurnstile(
   }
 
   try {
-    const res = await fetchFn('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    const res = await safeFetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       body: formData,
     });

@@ -140,11 +140,9 @@ export function createApp(envBindings: Partial<Env> = {}, services: AppServices 
       );
     }
 
-    // Never leak stack traces to callers
+    // Log error for observability while keeping caller response opaque
+    console.error(`[Worker Error ${reqId}]:`, err);
     const isDev = c.env?.ENVIRONMENT === 'development' || c.env?.ENVIRONMENT === 'test';
-    if (isDev) {
-      console.error('App error caught:', err);
-    }
     return c.json(
       {
         error: {

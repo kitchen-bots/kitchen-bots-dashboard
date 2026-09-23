@@ -53,8 +53,11 @@ function cacheLifetimeSeconds(cacheControl: string | null): number {
 
 export function createFirebaseIdTokenVerifier(
   projectId: string,
-  fetchFn: typeof fetch = fetch,
+  fetchFn?: typeof fetch,
 ): FirebaseIdTokenVerifier {
+  const safeFetch: typeof fetch = fetchFn
+    ? (input, init) => fetchFn(input, init)
+    : (input, init) => fetch(input, init);
   let cachedKeys = new Map<string, FirebaseJwk>();
   let keysExpireAt = 0;
 
@@ -63,7 +66,7 @@ export function createFirebaseIdTokenVerifier(
       return cachedKeys;
     }
 
-    const response = await fetchFn(FIREBASE_JWKS_URL, {
+    const response = await safeFetch(FIREBASE_JWKS_URL, {
       headers: { Accept: 'application/json' },
     });
     if (!response.ok) {
