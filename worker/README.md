@@ -44,6 +44,15 @@ worker/
 | POST | /v1/documents | operations/admin | Upload to PRIVATE_DOCUMENTS with non-guessable keys |
 | GET | /v1/documents/:id/access | owner/org/staff | Streams the private object after authorization |
 | POST | /v1/admin/staff-claims | admin | Sets/revokes custom claims; last-admin protected |
+| GET/POST | /v1/staff/products | editor+ | Staff catalog list/create (CMS) |
+| GET/PATCH/DELETE | /v1/staff/products/:id | editor+ | Staff product read/update/delete |
+| GET/POST | /v1/staff/categories, /v1/staff/content | editor+ | CMS categories and content list/create |
+| GET/PATCH | /v1/staff/enquiries(/:id/status) | editor+ | CRM enquiry list, read, status change |
+| GET/DELETE | /v1/staff/orders(/:id) | editor+ | Staff order list/read/delete |
+| GET/POST | /v1/staff/quotes | editor+ | Quote list; create recomputes totals server-side |
+| GET/PATCH | /v1/staff/quotes/:id/status | editor+ | Enforced quote transitions; send enqueues customer email |
+| GET/DELETE | /v1/staff/documents(/:id) | editor+ | Document records; delete removes the R2 object too |
+| GET | /v1/staff/kpis | editor+ | Order/enquiry/quote counts and non-cancelled revenue |
 
 Errors always use `{ code, message, requestId, fieldErrors? }`.
 Mutating endpoints require an `Idempotency-Key` header (8-128 chars); a

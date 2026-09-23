@@ -13,6 +13,7 @@ import {
   createFirebaseAuthProvider,
 } from './providers/firebaseAuthProvider';
 import { createAccessControlProvider } from './providers/accessControlProvider';
+import { workerDataProvider } from './providers/workerDataProvider';
 import { PermissionProvider } from './dashboard/context/PermissionContext';
 import { CoreProviders } from './dashboard/context/CoreProviders';
 import { ProtectedRoute } from './dashboard/components/layout/auth/ProtectedRoute';
@@ -52,6 +53,7 @@ function RefineProviders({ children }: { children: ReactNode }) {
   return (
     <Refine
       authProvider={authProvider}
+      dataProvider={workerDataProvider}
       accessControlProvider={accessControlProvider}
       routerProvider={routerProvider}
       resources={dashboardResources}

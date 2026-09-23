@@ -100,6 +100,62 @@ the public catalog endpoints return anything. Two options:
 - [ ] Categories published before products that reference them
 - [ ] Spot-check `GET /v1/catalog/products` after the Worker deploy
 
+## 6b. Dashboard environment variables and API flow
+
+The dashboard talks to the Worker through one authenticated client:
+`src/lib/apiClient.ts`.
+
+**Environment variables (dashboard, all public VITE_ vars):**
+
+- `VITE_API_BASE_URL` — Worker origin, no trailing slash
+  (dev: `http://127.0.0.1:8787`, prod: `https://api.kitchenbots.in` or the
+  workers.dev URL). Required by every migrated service; without it requests
+  fail fast with the `api_not_configured` error.
+- `VITE_FIREBASE_*` — web app config; the client calls
+  `currentUser.getIdToken()` to mint the bearer token per request
+- `VITE_TURNSTILE_SITE_KEY` — only needed by public intake forms
+- `VITE_USE_FIREBASE_EMULATORS=true` — local dev only
+
+There are no API keys for the dashboard→Worker channel: authorization is
+exclusively the Firebase ID token.
+
+**Request flow:**
+
+1. `apiFetch(path, { method, body, idempotencyKey })` reads the Firebase
+   session and sends `Authorization: Bearer <ID token>`.
+2. On 401 the client force-refreshes the token **once** and retries; a second
+   401 surfaces as `ApiError` with the Worker's `code`.
+3. Non-2xx responses parse the canonical envelope
+   `{ code, message, requestId, fieldErrors? }` into `ApiError` with
+   `status`, `code`, `requestId`, and `fieldErrors` fields.
+4. No token, URL, or response body is ever logged.
+
+**Endpoint map (what each dashboard service calls):**
+
+| Service | Worker endpoints |
+|---|---|
+| `CommerceProductService` / `productService` | `GET/POST /v1/staff/products`, `GET/PATCH/DELETE /v1/staff/products/:id` |
+| `orderService` (staff views) | `GET /v1/staff/orders`, `GET/DELETE /v1/staff/orders/:id` |
+| `orderService.updateOrderStatus` | `PATCH /v1/orders/:id/status` |
+| `orderService.createOrder` (customer) | `POST /v1/orders` + `Idempotency-Key` header |
+| `leadService` | `GET /v1/staff/enquiries`, `PATCH /v1/staff/enquiries/:id/status` |
+| Quotes (CRM) | `GET/POST /v1/staff/quotes`, `PATCH /v1/staff/quotes/:id/status` |
+| `documentService` | `GET/DELETE /v1/staff/documents`, `GET /v1/documents/:id/access` |
+| KPIs | `GET /v1/staff/kpis` |
+| Refine `dataProvider` | `/v1/staff/{products,categories,content,documents}` |
+
+**Not yet migrated (still legacy Google Apps Script, do not point at prod):**
+`ticketService`, `users.api`, `settings.api` (service tickets, user and
+settings modules). They keep `VITE_GAS_WEB_APP_URL` until their Worker
+endpoints ship in Phase 03.
+
+**Money and status conventions:** the Worker stores integer paise
+(`{ amountPaise, currency: 'INR' }`) and lowercase canonical statuses
+(`pending`, `published`, `new`, …). `src/dashboard/api/workerAdapter.ts`
+converts to the dashboard's rupee numbers and TitleCase statuses; never
+send client-computed totals to the Worker — they are recomputed and
+ignored server-side.
+
 ## 7. CORS origins
 
 `worker/wrangler.jsonc` → `vars.ALLOWED_ORIGINS`:

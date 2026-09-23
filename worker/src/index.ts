@@ -19,6 +19,7 @@ import { enquiryRoutes } from './routes/enquiries';
 import { orderRoutes } from './routes/orders';
 import { documentRoutes } from './routes/documents';
 import { adminRoutes } from './routes/admin';
+import { staffCatalogRoutes, staffCrmRoutes, staffQuoteRoutes, staffKpiRoutes } from './routes/staff';
 
 const app = new Hono<AppEnv>();
 
@@ -32,6 +33,10 @@ app.route('/v1', enquiryRoutes);
 app.route('/v1', orderRoutes);
 app.route('/v1', documentRoutes);
 app.route('/v1', adminRoutes);
+app.route('/v1', staffCatalogRoutes);
+app.route('/v1', staffCrmRoutes);
+app.route('/v1', staffQuoteRoutes);
+app.route('/v1', staffKpiRoutes);
 
 // Unknown /v1 routes return the canonical error envelope.
 app.notFound((c) =>
