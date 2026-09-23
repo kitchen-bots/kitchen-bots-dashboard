@@ -1,0 +1,41 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "kitchen-bots-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-22",
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  // Secrets (set with `wrangler secret put`):
+  //   FIREBASE_PROJECT_ID
+  //   FIREBASE_CLIENT_EMAIL
+  //   FIREBASE_PRIVATE_KEY
+  //   TURNSTILE_SECRET_KEY
+  //   RESEND_API_KEY
+  // Non-secret vars live in [vars] or per-env blocks below.
+  "r2_buckets": [
+    { "binding": "PUBLIC_MEDIA", "bucket_name": "kitchen-bots-media" },
+    { "binding": "PRIVATE_DOCUMENTS", "bucket_name": "kitchen-bots-private-documents" }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:5174,https://kitchenbots.in,https://www.kitchenbots.in,https://dashboard.kitchenbots.in",
+    "FIREBASE_PROJECT_ID_PUBLIC": "kitchen-bots"
+  },
+  "env": {
+    "staging": {
+      "name": "kitchen-bots-api-staging",
+      "r2_buckets": [
+        { "binding": "PUBLIC_MEDIA", "bucket_name": "kitchen-bots-media" },
+        { "binding": "PRIVATE_DOCUMENTS", "bucket_name": "kitchen-bots-private-documents-staging" }
+      ],
+      "vars": {
+        "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:5174,https://staging.kitchenbots.in,https://dashboard-staging.kitchenbots.in",
+        "FIREBASE_PROJECT_ID_PUBLIC": "kitchen-bots"
+      }
+    }
+  }
+}

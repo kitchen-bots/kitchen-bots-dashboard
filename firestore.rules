@@ -1,7 +1,213 @@
 rules_version = '2';
 
+// Kitchen Bots Firestore Rules (Phase 01, Task 3)
+//
+// Principles (docs/MASTER_PLAN.md Platform Guardrails):
+// - Deny by default; every allow is an explicit exception below.
+// - Staff authority comes from Firebase custom claims, never a profile field.
+// - Clients can never write roles, prices, totals, ownership, publication
+//   state, or operational status. Those fields are Worker-only.
+// - Collections written exclusively by the Worker (auditEvents, mailOutbox,
+//   idempotencyKeys) are unreadable and unwritable by clients.
+//
+// Notes on rules syntax:
+// - Field-change checks use request.resource.data.diff(resource.data)
+//   .affectedKeys(); request.writeFields is not supported at runtime.
+// - List rules constrain queries via resource.data equality so Firestore can
+//   prove every result is authorized.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function role() {
+      return request.auth.token.get('role', 'customer');
+    }
+
+    function isCustomer() {
+      return signedIn() && role() == 'customer';
+    }
+
+    function isEditor() {
+      return signedIn() && role() == 'editor';
+    }
+
+    function isOperations() {
+      return signedIn() && role() == 'operations';
+    }
+
+    function isAdmin() {
+      return signedIn() && role() == 'admin';
+    }
+
+    function isStaff() {
+      return isEditor() || isOperations() || isAdmin();
+    }
+
+    // Organization membership read for the caller. Membership doc ids are
+    // '{orgId}_{uid}' so the lookup stays a direct get().
+    function isMemberOf(orgId) {
+      return exists(/databases/$(database)/documents/memberships/$(orgId + '_' + uid()));
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // ---------- users ----------
+    // Self-readable mirror of the Firebase profile. Role, status, and claim
+    // mirrors are Worker-managed; a user may edit only display fields.
+    match /users/{userId} {
+      allow get: if signedIn() && (request.auth.uid == userId || isStaff());
+      allow list: if isStaff();
+
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(
+          ['uid', 'email', 'emailVerified', 'displayName', 'phone', 'photoUrl',
+           'addresses', 'status', 'role', 'createdAt', 'updatedAt', 'preferences'])
+        && request.resource.data.role == 'customer';
+      allow update: if signedIn() && request.auth.uid == userId
+        && changedKeys().hasOnly(['displayName', 'phone', 'photoUrl', 'addresses', 'preferences']);
+      // Deletes and role changes: Worker only.
+      allow delete: if false;
+    }
+
+    // ---------- organizations ----------
+    match /organizations/{orgId} {
+      allow get: if signedIn() && (isStaff() || isMemberOf(orgId));
+      allow list: if isStaff();
+      allow create, update: if isOperations() || isAdmin();
+      allow delete: if false;
+    }
+
+    // ---------- memberships ----------
+    match /memberships/{membershipId} {
+      allow get: if signedIn() && (isStaff() || resource.data.uid == request.auth.uid);
+      allow list: if signedIn() && (isStaff() || resource.data.uid == request.auth.uid);
+      allow create, update, delete: if isOperations() || isAdmin();
+    }
+
+    // ---------- catalog: products, categories, content ----------
+    // Published records are publicly readable (storefront catalog). Editors
+    // create drafts and edit content; flipping publicationState is a
+    // Worker/admin transition, never a client field write.
+    match /products/{productId} {
+      allow get: if resource.data.publicationState == 'published' || isStaff();
+      allow list: if true; // Public catalog listing; each doc's get-rule governs visibility.
+
+      allow create: if (isEditor() || isOperations() || isAdmin())
+        && request.resource.data.publicationState == 'draft';
+      allow update: if isOperations() || isAdmin()
+        || (isEditor() && !changedKeys().hasAny(['publicationState']));
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow get: if resource.data.publicationState == 'published' || isStaff();
+      allow list: if isStaff();
+
+      allow create: if (isEditor() || isAdmin())
+        && request.resource.data.publicationState == 'draft';
+      allow update: if isAdmin()
+        || (isEditor() && !changedKeys().hasAny(['publicationState']));
+      allow delete: if isAdmin();
+    }
+
+    match /content/{contentId} {
+      allow get: if resource.data.publicationState == 'published' || isEditor() || isAdmin();
+      allow list: if isEditor() || isAdmin();
+
+      allow create: if (isEditor() || isAdmin())
+        && request.resource.data.publicationState == 'draft';
+      allow update: if isAdmin()
+        || (isEditor() && !changedKeys().hasAny(['publicationState']));
+      allow delete: if isAdmin();
+    }
+
+    // ---------- enquiries ----------
+    match /enquiries/{enquiryId} {
+      allow get: if signedIn()
+        && (isStaff()
+            || (resource.data.email == request.auth.token.email
+                && request.auth.token.email_verified == true));
+      allow list: if isStaff();
+      allow create: if false; // Public intake goes through POST /v1/enquiries (Worker).
+      allow update: if isOperations() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------- quotes ----------
+    match /quotes/{quoteId} {
+      allow get: if signedIn()
+        && (isStaff()
+            || resource.data.customerUid == request.auth.uid
+            || (isCustomer() && resource.data.organizationId != null && isMemberOf(resource.data.organizationId)));
+      allow list: if isStaff();
+      allow create, delete: if false; // Created and mutated by the Worker.
+      allow update: if isOperations() || isAdmin();
+    }
+
+    // ---------- orders ----------
+    match /orders/{orderId} {
+      allow get: if signedIn()
+        && (isOperations() || isAdmin()
+            || resource.data.customerUid == request.auth.uid
+            || (isCustomer() && resource.data.organizationId != null && isMemberOf(resource.data.organizationId)));
+      // The customerUid equality lets Firestore prove every result is the
+      // caller's own; staff listing is unconstrained by ownership.
+      allow list: if signedIn()
+        && (isOperations() || isAdmin() || resource.data.customerUid == request.auth.uid);
+      allow create, delete: if false; // POST /v1/orders (Worker) only.
+      allow update: if isOperations() || isAdmin();
+    }
+
+    // ---------- documents ----------
+    match /documents/{documentId} {
+      allow get: if signedIn()
+        && (isOperations() || isAdmin()
+            || resource.data.customerUid == request.auth.uid
+            || (isCustomer() && resource.data.organizationId != null && isMemberOf(resource.data.organizationId)));
+      allow list: if signedIn()
+        && (isOperations() || isAdmin() || resource.data.customerUid == request.auth.uid);
+      allow create, update, delete: if isOperations() || isAdmin();
+    }
+
+    // ---------- serviceRequests ----------
+    match /serviceRequests/{requestId} {
+      allow get: if signedIn()
+        && (isStaff()
+            || resource.data.customerUid == request.auth.uid
+            || (isCustomer() && resource.data.organizationId != null && isMemberOf(resource.data.organizationId)));
+      allow list: if signedIn()
+        && (isStaff() || resource.data.customerUid == request.auth.uid);
+      allow create: if isCustomer() || isOperations() || isAdmin();
+      allow update: if isOperations() || isAdmin();
+      allow delete: if false;
+    }
+
+    // ---------- Worker-only collections ----------
+    match /auditEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /mailOutbox/{mailId} {
+      allow read, write: if false;
+    }
+
+    match /idempotencyKeys/{keyId} {
+      allow read, write: if false;
+    }
+
+    // ---------- Default deny ----------
     match /{document=**} {
       allow read, write: if false;
     }
