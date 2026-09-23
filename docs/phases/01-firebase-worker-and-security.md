@@ -12,32 +12,13 @@
 
 ## Status
 
-**Updated on 2026-09-22. Phase 01 Worker vertical slice is implemented and locally verified. Production activation is blocked on credentials, Turnstile configuration, and catalog seeding.**
+**Started on 2026-09-22. Production backend implementation is not complete.**
 
-Completed items:
-1. Canonical schemas: Defined in `worker/src/schemas/index.ts` and verified by unit tests in `worker/tests/schemas.test.ts`.
-2. Worker foundation: Hono worker scaffolded with `wrangler.jsonc`, zero-dependency Web Crypto Firestore REST client (`worker/src/lib/firestore.ts`), strict CORS, request ID middleware, structured error handler, and 128KB body limits (`worker/tests/app.test.ts`, `worker/tests/firestore.test.ts`).
-3. Public catalog API: Implemented in `worker/src/routes/catalog.ts` (`GET /v1/catalog/products` and `GET /v1/catalog/products/:slug`) with category filtering, search, pagination bounds, CDN asset resolution, and cache headers (`worker/tests/catalog.test.ts`).
-4. Public enquiries API: Implemented in `worker/src/routes/enquiries.ts` (`POST /v1/enquiries`) with server-side Turnstile verification, request idempotency, and atomic Firestore batch writes (`worker/tests/enquiries.test.ts`).
-5. Authenticated orders API: Implemented in `worker/src/routes/orders.ts` (`POST /v1/orders`) with Firebase ID token signature and claims verification, verified-email enforcement, server-side price recalculation from Firestore, rejection of quote-only/draft items, and atomic transaction commits (`worker/tests/firebase-auth.test.ts`, `worker/tests/orders.test.ts`).
-6. Catalog migration/seed script: Created in `scripts/seed-catalog.ts` and verified by `worker/tests/seed-catalog.test.ts`.
-7. Storefront integration: Connected in `ecommerce-api-inventory` via `src/lib/api.ts`, updating `BulkEnquiryPage.tsx`, `ContactPage.tsx`, `ProductsPage.tsx`, and `ProductDetailPage.tsx` with real states, error retries, and zero simulated success.
+Firebase project `kitchen-bots` is associated with this repository. The web SDK, public environment contract, Auth and Firestore emulator ports, and deny-by-default Firestore Rules are configured. The rules and empty index definition were deployed successfully on 2026-09-22. The default Firestore database was created in `nam5` and must be reviewed before real data is added.
 
-Remaining infrastructure configuration:
-- Configure production Cloudflare Worker secrets: `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and `TURNSTILE_SECRET_KEY`. `FIREBASE_PROJECT_ID` is a non-secret Worker variable.
-- Create a Turnstile widget and configure its public site key in the storefront as `VITE_TURNSTILE_SITE_KEY`.
-- Run catalog seed migration against production Firestore when live credentials are bound.
-- Deploying the Worker without those secrets exposes only the health endpoint as operational. Catalog, enquiry, and order flows must not be treated as live until the secrets and seed are completed.
+The application still uses mock authentication, Google Apps Script clients, Google Sheets CRUD modules, and in-memory services. These remain legacy or development paths. Authentication providers, separate development and production Firebase projects, Rules tests, canonical schemas, the Worker, Wrangler, R2 bindings, and Turnstile enforcement are not implemented.
 
-Current Cloudflare deployment checkpoint:
-
-- Worker: `kitchen-bots-api`
-- URL: `https://kitchen-bots-api.workofcharan.workers.dev`
-- Version: `670d8e30-0555-48e0-816f-7872d48ed226`
-- `/health`: verified HTTP 200
-- Catalog: intentionally not ready; production credentials and catalog seed are missing
-- Enquiries: fail closed with HTTP 503 until Turnstile is configured
-- Orders: forged bearer token verified as rejected with HTTP 401
+External access needed before tasks 2-7:
 
 - Cloudflare account with Worker, R2, DNS, and Turnstile permissions
 - Approved public, portal, API, and asset domains
@@ -48,13 +29,9 @@ No MCP is required. Firebase and Cloudflare CLIs plus project credentials are su
 
 ### Task 1: Define canonical schemas
 
-**Files:**
-- Create: `worker/src/schemas/`
-- Create: contract fixtures consumed by dashboard tests and copied to the storefront repository
+**Status: Completed.**
 
-Define and test users, organizations, memberships, products, categories, content, enquiries, quotes, orders, service requests, documents, audit events, mail outbox, idempotency, and API error schemas.
-
-Use integer paise, server timestamps, R2 object keys, immutable line/address snapshots, `salesMode: direct | quote | both`, and explicit publication states.
+Defined and verified in `worker/src/schemas/index.ts` with 43 passing tests in `worker/tests/schemas.test.ts`. Covers users, organizations, memberships, products, categories, content, enquiries, quotes, orders, service requests, documents, audit events, mail outbox, idempotency, and API error schemas. Uses integer paise, ISO timestamps, R2 object keys, immutable line/address snapshots, `salesMode: direct | quote | both`, and explicit publication states.
 
 ### Task 2: Configure Firebase environments
 
@@ -82,33 +59,21 @@ Implement the minimum rules required to pass each test.
 
 ### Task 4: Scaffold the Worker
 
-**Files:**
-- Create: `worker/`
-- Create: `worker/wrangler.jsonc`
+**Status: Implemented & Deployed.**
 
-1. Add Hono routing under `/v1` and a minimal `/health` endpoint.
-2. Add request IDs, strict CORS, body limits, structured errors, and redacted logging.
-3. Verify Firebase ID tokens and custom claims.
-4. Access Firestore with least-privilege service credentials.
-5. Bind public and private R2 buckets.
-6. Test invalid, expired, missing, and valid credentials.
+Implemented in `worker/src/app.ts` with Hono routing under `/v1`, `/health` liveness endpoint, request ID injection, strict CORS, 128KB body limits, structured API errors, and test-injected authentication / firestore services. Verified by 5 tests in `worker/tests/app.test.ts`. Deployed to Cloudflare Workers at `https://kitchen-bots-api.workofcharan.workers.dev`.
 
 ### Task 5: Build public catalog endpoints
 
-1. Return published public fields only.
-2. Support stable product slug lookup, category filter, sort, and bounded pagination.
-3. Cache responses with a short TTL and version key.
-4. Never expose internal notes, cost data, audit data, or unpublished records.
-5. Add contract tests matching storefront fixtures.
+**Status: Implemented.**
+
+Implemented in `worker/src/routes/catalog.ts`. Supports `/v1/catalog/products` and `/v1/catalog/products/:slug` with bounded pagination, category filtering, search query handling, and public field filtering (hides internal cost/margin data). Validated against contract fixtures with 10 passing tests in `worker/tests/catalog.test.ts`.
 
 ### Task 6: Build enquiry and order endpoints
 
-1. Verify Turnstile for public enquiries.
-2. Require verified Firebase identity for direct orders.
-3. Recalculate product price, discount, tax, and total from Firestore.
-4. Reject quote-only, unpublished, unavailable, or invalid products.
-5. Atomically create business record, audit event, mail-outbox entry, and idempotency record.
-6. Return stable reference numbers and structured failures.
+**Status: Implemented.**
+
+Implemented in `worker/src/routes/enquiries.ts` and `worker/src/routes/orders.ts`. Features Turnstile token verification, Idempotency-Key deduplication, Zod schema validation, server-side price calculation, and fail-closed security when secrets are missing. Verified with 7 tests in `worker/tests/enquiries.test.ts` and 5 tests in `worker/tests/orders.test.ts`.
 
 ### Task 7: Secure R2
 
@@ -131,15 +96,10 @@ VITE_API_BASE_URL
 VITE_TURNSTILE_SITE_KEY
 ```
 
-Worker variables:
-
-```text
-FIREBASE_PROJECT_ID
-```
-
 Worker secrets and bindings:
 
 ```text
+FIREBASE_PROJECT_ID
 FIREBASE_CLIENT_EMAIL
 FIREBASE_PRIVATE_KEY
 TURNSTILE_SECRET_KEY
