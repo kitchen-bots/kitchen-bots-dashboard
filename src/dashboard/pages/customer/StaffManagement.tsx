@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Activity,
   AlertCircle,
@@ -197,13 +198,18 @@ export const StaffManagement = () => {
     setNewBusinessUnit('');
   };
 
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+  const homePath = isAdmin ? '/admin' : '/dashboard';
+  const homeLabel = isAdmin ? 'Admin' : 'Dashboard';
+
   return (
     <PageContainer
       title="Staff & User Directory"
       description="Manage operators, hub procurement teams, and facility staff accounts across commercial zones."
-      homeHref="/dashboard"
+      homeHref={homePath}
       breadcrumbs={[
-        { label: 'Dashboard', href: '/dashboard' },
+        { label: homeLabel, href: homePath },
         { label: 'Staff Management' },
       ]}
       actions={

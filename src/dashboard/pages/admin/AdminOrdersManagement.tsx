@@ -81,12 +81,13 @@ export const AdminOrdersManagement: React.FC = () => {
     <PageContainer
       title="Commercial Orders"
       description="Manage B2B equipment orders, reservations, state transitions, and fulfillment."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Orders' },
       ]}
       actions={
-        <Button onClick={() => navigate('/admin/orders/new')} className="gap-2">
+        <Button type="button" onClick={() => navigate('/admin/orders/new')} className="gap-2">
           <Plus className="w-4 h-4" />
           Create Order
         </Button>
@@ -304,9 +305,11 @@ export const AdminOrdersManagement: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            type="button"
                             className="h-7 w-7 text-muted-foreground hover:text-foreground"
                             onClick={() => navigate(`/admin/orders/${order.id}`)}
                             title="View Order Details"
+                            aria-label={`View order ${order.orderNumber}`}
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </Button>

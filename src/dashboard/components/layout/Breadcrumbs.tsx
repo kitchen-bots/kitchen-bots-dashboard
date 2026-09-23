@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight, Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 
 export interface BreadcrumbItem {
@@ -15,10 +15,14 @@ export interface BreadcrumbsProps extends React.HTMLAttributes<HTMLElement> {
 
 export function Breadcrumbs({
   items,
-  homeHref = '/dashboard',
+  homeHref,
   className,
   ...props
 }: BreadcrumbsProps) {
+  const location = useLocation();
+  const defaultHome = location.pathname.startsWith('/admin') ? '/admin' : '/dashboard';
+  const resolvedHomeHref = homeHref || defaultHome;
+
   return (
     <nav
       aria-label="Breadcrumb"
@@ -28,7 +32,7 @@ export function Breadcrumbs({
       <ol className="flex items-center space-x-2">
         <li>
           <Link
-            to={homeHref}
+            to={resolvedHomeHref}
             className="flex items-center hover:text-brand-primary transition-colors"
             aria-label="Home"
           >

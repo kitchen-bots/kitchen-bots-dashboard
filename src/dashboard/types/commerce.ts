@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const AssetSchema = z.object({
   id: z.string(),
-  url: z.string().url(),
+  url: z.string().min(1, 'Asset URL is required'),
   type: z.enum(['image', 'video', 'document']),
   isPrimary: z.boolean().default(false),
   title: z.string().optional(),

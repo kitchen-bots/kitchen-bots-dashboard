@@ -44,17 +44,15 @@ export function ProductsManagement() {
   const [productToDelete, setProductToDelete] = useState<CommerceProduct | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleToggleFeatured = async (e: React.MouseEvent, id: string) => {
+  const handleToggleFeatured = React.useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
       await toggleFeaturedMutation.mutateAsync(id);
-      if (selectedProduct?.id === id) {
-        setSelectedProduct({ ...selectedProduct, isFeatured: !selectedProduct.isFeatured });
-      }
+      setSelectedProduct(prev => prev?.id === id ? { ...prev, isFeatured: !prev.isFeatured } : prev);
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [toggleFeaturedMutation]);
 
   const closePanel = () => setSelectedProduct(null);
 
@@ -93,8 +91,7 @@ export function ProductsManagement() {
   const handleModalSubmit = async (productData: any) => {
     try {
       if (productToEdit) {
-        await updateProductMutation.mutateAsync({ id: productToEdit.id, data: productData });
-        const updated = await updateProductMutation.mutateAsync({ id: productToEdit.id, data: productData }); // re-fetch ideally, hacky return
+        const updated = await updateProductMutation.mutateAsync({ id: productToEdit.id, data: productData });
         setSelectedProduct(prev => prev?.id === updated.id ? updated : prev);
       } else {
         await createProductMutation.mutateAsync(productData);
@@ -129,12 +126,12 @@ export function ProductsManagement() {
     return `₹${min.toLocaleString('en-IN')} - ₹${max.toLocaleString('en-IN')}`;
   };
 
-  const ProductThumbnail = ({ src, alt, className = "w-12 h-12 rounded-md object-cover border border-border shrink-0" }: { src: string; alt: string; className?: string }) => {
+  const ProductThumbnail = ({ src, alt, className = "w-12 h-12 rounded-lg object-contain bg-muted/40 p-1 border border-border shrink-0" }: { src: string; alt: string; className?: string }) => {
     const [hasError, setHasError] = React.useState(false);
 
     if (hasError || !src) {
       return (
-        <div className={`bg-muted flex items-center justify-center border border-border text-muted-foreground ${className}`}>
+        <div className={`bg-muted/50 flex items-center justify-center border border-border text-muted-foreground ${className}`}>
           <Package size={20} />
         </div>
       );
@@ -155,18 +152,24 @@ export function ProductsManagement() {
       {
         accessorKey: 'name',
         header: 'Product',
+        size: 340,
+        minSize: 300,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5 min-w-[280px]">
               <ProductThumbnail src={getPrimaryImage(product)} alt={product.name} />
-              <div className="min-w-0">
-                <Text className="font-semibold truncate">{product.name}</Text>
+              <div className="min-w-0 flex-1 flex flex-col justify-center">
+                <span className="font-semibold text-foreground text-sm leading-snug line-clamp-2">
+                  {product.name}
+                </span>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-mono whitespace-nowrap shrink-0">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 font-mono font-medium whitespace-nowrap shrink-0">
                     {product.sku}
                   </Badge>
-                  <Text variant="muted" className="text-xs whitespace-nowrap shrink-0">{product.variants.length} Variants</Text>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                    {product.variants.length} {product.variants.length === 1 ? 'Variant' : 'Variants'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -176,38 +179,56 @@ export function ProductsManagement() {
       {
         accessorKey: 'price',
         header: 'Category & Price',
+        size: 180,
+        minSize: 160,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <>
-              <Text>{getPriceRange(product)}</Text>
-              <Text variant="muted" className="text-xs">{product.category}</Text>
-            </>
+            <div className="min-w-[140px] flex flex-col justify-center">
+              <span className="font-semibold text-foreground text-sm leading-snug">
+                {getPriceRange(product)}
+              </span>
+              <span className="text-xs text-muted-foreground mt-0.5">
+                {product.category}
+              </span>
+            </div>
           );
         },
       },
       {
         accessorKey: 'isFeatured',
         header: 'Featured',
+        size: 90,
+        minSize: 80,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <button 
-              onClick={(e) => handleToggleFeatured(e, product.id)}
-              className={`p-1.5 rounded-full transition-colors ${product.isFeatured ? 'text-yellow-400 bg-yellow-50 hover:bg-yellow-100' : 'text-slate-300 hover:text-slate-400 hover:bg-slate-100'}`}
-            >
-              <Star size={18} fill={product.isFeatured ? "currentColor" : "none"} />
-            </button>
+            <div className="flex items-center justify-start min-w-[70px]">
+              <button 
+                type="button"
+                onClick={(e) => handleToggleFeatured(e, product.id)}
+                aria-label={product.isFeatured ? "Remove from featured" : "Mark as featured"}
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                  product.isFeatured 
+                    ? 'text-amber-500 bg-amber-500/10 hover:bg-amber-500/20' 
+                    : 'text-muted-foreground/40 hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <Star size={18} fill={product.isFeatured ? "currentColor" : "none"} />
+              </button>
+            </div>
           );
         },
       },
       {
         accessorKey: 'status',
         header: 'Status',
+        size: 120,
+        minSize: 100,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="flex flex-col gap-1 items-start">
+            <div className="flex items-center min-w-[90px]">
               <Badge variant={getStatusVariant(product.status)}>
                 {product.status || 'Draft'}
               </Badge>
@@ -218,14 +239,30 @@ export function ProductsManagement() {
       {
         id: 'actions',
         header: () => <div className="text-right">Actions</div>,
+        size: 110,
+        minSize: 90,
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="text-right flex justify-end gap-2">
-              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleEditProduct(product); }}>
+            <div className="text-right flex items-center justify-end gap-1.5 min-w-[80px]">
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                aria-label="Edit product"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={(e) => { e.stopPropagation(); handleEditProduct(product); }}
+              >
                 <Edit size={16} />
               </Button>
-              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                aria-label="View product details"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); }}
+              >
                 <ChevronRight size={18} />
               </Button>
             </div>
@@ -233,7 +270,7 @@ export function ProductsManagement() {
         },
       },
     ],
-    []
+    [handleToggleFeatured]
   );
 
   const COLORS = ['#1a7a3c', '#0f4a24', '#f59e0b', '#e5e7eb'];
@@ -258,6 +295,7 @@ export function ProductsManagement() {
     <PageContainer
       title="Product Catalog"
       description="Manage enterprise product catalog, variations, and specifications."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Products' }
@@ -323,19 +361,23 @@ export function ProductsManagement() {
                 <div className="flex items-center gap-3 justify-between md:justify-end">
                   <div className="flex bg-muted p-1 rounded-lg border border-border">
                     <button 
+                      type="button"
                       onClick={() => setViewMode('list')}
+                      aria-label="List view"
                       className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       <List size={18} />
                     </button>
                     <button 
+                      type="button"
                       onClick={() => setViewMode('grid')}
+                      aria-label="Grid view"
                       className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-card shadow-xs text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       <LayoutGrid size={18} />
                     </button>
                   </div>
-                  <Button onClick={handleAddProduct} className="flex items-center gap-2">
+                  <Button onClick={handleAddProduct} type="button" className="flex items-center gap-2">
                     <Plus size={18} />
                     Add Product
                   </Button>
@@ -356,28 +398,30 @@ export function ProductsManagement() {
               ) : (
                 <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {products.map(product => (
-                    <div key={product.id} onClick={() => setSelectedProduct(product)} className="border border-border-default rounded-lg overflow-hidden hover:shadow-elevation-sm transition-shadow cursor-pointer bg-surface flex flex-col">
-                      <div className="h-40 relative flex-shrink-0 bg-muted flex items-center justify-center">
-                        <ProductThumbnail src={getPrimaryImage(product)} alt={product.name} className="w-full h-full object-cover" />
+                    <div key={product.id} onClick={() => setSelectedProduct(product)} className="border border-border rounded-lg overflow-hidden hover:shadow-xs transition-shadow cursor-pointer bg-card flex flex-col">
+                      <div className="h-44 relative flex-shrink-0 bg-muted/20 flex items-center justify-center p-4">
+                        <ProductThumbnail src={getPrimaryImage(product)} alt={product.name} className="w-full h-full object-contain" />
                         <div className="absolute top-2 right-2 flex gap-2">
                           <button 
+                            type="button"
                             onClick={(e) => handleToggleFeatured(e, product.id)}
-                            className={`p-1.5 rounded-full backdrop-blur-md transition-colors ${product.isFeatured ? 'text-yellow-400 bg-white/80' : 'text-white bg-black/30 hover:bg-black/50'}`}
+                            aria-label={product.isFeatured ? "Remove from featured" : "Mark as featured"}
+                            className={`p-1.5 rounded-full backdrop-blur-xs transition-colors ${product.isFeatured ? 'text-amber-500 bg-background/90 shadow-xs' : 'text-foreground/70 bg-background/60 hover:bg-background/90'}`}
                           >
                             <Star size={16} fill={product.isFeatured ? "currentColor" : "none"} />
                           </button>
                         </div>
                         <div className="absolute bottom-2 left-2 flex gap-2">
-                            <Badge variant={getStatusVariant(product.status)} className="backdrop-blur-md bg-white/80 text-[10px]">
+                            <Badge variant={getStatusVariant(product.status)} className="text-[10px]">
                               {product.status}
                             </Badge>
                         </div>
                       </div>
                       <div className="p-4 flex flex-col flex-1">
-                        <Heading level="h5" className="line-clamp-1">{product.name}</Heading>
+                        <Heading level="h5" className="line-clamp-2 leading-snug">{product.name}</Heading>
                         <Text variant="muted" className="text-xs mb-3">{product.category} • {product.sku}</Text>
                         
-                        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border-default">
+                        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
                           <Text className="font-bold">{getPriceRange(product)}</Text>
                           <Text variant="muted" className="text-xs">{product.variants.length} Variants</Text>
                         </div>
@@ -449,17 +493,17 @@ export function ProductsManagement() {
           {selectedProduct && (
             <div className="space-y-8 pb-8">
               {/* Large Preview */}
-              <div className="relative rounded-lg overflow-hidden border border-border-default bg-slate-50 aspect-video">
-                <img src={getPrimaryImage(selectedProduct)} alt={selectedProduct.name} className="w-full h-full object-contain mix-blend-multiply" />
+              <div className="relative rounded-lg overflow-hidden border border-border bg-muted/20 aspect-video flex items-center justify-center p-6">
+                <img src={getPrimaryImage(selectedProduct)} alt={selectedProduct.name} className="max-h-full max-w-full object-contain" />
                 {selectedProduct.isFeatured && (
-                  <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                  <div className="absolute top-3 right-3 bg-amber-400 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
                     <Star size={12} fill="currentColor" /> Featured
                   </div>
                 )}
                 {selectedProduct.tags && selectedProduct.tags.length > 0 && (
-                  <div className="absolute bottom-3 left-3 flex gap-2">
+                  <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
                     {selectedProduct.tags.map(tag => (
-                      <span key={tag} className="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded shadow-sm">
+                      <span key={tag} className="bg-primary text-primary-foreground text-xs font-semibold px-2.5 py-0.5 rounded shadow-xs">
                         {tag}
                       </span>
                     ))}
@@ -484,18 +528,18 @@ export function ProductsManagement() {
                   </div>
                 </div>
 
-                <div className="text-sm text-slate-700 mb-6">
+                <div className="text-sm text-muted-foreground mb-6">
                   {selectedProduct.description || selectedProduct.shortDescription || 'No description provided.'}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-border-default mb-6">
+                <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg border border-border mb-6">
                   <div>
                     <Text variant="muted" className="text-xs uppercase tracking-wider font-semibold">Visibility</Text>
-                    <Text className="text-sm font-medium mt-1">{selectedProduct.visibility}</Text>
+                    <Text className="text-sm font-medium mt-1 text-foreground">{selectedProduct.visibility}</Text>
                   </div>
                   <div>
                     <Text variant="muted" className="text-xs uppercase tracking-wider font-semibold">Total Variants</Text>
-                    <Text className="text-sm font-medium mt-1">{selectedProduct.variants?.length || 0}</Text>
+                    <Text className="text-sm font-medium mt-1 text-foreground">{selectedProduct.variants?.length || 0}</Text>
                   </div>
                 </div>
               </div>
@@ -542,15 +586,15 @@ export function ProductsManagement() {
               <div className="pt-4 border-t border-border">
                 <Text className="text-sm font-semibold mb-3 uppercase tracking-wider text-foreground">Actions</Text>
                 <div className="grid grid-cols-3 gap-3">
-                  <button onClick={() => handleEditProduct(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                  <button type="button" onClick={() => handleEditProduct(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
                     <Edit size={18} className="mb-2 text-primary" />
                     <span className="text-xs font-medium">Edit Product</span>
                   </button>
-                  <button onClick={() => setIsInventoryModalOpen(true)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
+                  <button type="button" onClick={() => setIsInventoryModalOpen(true)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-border bg-card hover:bg-muted/50 text-foreground transition-colors">
                     <Package size={18} className="mb-2 text-emerald-500" />
                     <span className="text-xs font-medium">Inventory</span>
                   </button>
-                  <button onClick={() => handleDeleteClick(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-destructive/20 bg-card hover:bg-destructive/10 text-destructive transition-colors">
+                  <button type="button" onClick={() => handleDeleteClick(selectedProduct)} className="flex flex-col items-center justify-center p-3 rounded-lg border border-destructive/20 bg-card hover:bg-destructive/10 text-destructive transition-colors">
                     <Trash2 size={18} className="mb-2" />
                     <span className="text-xs font-medium">Delete</span>
                   </button>

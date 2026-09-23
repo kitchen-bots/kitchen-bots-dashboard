@@ -15,7 +15,9 @@
     "check": "npm run lint && npm run test && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sync:catalog": "node scripts/sync-catalog.mjs",
+    "sync:catalog:check": "node scripts/sync-catalog.mjs --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

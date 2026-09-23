@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminRoutes } from './dashboard/routes/AdminRoutes';
 import { CustomerRoutes } from './dashboard/routes/CustomerRoutes';
 import { Login } from './dashboard/pages/auth/Login';
+import { Unauthorized } from './dashboard/pages/auth/Unauthorized';
 import { AuthProvider } from './dashboard/context/AuthContext';
 import { PermissionProvider } from './dashboard/context/PermissionContext';
 import { CoreProviders } from './dashboard/context/CoreProviders';
@@ -62,6 +63,7 @@ function App() {
                         </GuestRoute>
                       }
                     />
+                    <Route path="/unauthorized" element={<Unauthorized />} />
                     <Route
                       path="/admin/*"
                       element={
@@ -78,6 +80,7 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                   <DialogSystem />
                 </CoreProviders>

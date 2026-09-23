@@ -11,16 +11,16 @@ describe('CommerceProductService', () => {
   });
 
   it('should filter products by search query', async () => {
-    const response = await CommerceProductService.getProducts({ search: 'Gas' });
+    const response = await CommerceProductService.getProducts({ search: 'BBQ' });
     expect(response.data).toBeInstanceOf(Array);
-    expect(response.data.every(p => p.name.includes('Gas') || p.sku.includes('Gas') || p.category.includes('Gas') || p.name.toLowerCase().includes('gas'))).toBe(true);
+    expect(response.data.every(p => p.name.includes('BBQ') || p.sku.includes('BBQ') || p.category.includes('BBQ') || p.name.toLowerCase().includes('bbq'))).toBe(true);
   });
 
   it('should get a product by ID', async () => {
-    const product = await CommerceProductService.getProductById('PROD-001');
+    const product = await CommerceProductService.getProductById('prod-1');
     expect(product).toBeDefined();
-    expect(product.id).toBe('PROD-001');
-    expect(product.sku).toBe('KB-GAS-001');
+    expect(product.id).toBe('prod-1');
+    expect(product.sku).toBe('KB-SM-001');
   });
 
   it('should throw an error for non-existent product ID', async () => {
@@ -53,15 +53,15 @@ describe('CommerceProductService', () => {
 
   it('should update an existing product', async () => {
     // Make sure we have a product to update
-    await CommerceProductService.getProductById('PROD-001');
+    await CommerceProductService.getProductById('prod-1');
     
-    const updatedProduct = await CommerceProductService.updateProduct('PROD-001', { name: 'Updated Gas Range' });
-    expect(updatedProduct.name).toBe('Updated Gas Range');
-    expect(updatedProduct.id).toBe('PROD-001');
+    const updatedProduct = await CommerceProductService.updateProduct('prod-1', { name: 'Updated Commercial BBQ Grill' });
+    expect(updatedProduct.name).toBe('Updated Commercial BBQ Grill');
+    expect(updatedProduct.id).toBe('prod-1');
 
     // Verify it was updated
-    const fetchedProduct = await CommerceProductService.getProductById('PROD-001');
-    expect(fetchedProduct.name).toBe('Updated Gas Range');
+    const fetchedProduct = await CommerceProductService.getProductById('prod-1');
+    expect(fetchedProduct.name).toBe('Updated Commercial BBQ Grill');
   });
 
   it('should delete a product', async () => {

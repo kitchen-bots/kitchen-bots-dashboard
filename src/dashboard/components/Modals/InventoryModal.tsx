@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +32,14 @@ export function InventoryModal({ isOpen, onClose, product }: InventoryModalProps
   
   // Default to first variant if exists
   const [selectedVariantId, setSelectedVariantId] = useState<string>(product?.variants?.[0]?.id || '');
+
+  useEffect(() => {
+    if (product?.variants?.length) {
+      setSelectedVariantId(product.variants[0].id);
+    } else {
+      setSelectedVariantId('');
+    }
+  }, [product, isOpen]);
 
   const { data: inventoryData, isLoading: loadingInventory } = useQuery({
     queryKey: ['inventory', selectedVariantId],
@@ -97,7 +105,12 @@ export function InventoryModal({ isOpen, onClose, product }: InventoryModalProps
               <Heading level="h3">Inventory Management</Heading>
               <Text variant="muted" className="mt-1 text-sm">{product.name} ({product.sku})</Text>
             </div>
-            <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors">
+            <button 
+              type="button"
+              onClick={onClose} 
+              aria-label="Close inventory modal"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+            >
               <X size={18} />
             </button>
           </div>
@@ -121,12 +134,14 @@ export function InventoryModal({ isOpen, onClose, product }: InventoryModalProps
           {/* Tabs */}
           <div className="flex border-b border-border px-6 mt-4 shrink-0 bg-popover">
             <button
+              type="button"
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               onClick={() => setActiveTab('overview')}
             >
               Overview & History
             </button>
             <button
+              type="button"
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === 'adjust' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               onClick={() => setActiveTab('adjust')}
             >

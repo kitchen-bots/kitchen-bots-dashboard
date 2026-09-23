@@ -20,7 +20,7 @@ export const AddQuote: React.FC = () => {
   });
 
   const [items, setItems] = useState([
-    { productId: 'PROD-1', variantId: 'VAR-1', productName: 'Commercial Oven', sku: 'OVEN-001', unitPrice: 5000, quantity: 1 }
+    { productId: 'prod-1', variantId: 'VAR-001-NG', productName: 'Commercial BBQ Grill', sku: 'KB-SM-001', unitPrice: 18000, quantity: 1 }
   ]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ export const AddQuote: React.FC = () => {
   };
 
   const addItem = () => {
-    setItems([...items, { productId: 'PROD-2', variantId: 'VAR-2', productName: 'Prep Table', sku: 'PT-002', unitPrice: 2000, quantity: 1 }]);
+    setItems([...items, { productId: 'prod-2', variantId: 'VAR-PROD-2-STD', productName: 'Rocket Stove (Single Burner)', sku: 'KB-RS-002', unitPrice: 8500, quantity: 1 }]);
   };
 
   const removeItem = (index: number) => {

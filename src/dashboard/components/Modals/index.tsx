@@ -115,12 +115,13 @@ export const ConfirmDeleteModal = ({
   );
 };
 
-export const CreateModal = ({ isOpen, onClose, title, children, onSubmit, isSubmitting = false }: Omit<ModalProps, 'footer'> & { onSubmit: () => void, isSubmitting?: boolean }) => {
+export const CreateModal = ({ isOpen, onClose, title, children, onSubmit, isSubmitting = false, maxWidth = 'md' }: Omit<ModalProps, 'footer'> & { onSubmit: () => void, isSubmitting?: boolean, maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' }) => {
   return (
     <ModalBase
       isOpen={isOpen}
       onClose={onClose}
       title={title}
+      maxWidth={maxWidth}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -141,12 +142,13 @@ export const CreateModal = ({ isOpen, onClose, title, children, onSubmit, isSubm
   );
 };
 
-export const EditModal = ({ isOpen, onClose, title, children, onSubmit, isSubmitting = false }: Omit<ModalProps, 'footer'> & { onSubmit: () => void, isSubmitting?: boolean }) => {
+export const EditModal = ({ isOpen, onClose, title, children, onSubmit, isSubmitting = false, maxWidth = 'md' }: Omit<ModalProps, 'footer'> & { onSubmit: () => void, isSubmitting?: boolean, maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' }) => {
   return (
     <ModalBase
       isOpen={isOpen}
       onClose={onClose}
       title={title}
+      maxWidth={maxWidth}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>

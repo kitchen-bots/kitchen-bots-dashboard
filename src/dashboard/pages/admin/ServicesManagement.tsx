@@ -173,19 +173,34 @@ export const ServicesManagement = () => {
     <PageContainer
       title="Service Management"
       description="Manage service tickets, track engineers, and monitor resolution metrics."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Services' }
       ]}
       actions={
-        <Button
-          variant="default"
-          onClick={() => setIsNewTicketModalOpen(true)}
-          className="gap-2 self-start md:self-auto cursor-pointer"
-        >
-          <Plus size={16} />
-          New Ticket
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsMapModalOpen(true)}
+            className="gap-1.5 text-xs font-medium cursor-pointer h-9 px-3"
+          >
+            <MapPin size={14} className="text-primary" />
+            <span className="hidden sm:inline">Engineer Radar</span>
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => setIsNewTicketModalOpen(true)}
+            className="gap-1.5 text-xs font-semibold cursor-pointer h-9 px-3.5 shadow-sm"
+          >
+            <Plus size={15} />
+            <span>New Ticket</span>
+          </Button>
+        </div>
       }
     >
       <div className="flex flex-col gap-6">
@@ -196,55 +211,59 @@ export const ServicesManagement = () => {
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          <Card>
+          <Card className="border border-border/80 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400">
+              <div className="flex justify-between items-start mb-2">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   <Ticket size={20} />
                 </div>
                 <Badge variant="warning">Open</Badge>
               </div>
-              <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Open Tickets</Text>
-              <Text className="text-2xl font-bold text-foreground mt-1">{openCount}</Text>
+              <Text variant="muted" className="text-[11px] font-bold uppercase tracking-wider">Open Tickets</Text>
+              <div className="text-3xl font-extrabold tracking-tight text-foreground mt-1">{openCount}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">Awaiting technician assignment</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-border/80 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <div className="flex justify-between items-start mb-2">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   <Wrench size={20} />
                 </div>
                 <Badge variant="info">In Progress</Badge>
               </div>
-              <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Active Services</Text>
-              <Text className="text-2xl font-bold text-foreground mt-1">{inProgressCount}</Text>
+              <Text variant="muted" className="text-[11px] font-bold uppercase tracking-wider">Active Services</Text>
+              <div className="text-3xl font-extrabold tracking-tight text-foreground mt-1">{inProgressCount}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">Under active diagnostic/repair</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-border/80 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <div className="flex justify-between items-start mb-2">
+                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                   <Clock size={20} />
                 </div>
                 <Badge variant="secondary">Assigned</Badge>
               </div>
-              <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Assigned Engineers</Text>
-              <Text className="text-2xl font-bold text-foreground mt-1">{assignedCount}</Text>
+              <Text variant="muted" className="text-[11px] font-bold uppercase tracking-wider">Assigned Engineers</Text>
+              <div className="text-3xl font-extrabold tracking-tight text-foreground mt-1">{assignedCount}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">Field personnel dispatched on site</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-border/80 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <div className="flex justify-between items-start mb-2">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <CheckCircle2 size={20} />
                 </div>
                 <Badge variant="default">Resolved</Badge>
               </div>
-              <Text variant="muted" className="text-xs font-bold uppercase tracking-wider">Completed Tickets</Text>
-              <Text className="text-2xl font-bold text-foreground mt-1">{completedCount}</Text>
+              <Text variant="muted" className="text-[11px] font-bold uppercase tracking-wider">Completed Tickets</Text>
+              <div className="text-3xl font-extrabold tracking-tight text-foreground mt-1">{completedCount}</div>
+              <p className="text-[11px] text-muted-foreground mt-1">Resolved within SLA targets</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -364,12 +383,14 @@ export const ServicesManagement = () => {
                             <Button
                               variant="ghost"
                               size="icon"
+                              type="button"
                               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleCycleStatus(ticket);
                               }}
                               title="Advance status"
+                              aria-label={`Advance status for ticket #${ticket.id}`}
                             >
                               <MoreVertical size={16} />
                             </Button>
@@ -579,85 +600,113 @@ export const ServicesManagement = () => {
         onClose={() => setIsNewTicketModalOpen(false)}
         title="Create Service Ticket"
         description="Dispatch a field maintenance engineer to service commercial kitchen machinery."
-      >
-        <form onSubmit={handleCreateTicket} className="space-y-4 py-2">
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Client / Restaurant Name *
-            </label>
-            <Input
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="e.g. Royal Tandoor"
-              className="text-xs"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Equipment Model *
-            </label>
-            <select
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              className="w-full h-10 px-3 py-2 text-xs rounded-md border border-input bg-background text-foreground focus:outline-hidden"
-            >
-              <option value="Smart Fryer Pro">Smart Fryer Pro</option>
-              <option value="Auto-Wok 3000">Auto-Wok 3000</option>
-              <option value="GrillMaster 3000 PRO">GrillMaster 3000 PRO</option>
-              <option value="SteamPro Commercial Oven">SteamPro Commercial Oven</option>
-              <option value="Main Freezer Leak">CoolFreeze Industrial (Freezer)</option>
-              <option value="Gas Range Component">Global Series Gas Range</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Assigned Field Technician
-            </label>
-            <select
-              value={engineerName}
-              onChange={(e) => setEngineerName(e.target.value)}
-              className="w-full h-10 px-3 py-2 text-xs rounded-md border border-input bg-background text-foreground focus:outline-hidden"
-            >
-              <option value="Vikram R.">Vikram R. (Available)</option>
-              <option value="Priya D.">Priya D. (En Route)</option>
-              <option value="Amit K.">Amit K. (General Dispatch)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="urgent-checkbox"
-              checked={isUrgent}
-              onChange={(e) => setIsUrgent(e.target.checked)}
-              className="rounded border-input text-primary focus:ring-ring h-4 w-4"
-            />
-            <label htmlFor="urgent-checkbox" className="text-xs font-medium text-foreground cursor-pointer">
-              Mark as high-priority urgent service request (SLA &lt; 2 hours)
-            </label>
-          </div>
-
-          <div className="pt-3 border-t border-border flex justify-end gap-2">
+        footer={
+          <div className="flex items-center justify-end gap-2.5 w-full">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsNewTicketModalOpen(false)}
-              className="text-xs cursor-pointer"
+              className="text-xs cursor-pointer h-9 px-4"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              form="create-service-ticket-form"
               size="sm"
-              className="text-xs gap-1.5 cursor-pointer"
+              className="text-xs gap-1.5 cursor-pointer h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm font-semibold"
             >
               <Plus size={14} />
               Dispatch Ticket
             </Button>
+          </div>
+        }
+      >
+        <form id="create-service-ticket-form" onSubmit={handleCreateTicket} className="space-y-4 py-1">
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Client / Restaurant Name <span className="text-destructive">*</span>
+            </label>
+            <Input
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="e.g. Royal Tandoor"
+              className="text-xs h-10"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Equipment Model <span className="text-destructive">*</span>
+            </label>
+            <div className="relative">
+              <select
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-xs rounded-md border border-input bg-background text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring appearance-none pr-8 cursor-pointer"
+              >
+                <option value="Commercial BBQ Grill">Commercial BBQ Grill</option>
+                <option value="Rocket Stove (Single Burner)">Rocket Stove (Single Burner)</option>
+                <option value="Food Processing Machine">Food Processing Machine</option>
+                <option value="Street Food Griddle">Street Food Griddle</option>
+                <option value="Flip BBQ Height Adjustable">Flip BBQ Height Adjustable</option>
+                <option value="Collapsible BBQ Large">Collapsible BBQ Large</option>
+                <option value="Industrial 4-Burner Gas Range">Industrial 4-Burner Gas Range</option>
+                <option value="Commercial Exhaust Hood 6ft">Commercial Exhaust Hood 6ft</option>
+                <option value="Smart Fryer Pro">Smart Fryer Pro</option>
+                <option value="Auto-Wok 3000">Auto-Wok 3000</option>
+                <option value="SteamPro Commercial Oven">SteamPro Commercial Oven</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 rotate-90 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Assigned Field Technician
+            </label>
+            <div className="relative">
+              <select
+                value={engineerName}
+                onChange={(e) => setEngineerName(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-xs rounded-md border border-input bg-background text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring appearance-none pr-8 cursor-pointer"
+              >
+                <option value="Vikram R.">Vikram R. (Available - North Zone)</option>
+                <option value="Priya D.">Priya D. (En Route - Central Hub)</option>
+                <option value="Amit K.">Amit K. (Available - West Hub)</option>
+                <option value="Rajesh M.">Rajesh M. (On Duty - South Hub)</option>
+              </select>
+              <ChevronRight className="w-3.5 h-3.5 rotate-90 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/70 bg-muted/20 p-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="urgent-checkbox"
+                checked={isUrgent}
+                onChange={(e) => setIsUrgent(e.target.checked)}
+                className="rounded border-input text-primary focus:ring-ring h-4 w-4 cursor-pointer"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">
+                    Mark as High-Priority Urgent Request
+                  </span>
+                  {isUrgent && (
+                    <Badge variant="destructive" className="text-[10px] uppercase font-bold tracking-wider py-0 px-1.5">
+                      SLA &lt; 2h
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Sends immediate priority alert to the nearest active field engineer.
+                </p>
+              </div>
+            </label>
           </div>
         </form>
       </Modal>

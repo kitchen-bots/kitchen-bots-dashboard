@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">
+  <rect width="160" height="160" rx="12" fill="#F1F5F9" />
+  <!-- Stand Mixer Cast Base -->
+  <path d="M36 138 L124 138 L120 126 L40 126 Z" fill="#1E293B" />
+  <!-- Rear Column Pillar -->
+  <rect x="96" y="44" width="24" height="84" rx="4" fill="#334155" />
+  <!-- Gearhead Top Housing -->
+  <rect x="44" y="32" width="76" height="26" rx="8" fill="#475569" />
+  <circle cx="110" cy="45" r="5" fill="#1E293B" />
+  <!-- Speed Selector Lever -->
+  <rect x="116" y="38" width="14" height="4" rx="2" fill="#94A3B8" />
+  <circle cx="130" cy="40" r="3" fill="#16A34A" />
+  <!-- Stainless Planetary Mixing Bowl -->
+  <path d="M44 76 C44 114, 96 114, 96 76 Z" fill="#64748B" stroke="#94A3B8" stroke-width="2" />
+  <ellipse cx="70" cy="76" rx="26" ry="6" fill="#334155" />
+  <!-- Safety Guard / Wire Cage -->
+  <path d="M46 64 L94 64" stroke="#94A3B8" stroke-width="2" stroke-dasharray="3 3" />
+  <path d="M48 70 L92 70" stroke="#94A3B8" stroke-width="2" stroke-dasharray="3 3" />
+  <!-- Agitator / Whisk Assembly -->
+  <line x1="70" y1="56" x2="70" y2="88" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round" />
+  <!-- Bowl Lift Handle -->
+  <rect x="92" y="98" width="16" height="5" rx="1" fill="#1E293B" />
+  <circle cx="108" cy="100" r="3" fill="#0F172A" />
+</svg>

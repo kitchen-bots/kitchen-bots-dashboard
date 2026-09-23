@@ -369,6 +369,7 @@ export function LeadsManagement() {
     <PageContainer
       title="Lead Management CRM"
       description="Track enquiries, manage prospects, monitor quotations and convert opportunities."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Leads' }

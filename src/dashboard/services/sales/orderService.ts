@@ -5,8 +5,191 @@ import { EventFactory } from '../../utils/eventFactory';
 import { EventType, EventCategory, AggregateType } from '../../types/events';
 import { QuoteService } from './quoteService';
 
+import { TimelineService } from './timelineService';
+
+const INITIAL_COMMERCIAL_ORDERS: Order[] = [
+  {
+    id: 'ord-comm-1',
+    orderNumber: 'ORD-9801',
+    customerId: 'user-cust-1',
+    companyName: 'Curry Cloud Kitchens',
+    contactPerson: 'Rohan Das',
+    email: 'rohan.das@currycloud.com',
+    phone: '+91 98765 01234',
+    billingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
+    shippingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
+    salesRepId: 'user-admin-1',
+    status: 'Pending Approval',
+    paymentStatus: 'Paid',
+    shippingStatus: 'Unshipped',
+    inventoryStatus: 'Pending',
+    orderSource: 'Quote Conversion',
+    priority: 'High',
+    currency: 'INR',
+    items: [
+      {
+        id: 'line-101',
+        productId: 'p-1',
+        variantId: 'v-p1-1',
+        productName: 'Commercial BBQ Grill',
+        sku: 'KB-BBQ-001',
+        pricing: {
+          unitPrice: 85000,
+          quantity: 1,
+          discountAmount: 0,
+          taxRate: 18,
+          taxAmount: 15300,
+          subtotal: 85000,
+          total: 100300,
+        },
+        fulfilledQuantity: 0,
+        fulfillmentStatus: 'Unfulfilled',
+      },
+    ],
+    subtotal: 85000,
+    totalDiscount: 0,
+    totalTax: 15300,
+    shippingCost: 2500,
+    grandTotal: 102800,
+    documents: [],
+    createdAt: '2024-10-18T10:30:00.000Z',
+    updatedAt: '2024-10-18T10:30:00.000Z',
+  },
+  {
+    id: 'ord-comm-2',
+    orderNumber: 'ORD-9802',
+    customerId: 'user-cust-2',
+    companyName: 'Blue Door Cafe',
+    contactPerson: 'Vikram Singh',
+    email: 'vikram@bluedoorcafe.in',
+    phone: '+91 98765 43210',
+    billingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
+    shippingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
+    salesRepId: 'user-admin-1',
+    status: 'Approved',
+    paymentStatus: 'Paid',
+    shippingStatus: 'Unshipped',
+    inventoryStatus: 'Reserved',
+    orderSource: 'Manual',
+    priority: 'Normal',
+    currency: 'INR',
+    items: [
+      {
+        id: 'line-102',
+        productId: 'p-8',
+        variantId: 'v-p8-1',
+        productName: 'Industrial 4-Burner Gas Range',
+        sku: 'KB-RNG-008',
+        pricing: {
+          unitPrice: 68000,
+          quantity: 1,
+          discountAmount: 0,
+          taxRate: 18,
+          taxAmount: 12240,
+          subtotal: 68000,
+          total: 80240,
+        },
+        fulfilledQuantity: 0,
+        fulfillmentStatus: 'Unfulfilled',
+      },
+    ],
+    subtotal: 68000,
+    totalDiscount: 0,
+    totalTax: 12240,
+    shippingCost: 1500,
+    grandTotal: 81740,
+    documents: [],
+    createdAt: '2024-10-16T14:20:00.000Z',
+    updatedAt: '2024-10-17T09:15:00.000Z',
+  },
+  {
+    id: 'ord-comm-3',
+    orderNumber: 'ORD-9803',
+    customerId: 'user-cust-3',
+    companyName: 'Cloud Kitchens India',
+    contactPerson: 'Anita Desai',
+    email: 'anita@cloudkitchens.co.in',
+    phone: '+91 98222 33445',
+    billingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
+    shippingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
+    salesRepId: 'user-admin-1',
+    status: 'Shipped',
+    paymentStatus: 'Paid',
+    shippingStatus: 'Shipped',
+    inventoryStatus: 'Deducted',
+    orderSource: 'Ecommerce',
+    priority: 'Urgent',
+    currency: 'INR',
+    items: [
+      {
+        id: 'line-103',
+        productId: 'p-6',
+        variantId: 'v-p6-1',
+        productName: 'Commercial Exhaust Hood 6ft',
+        sku: 'KB-HOD-006',
+        pricing: {
+          unitPrice: 52000,
+          quantity: 1,
+          discountAmount: 0,
+          taxRate: 18,
+          taxAmount: 9360,
+          subtotal: 52000,
+          total: 61360,
+        },
+        fulfilledQuantity: 1,
+        fulfillmentStatus: 'Fulfilled',
+      },
+    ],
+    subtotal: 52000,
+    totalDiscount: 0,
+    totalTax: 9360,
+    shippingCost: 3000,
+    grandTotal: 64360,
+    documents: [],
+    createdAt: '2024-10-14T11:00:00.000Z',
+    updatedAt: '2024-10-18T16:45:00.000Z',
+  },
+];
+
+INITIAL_COMMERCIAL_ORDERS.forEach((order) => {
+  TimelineService.addTimelineEntry({
+    id: `tl-${order.id}-1`,
+    entityId: order.id,
+    entityType: 'ORDER',
+    type: 'CREATED',
+    userId: order.salesRepId,
+    userName: 'Sales System',
+    description: `Order ${order.orderNumber} placed for ${order.companyName} with ${order.items.length} item(s)`,
+    timestamp: order.createdAt,
+  });
+  if (order.status === 'Approved' || order.status === 'Shipped') {
+    TimelineService.addTimelineEntry({
+      id: `tl-${order.id}-2`,
+      entityId: order.id,
+      entityType: 'ORDER',
+      type: 'APPROVED',
+      userId: order.salesRepId,
+      userName: 'Commercial Operations',
+      description: `Order approved and verified for fulfillment`,
+      timestamp: order.updatedAt,
+    });
+  }
+  if (order.status === 'Shipped') {
+    TimelineService.addTimelineEntry({
+      id: `tl-${order.id}-3`,
+      entityId: order.id,
+      entityType: 'ORDER',
+      type: 'SHIPPED',
+      userId: order.salesRepId,
+      userName: 'Logistics Dispatch',
+      description: `Dispatched via BlueDart Express to ${order.shippingAddress.city}`,
+      timestamp: order.updatedAt,
+    });
+  }
+});
+
 export class OrderService {
-  private static orders: Map<string, Order> = new Map();
+  private static orders: Map<string, Order> = new Map(INITIAL_COMMERCIAL_ORDERS.map((o) => [o.id, o]));
   public static lastEventId: Map<string, string> = new Map(); // Expose for inter-service causation
 
   static createOrderFromQuote(quote: Quote, userId: string, userName: string): Order {
@@ -108,6 +291,97 @@ export class OrderService {
     return Array.from(this.orders.values()).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+  }
+
+  static registerDirectOrder(data: {
+    id?: string;
+    orderNumber?: string;
+    customerId?: string;
+    companyName?: string;
+    contactPerson?: string;
+    email?: string;
+    phone?: string;
+    totalPrice?: number;
+    items?: Array<{ productId?: string; name: string; quantity: number; price: number }>;
+    shippingAddress?: any;
+    status?: OrderStatus;
+  }): Order {
+    const id = data.id || crypto.randomUUID();
+    const orderNumber = data.orderNumber || `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
+    const items: OrderLineItem[] = (data.items || []).map((it, idx) => ({
+      id: `line-${idx}-${Date.now()}`,
+      productId: it.productId || 'p-gen',
+      variantId: 'v-gen',
+      productName: it.name,
+      sku: `SKU-${idx + 1}`,
+      pricing: {
+        unitPrice: it.price,
+        quantity: it.quantity,
+        discountAmount: 0,
+        taxRate: 18,
+        taxAmount: Math.round(it.price * it.quantity * 0.18),
+        subtotal: it.price * it.quantity,
+        total: Math.round(it.price * it.quantity * 1.18),
+      },
+      fulfilledQuantity: 0,
+      fulfillmentStatus: 'Unfulfilled',
+    }));
+
+    const subtotal = items.reduce((s, i) => s + i.pricing.subtotal, 0);
+    const totalTax = items.reduce((s, i) => s + i.pricing.taxAmount, 0);
+    const grandTotal = data.totalPrice || (subtotal + totalTax);
+
+    const addr = {
+      street: data.shippingAddress?.addressLine1 || 'Main Commercial Facility',
+      city: data.shippingAddress?.city || 'Bengaluru',
+      state: data.shippingAddress?.state || 'Karnataka',
+      postalCode: data.shippingAddress?.postalCode || '560001',
+      country: data.shippingAddress?.country || 'India',
+    };
+
+    const order: Order = {
+      id,
+      orderNumber,
+      customerId: data.customerId || 'UNKNOWN',
+      companyName: data.companyName || 'Commercial Client',
+      contactPerson: data.contactPerson || 'Procurement Officer',
+      email: data.email || 'orders@kitchenbots.com',
+      phone: data.phone || '+91 98765 43210',
+      billingAddress: addr,
+      shippingAddress: addr,
+      salesRepId: 'user-admin-1',
+      status: data.status || 'Pending Approval',
+      paymentStatus: 'Paid',
+      shippingStatus: 'Unshipped',
+      inventoryStatus: 'Pending',
+      orderSource: 'Ecommerce',
+      priority: 'Normal',
+      currency: 'INR',
+      items,
+      subtotal,
+      totalDiscount: 0,
+      totalTax,
+      shippingCost: 0,
+      grandTotal,
+      documents: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.orders.set(id, order);
+
+    TimelineService.addTimelineEntry({
+      id: crypto.randomUUID(),
+      entityId: id,
+      entityType: 'ORDER',
+      type: 'CREATED',
+      userId: 'system',
+      userName: 'Direct Order Placement',
+      description: `Order ${orderNumber} placed for ${order.companyName} (${items.length} item(s), ₹${grandTotal.toLocaleString('en-IN')})`,
+      timestamp: order.createdAt,
+    });
+
+    return order;
   }
 
   // --- State Machine ---

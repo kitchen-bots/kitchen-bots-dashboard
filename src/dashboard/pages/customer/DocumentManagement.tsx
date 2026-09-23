@@ -38,7 +38,7 @@ const initialDocuments: DocumentItem[] = [
     name: 'Maintenance_Guide_V2.pdf',
     size: '4.2 MB',
     type: 'MANUAL',
-    product: 'GrillMaster 3000 PRO',
+    product: 'Commercial BBQ Grill',
     date: 'Oct 24, 2023',
     version: 'v2.1',
     owner: 'Rahul Sharma',
@@ -48,7 +48,7 @@ const initialDocuments: DocumentItem[] = [
     name: 'Installation_Invoice_7721.pdf',
     size: '1.8 MB',
     type: 'INVOICE',
-    product: 'CoolFreeze Industrial',
+    product: 'Rocket Stove (Single Burner)',
     date: 'Oct 22, 2023',
     version: 'v1.0',
     owner: 'Ops Billing',
@@ -58,7 +58,7 @@ const initialDocuments: DocumentItem[] = [
     name: 'ISO_9001_Certification.pdf',
     size: '2.1 MB',
     type: 'CERT',
-    product: 'Global Series Ranges',
+    product: 'Industrial 4-Burner Gas Range',
     date: 'Oct 15, 2023',
     version: 'v3.0',
     owner: 'Quality Assurance',
@@ -68,7 +68,7 @@ const initialDocuments: DocumentItem[] = [
     name: 'Quarterly_Service_Report_Q3.pdf',
     size: '3.4 MB',
     type: 'SERVICE',
-    product: 'SteamPro Commercial Oven',
+    product: 'Commercial Exhaust Hood 6ft',
     date: 'Sep 30, 2023',
     version: 'v1.1',
     owner: 'Field Engineering',
@@ -78,7 +78,7 @@ const initialDocuments: DocumentItem[] = [
     name: 'Electrical_Schematics_RevC.pdf',
     size: '5.6 MB',
     type: 'MANUAL',
-    product: 'Induction Top Double-Burner',
+    product: 'Food Processing Machine',
     date: 'Sep 18, 2023',
     version: 'v2.4',
     owner: 'Hardware Team',
@@ -486,14 +486,17 @@ export const DocumentManagement: React.FC = () => {
         </Card>
 
         {/* Right Preview Panel */}
-        <Card className="hidden 2xl:flex w-[320px] shrink-0 flex-col">
-          <CardHeader className="pb-3 border-b border-border">
+        <Card className="hidden 2xl:flex w-[320px] shrink-0 flex-col border border-border/80 shadow-sm rounded-xl overflow-hidden bg-card">
+          <CardHeader className="p-4 border-b border-border bg-muted/20">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold">Document Metadata</CardTitle>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-semibold text-foreground">Document Details</CardTitle>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={() => setIsPreviewModalOpen(true)}
                 title="Full Preview"
               >
@@ -501,42 +504,62 @@ export const DocumentManagement: React.FC = () => {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4 text-xs">
-            <div className="space-y-2">
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">File</span>
-                <span className="font-semibold text-foreground truncate max-w-[160px]">
+          <CardContent className="p-4 space-y-4 text-xs flex-1 flex flex-col justify-between">
+            {/* File Header Preview Card */}
+            <div className="p-3 rounded-lg border border-border/70 bg-muted/30 flex items-start gap-2.5">
+              <div className="h-9 w-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground truncate text-xs" title={selectedDoc.name}>
                   {selectedDoc.name}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">Size</span>
-                <span className="font-medium text-foreground">{selectedDoc.size}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">Version</span>
-                <span className="font-medium text-foreground">{selectedDoc.version}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">Owner</span>
-                <span className="font-medium text-foreground">{selectedDoc.owner}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-border/50">
-                <span className="text-muted-foreground">Hardware Unit</span>
-                <span className="font-medium text-foreground truncate max-w-[160px]">
-                  {selectedDoc.product}
-                </span>
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                    {selectedDoc.type}
+                  </Badge>
+                  <span className="text-[11px] text-muted-foreground font-mono">{selectedDoc.size}</span>
+                </div>
               </div>
             </div>
 
+            {/* Metadata Rows */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                <span className="text-muted-foreground">Version</span>
+                <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
+                  {selectedDoc.version}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                <span className="text-muted-foreground">Owner</span>
+                <span className="font-medium text-foreground truncate max-w-[140px]">{selectedDoc.owner}</span>
+              </div>
+              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                <span className="text-muted-foreground">Hardware Unit</span>
+                <span className="font-medium text-foreground truncate max-w-[140px]" title={selectedDoc.product}>
+                  {selectedDoc.product}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                <span className="text-muted-foreground">Date Indexed</span>
+                <span className="font-medium text-foreground">{selectedDoc.date}</span>
+              </div>
+            </div>
+
+            {/* Action Footer */}
             <div className="pt-2">
               <Button
                 onClick={() => handleDownload(selectedDoc)}
-                className="w-full gap-1.5 cursor-pointer"
+                className="w-full gap-2 cursor-pointer text-xs font-semibold py-2.5 h-10 shadow-sm"
                 size="sm"
+                title={`Download ${selectedDoc.name}`}
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download {selectedDoc.name}</span>
+                <Download className="w-4 h-4 shrink-0" />
+                <span>Download File</span>
+                <span className="text-[10px] opacity-80 ml-auto font-mono bg-primary-foreground/15 px-1.5 py-0.5 rounded">
+                  {selectedDoc.size}
+                </span>
               </Button>
             </div>
           </CardContent>
