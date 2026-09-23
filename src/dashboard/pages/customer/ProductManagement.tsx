@@ -17,6 +17,7 @@ import { productService } from '../../services/productService';
 import { Product } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { PageContainer } from '../../components/layout/PageContainer';
+import { getMediaUrl } from '../../lib/cdn';
 import {
   Card,
   CardContent,
@@ -254,7 +255,7 @@ export const ProductManagement: React.FC = () => {
                       <img
                         alt={product.name}
                         className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                        src={product.image}
+                        src={getMediaUrl(product.image)}
                       />
                     ) : (
                       <ImageIcon className="text-muted-foreground w-10 h-10 opacity-40" />

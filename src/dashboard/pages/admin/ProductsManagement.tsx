@@ -17,6 +17,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { DataGrid } from '../../components/ui/DataGrid';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { ColumnDef } from '@tanstack/react-table';
+import { getMediaUrl } from '../../lib/cdn';
 
 export function ProductsManagement() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,7 +115,8 @@ export function ProductsManagement() {
 
   const getPrimaryImage = (product: CommerceProduct) => {
     const primary = product.images?.find(i => i.isPrimary) || product.images?.[0];
-    return primary?.url || 'https://via.placeholder.com/150';
+    const url = primary?.url || 'https://via.placeholder.com/150';
+    return getMediaUrl(url);
   };
 
   const getPriceRange = (product: CommerceProduct) => {
