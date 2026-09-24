@@ -135,7 +135,7 @@ export const AddOrder = () => {
       } as any);
 
       showToast('Success', 'Order created successfully', 'success');
-      navigate(isAdmin ? '/admin/orders' : '/customer/orders');
+      navigate(isAdmin ? '/admin/orders' : '/dashboard/orders');
     } catch (err) {
       console.error('Failed to create order', err);
       showToast('Error', 'Failed to create order', 'error');
@@ -160,6 +160,7 @@ export const AddOrder = () => {
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(homePath)}
@@ -170,6 +171,7 @@ export const AddOrder = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(ordersPath)}

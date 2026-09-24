@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">
+  <rect width="160" height="160" rx="12" fill="#F1F5F9" />
+  <!-- Main Deep Fryer Cabinet -->
+  <rect x="28" y="36" width="104" height="108" rx="4" fill="#334155" />
+  <rect x="32" y="40" width="96" height="100" rx="2" fill="#475569" />
+  <!-- Dual Oil Vats / Well Chambers -->
+  <rect x="38" y="46" width="38" height="34" rx="2" fill="#1E293B" />
+  <rect x="42" y="50" width="30" height="26" fill="#F59E0B" fill-opacity="0.3" stroke="#F59E0B" stroke-width="1.5" />
+  <rect x="84" y="46" width="38" height="34" rx="2" fill="#1E293B" />
+  <rect x="88" y="50" width="30" height="26" fill="#F59E0B" fill-opacity="0.3" stroke="#F59E0B" stroke-width="1.5" />
+  <!-- Auto-Lift Basket Handles -->
+  <rect x="52" y="24" width="10" height="24" rx="2" fill="#94A3B8" />
+  <rect x="54" y="18" width="6" height="8" rx="2" fill="#0F172A" />
+  <rect x="98" y="24" width="10" height="24" rx="2" fill="#94A3B8" />
+  <rect x="100" y="18" width="6" height="8" rx="2" fill="#0F172A" />
+  <!-- Filtration System Panel -->
+  <rect x="38" y="86" width="84" height="18" rx="2" fill="#1E293B" />
+  <!-- Digital Temperature Controllers -->
+  <rect x="42" y="90" width="22" height="10" rx="1" fill="#0F172A" />
+  <rect x="45" y="93" width="14" height="4" fill="#22C55E" />
+  <rect x="70" y="90" width="22" height="10" rx="1" fill="#0F172A" />
+  <rect x="73" y="93" width="14" height="4" fill="#22C55E" />
+  <circle cx="104" cy="95" r="4" fill="#16A34A" />
+  <circle cx="114" cy="95" r="3" fill="#EF4444" />
+  <!-- Micro-filtration Lower Tank -->
+  <rect x="38" y="110" width="84" height="24" rx="2" fill="#0F172A" />
+  <rect x="44" y="118" width="72" height="8" rx="1" fill="#334155" />
+  <line x1="50" y1="122" x2="110" y2="122" stroke="#64748B" stroke-width="2" stroke-dasharray="4 2" />
+  <!-- Castors / Legs -->
+  <rect x="36" y="144" width="8" height="6" rx="1" fill="#0F172A" />
+  <rect x="116" y="144" width="8" height="6" rx="1" fill="#0F172A" />
+</svg>

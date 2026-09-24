@@ -119,15 +119,16 @@ export function ProductModal({ isOpen, onClose, onSubmit, initialData }: Product
       isOpen={isOpen}
       onClose={onClose}
       title={title}
+      maxWidth="xl"
       onSubmit={form.handleSubmit(onFormSubmit)}
       isSubmitting={form.formState.isSubmitting}
     >
-      <div className="flex border-b border-border-default mb-4">
+      <div className="flex border-b border-border mb-4">
         {['basic', 'specs', 'variants', 'images'].map((tab) => (
           <button
             key={tab}
             type="button"
-            className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${activeTab === tab ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab(tab as any)}
           >
             {tab}

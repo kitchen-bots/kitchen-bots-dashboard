@@ -20,6 +20,11 @@ import {
 } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
+function generateFallbackSku(name: string): string {
+  const clean = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6) || 'PROD';
+  return `KB-${clean}-01`;
+}
+
 export const AddProduct = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -55,12 +60,12 @@ export const AddProduct = () => {
       setIsSubmitting(true);
       await productService.createProduct({
         name: formData.name || 'Untitled Product',
-        sku: formData.sku || `KB-SKU-${Math.floor(Math.random() * 10000)}`,
+        sku: formData.sku || generateFallbackSku(formData.name),
         category: formData.category,
         price: parseFloat(formData.price) || 0,
         stock: parseInt(formData.stock) || 0,
         status: status,
-        image: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=400&q=80',
+        image: '/products/commercial-gas-range.svg',
         specs: [],
         isFeatured: false,
         lifecycleState: status === 'Active' ? 'Published' : 'Draft',
@@ -74,7 +79,7 @@ export const AddProduct = () => {
         relatedProducts: [],
       });
       showToast('Success', 'Product catalog entry created.', 'success');
-      navigate(isAdmin ? '/admin/products' : '/customer/products');
+      navigate(productsPath);
     } catch (error) {
       console.error('Failed to create product:', error);
       showToast('Error', 'Failed to create product. Please try again.', 'error');
@@ -84,7 +89,7 @@ export const AddProduct = () => {
   };
 
   const homePath = isAdmin ? '/admin' : '/dashboard';
-  const productsPath = isAdmin ? '/admin/products' : '/customer/products';
+  const productsPath = isAdmin ? '/admin/products' : '/dashboard/products';
 
   return (
     <PageContainer
@@ -99,6 +104,7 @@ export const AddProduct = () => {
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(homePath)}
@@ -109,6 +115,7 @@ export const AddProduct = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(productsPath)}

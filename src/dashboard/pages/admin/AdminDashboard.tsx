@@ -110,6 +110,7 @@ export function AdminDashboard() {
     <PageContainer
       title="Operations Overview"
       description="Real-time commercial automation, orders, catalog and customer operations."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Dashboard' },

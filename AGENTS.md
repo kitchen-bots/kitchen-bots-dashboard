@@ -47,3 +47,41 @@ npm run build
 ```
 
 Worker and Firebase commands will be added in the infrastructure phase and become mandatory after that phase.
+
+## Daily Git & PR Workflow
+
+Always follow this exact workflow when starting work, committing, opening PRs, and making follow-up updates in this repository:
+
+### 1. Start Work
+```bash
+git switch main
+git fetch upstream
+git merge --ff-only upstream/main
+git push origin main
+git switch -c charan/<task-name>
+```
+
+### 2. Commit Changes
+```bash
+git add <path/to/files>
+git diff --cached --check
+npm run check
+git commit -m "feat: describe the change"
+git push -u origin HEAD
+```
+
+### 3. Open PR
+```bash
+gh pr create \
+  --repo kitchen-bots/kitchen-bots-dashboard \
+  --base main \
+  --head "workofcharan:$(git branch --show-current)"
+```
+
+### 4. Follow-up Changes on the Same PR
+```bash
+git add <path/to/files>
+npm run check
+git commit -m "fix: describe the correction"
+git push
+```

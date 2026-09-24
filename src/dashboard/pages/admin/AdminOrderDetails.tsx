@@ -78,6 +78,7 @@ export const AdminOrderDetails: React.FC = () => {
     <PageContainer
       title={order.orderNumber}
       description={`Customer: ${order.companyName} (${order.contactPerson})`}
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Orders', href: '/admin/orders' },

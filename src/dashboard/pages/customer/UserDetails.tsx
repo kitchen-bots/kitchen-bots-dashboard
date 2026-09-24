@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   Building2,
@@ -24,23 +24,30 @@ import { Badge } from '../../components/ui/Badge';
 
 export const UserDetails = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+  const homePath = isAdmin ? '/admin' : '/dashboard';
+  const staffPath = isAdmin ? '/admin/users' : '/dashboard/staff';
+  const homeLabel = isAdmin ? 'Admin' : 'Dashboard';
+  const staffLabel = isAdmin ? 'Users' : 'Staff';
 
   return (
     <PageContainer
       title="User Profile: Priya Kapoor"
       description="Procurement Manager account, organizational hierarchy, and assigned commercial units."
-      homeHref="/dashboard"
+      homeHref={homePath}
       breadcrumbs={[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Staff', href: '/dashboard/staff' },
+        { label: homeLabel, href: homePath },
+        { label: staffLabel, href: staffPath },
         { label: 'Priya Kapoor' },
       ]}
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homePath)}
             className="gap-1.5"
             title="Return to Home Dashboard"
           >
@@ -48,9 +55,10 @@ export const UserDetails = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate('/dashboard/staff')}
+            onClick={() => navigate(staffPath)}
             className="gap-1.5"
             title="Return to Staff Directory"
           >

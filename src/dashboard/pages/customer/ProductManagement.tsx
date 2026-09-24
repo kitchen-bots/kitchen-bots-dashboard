@@ -17,6 +17,7 @@ import { productService } from '../../services/productService';
 import { Product } from '../../types';
 import { useToast } from '../../context/ToastContext';
 import { PageContainer } from '../../components/layout/PageContainer';
+import { getMediaUrl } from '../../lib/cdn';
 import {
   Card,
   CardContent,
@@ -87,8 +88,10 @@ export const ProductManagement: React.FC = () => {
     return matchesCategory && matchesStock;
   });
 
-  const lowStockCount = products.filter((p) => (p.stock ?? 0) <= 5).length;
+  const lowStockProducts = products.filter((p) => (p.stock ?? 0) <= 5);
+  const lowStockCount = lowStockProducts.length;
   const activeCount = products.filter((p) => p.status === 'Active').length;
+  const featuredCount = products.filter((p) => p.isFeatured).length;
 
   return (
     <PageContainer
@@ -102,6 +105,7 @@ export const ProductManagement: React.FC = () => {
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(homePath)}
@@ -112,6 +116,7 @@ export const ProductManagement: React.FC = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             size="sm"
             onClick={() => navigate(`${basePath}/new`)}
             className="gap-1.5"
@@ -172,15 +177,15 @@ export const ProductManagement: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4 space-y-0">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Best Sellers
+              Featured Units
             </span>
             <div className="h-7 w-7 rounded-md border border-border bg-muted/40 flex items-center justify-center text-amber-500">
               <Star className="w-4 h-4" />
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
-            <div className="text-2xl font-bold tracking-tight text-foreground">15</div>
-            <p className="text-[11px] text-muted-foreground mt-1">High-demand commercial units</p>
+            <div className="text-2xl font-bold tracking-tight text-foreground">{featuredCount}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">Highlighted commercial units</p>
           </CardContent>
         </Card>
       </div>
@@ -245,12 +250,12 @@ export const ProductManagement: React.FC = () => {
             ) : (
               filteredProducts.map((product) => (
                 <Card key={product.id} className="overflow-hidden group flex flex-col">
-                  <div className="aspect-video bg-muted/30 relative flex items-center justify-center overflow-hidden border-b border-border">
+                  <div className="aspect-video bg-muted/20 relative flex items-center justify-center overflow-hidden border-b border-border p-4">
                     {product.image ? (
                       <img
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        src={product.image}
+                        className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        src={getMediaUrl(product.image)}
                       />
                     ) : (
                       <ImageIcon className="text-muted-foreground w-10 h-10 opacity-40" />
@@ -292,13 +297,16 @@ export const ProductManagement: React.FC = () => {
                           to={`${basePath}/${product.id}`}
                           className="h-8 w-8 rounded-md border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
                           title="Edit Equipment"
+                          aria-label={`Edit ${product.name}`}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </Link>
                         <button
+                          type="button"
                           onClick={() => handleDelete(product.id)}
                           className="h-8 w-8 rounded-md border border-border bg-muted/40 hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center transition-colors cursor-pointer"
                           title="Delete Equipment"
+                          aria-label={`Delete ${product.name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -318,20 +326,19 @@ export const ProductManagement: React.FC = () => {
               <CardTitle className="text-sm font-semibold">Inventory Alerts</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-3 text-xs">
-              <div className="flex items-start gap-2.5 pb-3 border-b border-border">
-                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground">CoolFreeze Industrial</p>
-                  <p className="text-[11px] text-muted-foreground">Only 2 units remaining in hub</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground">SteamPro Oven 5</p>
-                  <p className="text-[11px] text-muted-foreground">Reorder threshold reached (4 units)</p>
-                </div>
-              </div>
+              {lowStockProducts.length === 0 ? (
+                <p className="text-muted-foreground py-2 text-center">All stock levels healthy.</p>
+              ) : (
+                lowStockProducts.slice(0, 5).map((prod) => (
+                  <div key={prod.id} className="flex items-start gap-2.5 pb-2.5 border-b border-border last:border-b-0 last:pb-0">
+                    <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${(prod.stock ?? 0) <= 2 ? 'text-rose-500' : 'text-amber-500'}`} />
+                    <div>
+                      <p className="font-medium text-foreground">{prod.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{prod.stock ?? 0} units remaining in hub</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

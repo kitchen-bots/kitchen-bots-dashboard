@@ -1,40 +1,9 @@
 import { CommerceInventory, CommerceStockMovement, CommerceWarehouse } from '../../types/commerce';
+import { INITIAL_WAREHOUSES, INITIAL_INVENTORY } from '../../data/catalog';
 
-const mockWarehouses: CommerceWarehouse[] = [
-  { id: 'WH-001', name: 'Main Distribution Center', code: 'MDC', location: 'Mumbai', isActive: true },
-  { id: 'WH-002', name: 'North Regional Hub', code: 'NRH', location: 'Delhi', isActive: true }
-];
-
-let mockInventory: CommerceInventory[] = [
-  {
-    id: 'INV-001',
-    variantId: 'VAR-001-NG',
-    warehouseId: 'WH-001',
-    currentStock: 50,
-    reservedStock: 5,
-    availableStock: 45,
-    minimumStock: 10,
-    maximumStock: 100,
-    reorderLevel: 15,
-    status: 'In_Stock',
-    lastCountAt: new Date().toISOString()
-  },
-  {
-    id: 'INV-002',
-    variantId: 'VAR-001-LP',
-    warehouseId: 'WH-001',
-    currentStock: 20,
-    reservedStock: 2,
-    availableStock: 18,
-    minimumStock: 5,
-    maximumStock: 50,
-    reorderLevel: 10,
-    status: 'In_Stock',
-    lastCountAt: new Date().toISOString()
-  }
-];
-
-let mockMovements: CommerceStockMovement[] = [];
+const mockWarehouses: CommerceWarehouse[] = [...INITIAL_WAREHOUSES];
+const mockInventory: CommerceInventory[] = [...INITIAL_INVENTORY];
+const mockMovements: CommerceStockMovement[] = [];
 
 export const CommerceInventoryService = {
   getWarehouses: async (): Promise<CommerceWarehouse[]> => {

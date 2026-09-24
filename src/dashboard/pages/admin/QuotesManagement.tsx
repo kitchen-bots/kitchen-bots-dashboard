@@ -66,12 +66,13 @@ export const QuotesManagement: React.FC = () => {
     <PageContainer
       title="Sales Quotations"
       description="Create, review, and track B2B commercial proposals and pricing terms."
+      homeHref="/admin"
       breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Quotes' },
       ]}
       actions={
-        <Button onClick={() => navigate('/admin/quotes/new')} className="gap-2">
+        <Button type="button" onClick={() => navigate('/admin/quotes/new')} className="gap-2">
           <Plus className="w-4 h-4" />
           Create Quote
         </Button>
@@ -278,9 +279,11 @@ export const QuotesManagement: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            type="button"
                             className="h-7 w-7 text-muted-foreground hover:text-foreground"
                             onClick={() => navigate(`/admin/quotes/${quote.id}`)}
                             title="View Quote Details"
+                            aria-label={`View quote ${quote.quoteNumber}`}
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </Button>

@@ -89,7 +89,7 @@ export const EditProduct = () => {
         status: status,
       });
       showToast('Success', 'Product updated successfully', 'success');
-      navigate(isAdmin ? '/admin/products' : '/customer/products');
+      navigate(productsPath);
     } catch (error) {
       console.error('Failed to update product:', error);
       showToast('Error', 'Failed to update product.', 'error');
@@ -99,7 +99,7 @@ export const EditProduct = () => {
   };
 
   const homePath = isAdmin ? '/admin' : '/dashboard';
-  const productsPath = isAdmin ? '/admin/products' : '/customer/products';
+  const productsPath = isAdmin ? '/admin/products' : '/dashboard/products';
 
   if (isLoading) {
     return (
@@ -116,7 +116,7 @@ export const EditProduct = () => {
         <p className="text-sm text-muted-foreground mb-4">
           The requested product ID could not be loaded from the database.
         </p>
-        <Button onClick={() => navigate(productsPath)}>Return to Products</Button>
+        <Button type="button" onClick={() => navigate(productsPath)}>Return to Products</Button>
       </div>
     );
   }
@@ -134,6 +134,7 @@ export const EditProduct = () => {
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(homePath)}
@@ -144,6 +145,7 @@ export const EditProduct = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => navigate(productsPath)}

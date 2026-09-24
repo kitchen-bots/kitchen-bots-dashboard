@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { Breadcrumbs, BreadcrumbItem } from './Breadcrumbs';
 import { Heading, Text } from '../ui/Typography';
@@ -22,12 +23,16 @@ export function PageContainer({
   className,
   ...props
 }: PageContainerProps) {
+  const location = useLocation();
+  const defaultHome = location.pathname.startsWith('/admin') ? '/admin' : '/dashboard';
+  const resolvedHomeHref = homeHref || defaultHome;
+
   return (
     <div className={cn("w-full max-w-screen-2xl mx-auto flex flex-col gap-6", className)} {...props}>
       {(breadcrumbs || title || description || actions) && (
         <div className="flex flex-col gap-4">
           {breadcrumbs && (
-            <Breadcrumbs items={breadcrumbs} homeHref={homeHref} />
+            <Breadcrumbs items={breadcrumbs} homeHref={resolvedHomeHref} />
           )}
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

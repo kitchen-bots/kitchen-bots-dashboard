@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowLeft,
@@ -29,7 +29,14 @@ import { useToast } from '../../context/ToastContext';
 export const OrderDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
+
+  const isAdmin = location.pathname.startsWith('/admin');
+  const homePath = isAdmin ? '/admin' : '/dashboard';
+  const ordersPath = isAdmin ? '/admin/orders' : '/dashboard/orders';
+  const homeLabel = isAdmin ? 'Admin' : 'Dashboard';
+
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,7 +75,7 @@ export const OrderDetails = () => {
         <p className="text-xs text-muted-foreground mb-4">
           The requested order ID could not be loaded from the operational database.
         </p>
-        <Button onClick={() => navigate('/dashboard/orders')}>Return to Orders</Button>
+        <Button type="button" onClick={() => navigate(ordersPath)}>Return to Orders</Button>
       </div>
     );
   }
@@ -90,18 +97,19 @@ export const OrderDetails = () => {
     <PageContainer
       title={`Order #${order.id.slice(0, 8)}`}
       description={`Placed on ${new Date(order.createdAt).toLocaleDateString()} for ${order.customer?.name || 'Customer'}`}
-      homeHref="/dashboard"
+      homeHref={homePath}
       breadcrumbs={[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Orders', href: '/dashboard/orders' },
+        { label: homeLabel, href: homePath },
+        { label: 'Orders', href: ordersPath },
         { label: `#${order.id.slice(0, 8)}` },
       ]}
       actions={
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homePath)}
             className="gap-1.5"
             title="Return to Home Dashboard"
           >
@@ -109,16 +117,17 @@ export const OrderDetails = () => {
             <span className="hidden sm:inline">Home</span>
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate('/dashboard/orders')}
+            onClick={() => navigate(ordersPath)}
             className="gap-1.5"
             title="Back to Orders"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Orders</span>
           </Button>
-          <Button size="sm" onClick={handleDownloadInvoice} className="gap-1.5">
+          <Button type="button" size="sm" onClick={handleDownloadInvoice} className="gap-1.5">
             <Download className="w-4 h-4" />
             <span>Download Invoice</span>
           </Button>
