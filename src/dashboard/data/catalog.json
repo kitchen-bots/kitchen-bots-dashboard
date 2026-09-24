@@ -1,6 +1,6 @@
 {
   "meta": {
-    "syncedAt": "2026-09-24T14:59:35.201Z",
+    "syncedAt": "2026-09-24T15:18:35.959Z",
     "productCount": 12,
     "categoryCount": 6,
     "source": "kitchen-bots-ecommerce"
@@ -120,45 +120,38 @@
       "images": [
         {
           "id": "img-prod-1-1",
-          "url": "/images/products/kb-flip-bbq-std.webp",
+          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 2.png",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-1-2",
-          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 2.png",
+          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 3.png",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-1-3",
-          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 3.png",
+          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 4.png",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-1-4",
-          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V1 4.png",
+          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V2.png",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-1-5",
-          "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V2.png",
-          "type": "image",
-          "isPrimary": false,
-          "order": 4
-        },
-        {
-          "id": "img-prod-1-6",
           "url": "/images/products/1_Visualise Files - Flip Base/Flip BBQ with Standard Base V3.png",
           "type": "image",
           "isPrimary": false,
-          "order": 5
+          "order": 4
         }
       ],
       "specifications": [
@@ -273,38 +266,31 @@
       "images": [
         {
           "id": "img-prod-2-1",
-          "url": "/images/products/kb-flip-bbq-adj.webp",
+          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Open Model Pint 3.png",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-2-2",
-          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Open Model Pint 3.png",
+          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Pinted 2.png",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-2-3",
-          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Pinted 2.png",
+          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Pinted 3.png",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-2-4",
-          "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Pinted 3.png",
-          "type": "image",
-          "isPrimary": false,
-          "order": 3
-        },
-        {
-          "id": "img-prod-2-5",
           "url": "/images/products/2_Visualise Files - Flip Base Height Adjustable/Flip Height Adjustable Pinted 4.png",
           "type": "image",
           "isPrimary": false,
-          "order": 4
+          "order": 3
         }
       ],
       "specifications": [
@@ -403,45 +389,38 @@
       "images": [
         {
           "id": "img-prod-3-1",
-          "url": "/images/products/kb-collapsible-bbq-big.webp",
+          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Collapasible Big with Grill Plate.png",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-3-2",
-          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Collapasible Big with Grill Plate.png",
+          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Collapasible Big with Hot Plate.png",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-3-3",
-          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Collapasible Big with Hot Plate.png",
+          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Coal Jug 3.png",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-3-4",
-          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Coal Jug 3.png",
+          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Coal Jug 4.png",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-3-5",
-          "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Coal Jug 4.png",
-          "type": "image",
-          "isPrimary": false,
-          "order": 4
-        },
-        {
-          "id": "img-prod-3-6",
           "url": "/images/products/3_Visualise Files - Collapsible_BBQ/Untitled Project.png",
           "type": "image",
           "isPrimary": false,
-          "order": 5
+          "order": 4
         }
       ],
       "specifications": [
@@ -540,38 +519,31 @@
       "images": [
         {
           "id": "img-prod-4-1",
-          "url": "/images/products/kb-collapsible-flip.webp",
+          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 2.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-4-2",
-          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 2.jpg",
+          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 3.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-4-3",
-          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 3.jpg",
+          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 4.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-4-4",
-          "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 4.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 3
-        },
-        {
-          "id": "img-prod-4-5",
           "url": "/images/products/4_Visualise Files  - Collapsible_Flip/Collapsible BBQ and Flip 5.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 4
+          "order": 3
         }
       ],
       "specifications": [
@@ -670,52 +642,45 @@
       "images": [
         {
           "id": "img-prod-5-1",
-          "url": "/images/products/kb-collapsible-bbq-small.webp",
+          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 2.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-5-2",
-          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 2.jpg",
+          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 3.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-5-3",
-          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 3.jpg",
+          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 4.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-5-4",
-          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 4.jpg",
+          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 5.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-5-5",
-          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 5.jpg",
+          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 6.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 4
         },
         {
           "id": "img-prod-5-6",
-          "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 6.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 5
-        },
-        {
-          "id": "img-prod-5-7",
           "url": "/images/products/5_Visualise Files  - Collapsible_BBQ Small/Collapsible BBQ Small - Paint Version 7.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 6
+          "order": 5
         }
       ],
       "specifications": [
@@ -814,52 +779,45 @@
       "images": [
         {
           "id": "img-prod-6-1",
-          "url": "/images/products/kb-rocket-stove-150.webp",
+          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 2.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-6-2",
-          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 2.jpg",
+          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 3.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-6-3",
-          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 3.jpg",
+          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 4.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-6-4",
-          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 4.jpg",
+          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 6.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-6-5",
-          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 6.jpg",
+          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 7.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 4
         },
         {
           "id": "img-prod-6-6",
-          "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 7.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 5
-        },
-        {
-          "id": "img-prod-6-7",
           "url": "/images/products/6_Visualise Files - Rocket Stove_150MM/Rocket Stove 150MM Painted Model 8.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 6
+          "order": 5
         }
       ],
       "specifications": [
@@ -952,45 +910,38 @@
       "images": [
         {
           "id": "img-prod-7-1",
-          "url": "/images/products/kb-rocket-stove-coll.webp",
+          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 2.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-7-2",
-          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 2.jpg",
+          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 3.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-7-3",
-          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 3.jpg",
+          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 4.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-7-4",
-          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 4.jpg",
+          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 5.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-7-5",
-          "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 5.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 4
-        },
-        {
-          "id": "img-prod-7-6",
           "url": "/images/products/7_Visualise Files - Rocket Stove_Collapsible/Rocket Stove Collapsible Small 6.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 5
+          "order": 4
         }
       ],
       "specifications": [
@@ -1083,66 +1034,59 @@
       "images": [
         {
           "id": "img-prod-8-1",
-          "url": "/images/products/kb-auto-bbq-ss.webp",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 2.png",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-8-2",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ Paint Model V2.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 3.png",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-8-3",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ Paint Model.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 4.png",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-8-4",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 2.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 5.png",
           "type": "image",
           "isPrimary": false,
           "order": 3
         },
         {
           "id": "img-prod-8-5",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 3.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 6.png",
           "type": "image",
           "isPrimary": false,
           "order": 4
         },
         {
           "id": "img-prod-8-6",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 4.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 7.png",
           "type": "image",
           "isPrimary": false,
           "order": 5
         },
         {
           "id": "img-prod-8-7",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 5.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ Paint Model V2.png",
           "type": "image",
           "isPrimary": false,
           "order": 6
         },
         {
           "id": "img-prod-8-8",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 6.png",
+          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ Paint Model.png",
           "type": "image",
           "isPrimary": false,
           "order": 7
-        },
-        {
-          "id": "img-prod-8-9",
-          "url": "/images/products/8_Visualise Renders  - Automatic BBQ/Automatic BBQ SS Model 7.png",
-          "type": "image",
-          "isPrimary": false,
-          "order": 8
         }
       ],
       "specifications": [
@@ -1241,31 +1185,24 @@
       "images": [
         {
           "id": "img-prod-9-1",
-          "url": "/images/products/kb-santa-maria-med.webp",
+          "url": "/images/products/9_Visualise Files -Santa Maria Grill Medium/SantaMaria BBQ Meduim- Paint Model 1.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-9-2",
-          "url": "/images/products/9_Visualise Files -Santa Maria Grill Medium/SantaMaria BBQ Meduim- Paint Model 1.jpg",
+          "url": "/images/products/9_Visualise Files -Santa Maria Grill Medium/SantaMaria BBQ Meduim- Paint Model 2.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-9-3",
-          "url": "/images/products/9_Visualise Files -Santa Maria Grill Medium/SantaMaria BBQ Meduim- Paint Model 2.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 2
-        },
-        {
-          "id": "img-prod-9-4",
           "url": "/images/products/9_Visualise Files -Santa Maria Grill Medium/SantaMaria BBQ Meduim- Paint Model 3.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 3
+          "order": 2
         }
       ],
       "specifications": [
@@ -1364,7 +1301,7 @@
       "images": [
         {
           "id": "img-prod-10-1",
-          "url": "/images/products/kb-santa-maria-small.webp",
+          "url": "/images/products/10_Visualise Files -Santa Maria Grill Small/SantaMaria BBQ Meduim- Paint Model 2.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
@@ -1378,17 +1315,10 @@
         },
         {
           "id": "img-prod-10-3",
-          "url": "/images/products/10_Visualise Files -Santa Maria Grill Small/SantaMaria BBQ Meduim- Paint Model 2.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 2
-        },
-        {
-          "id": "img-prod-10-4",
           "url": "/images/products/10_Visualise Files -Santa Maria Grill Small/SantaMaria BBQ Meduim- Paint Model 3.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 3
+          "order": 2
         }
       ],
       "specifications": [
@@ -1487,31 +1417,24 @@
       "images": [
         {
           "id": "img-prod-11-1",
-          "url": "/images/products/kb-suitcase-bbq-big.webp",
+          "url": "/images/products/11_Visualise Files - Suitcase BBQ Big/1_Suitcase BBQ Big Painted 4.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-11-2",
-          "url": "/images/products/11_Visualise Files - Suitcase BBQ Big/1_Suitcase BBQ Big Painted 4.jpg",
+          "url": "/images/products/11_Visualise Files - Suitcase BBQ Big/2_Suitcase BBQ Big Painted 5.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-11-3",
-          "url": "/images/products/11_Visualise Files - Suitcase BBQ Big/2_Suitcase BBQ Big Painted 5.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 2
-        },
-        {
-          "id": "img-prod-11-4",
           "url": "/images/products/11_Visualise Files - Suitcase BBQ Big/3_Suitcase BBQ Big Painted 2.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 3
+          "order": 2
         }
       ],
       "specifications": [
@@ -1610,38 +1533,31 @@
       "images": [
         {
           "id": "img-prod-12-1",
-          "url": "/images/products/kb-suitcase-bbq-small.webp",
+          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model.jpg",
           "type": "image",
           "isPrimary": true,
           "order": 0
         },
         {
           "id": "img-prod-12-2",
-          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model.jpg",
+          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model 2.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 1
         },
         {
           "id": "img-prod-12-3",
-          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model 2.jpg",
+          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model 3.jpg",
           "type": "image",
           "isPrimary": false,
           "order": 2
         },
         {
           "id": "img-prod-12-4",
-          "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model 3.jpg",
-          "type": "image",
-          "isPrimary": false,
-          "order": 3
-        },
-        {
-          "id": "img-prod-12-5",
           "url": "/images/products/12_Visualise Files - Suitcase BBQ Small/Suitcase BBQ Small - Paint Model 4.jpg",
           "type": "image",
           "isPrimary": false,
-          "order": 4
+          "order": 3
         }
       ],
       "specifications": [
