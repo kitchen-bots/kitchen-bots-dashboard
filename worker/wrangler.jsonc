@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kitchen-bots-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ALLOWED_ADMIN_EMAILS": "admin@kitchenbots.com,admin@kitchenbots.in"
+  },
+  "r2_buckets": [
+    {
+      "binding": "PUBLIC_MEDIA",
+      "bucket_name": "kitchen-bots-public-media"
+    },
+    {
+      "binding": "PRIVATE_DOCUMENTS",
+      "bucket_name": "kitchen-bots-private-documents"
+    }
+  ]
+}

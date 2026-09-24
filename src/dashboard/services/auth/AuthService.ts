@@ -1,7 +1,13 @@
 import { User, Role } from '../../types';
 import { SessionStorageAdapter, LocalStorageAdapter } from './StorageAdapter';
-import { userService } from '../userService';
 import { eventBus } from '../events/EventBus';
+import { auth } from '../../config/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
 
 export type SessionState = 
   | 'INITIALIZING'
@@ -19,7 +25,7 @@ export interface AuthState {
 
 export interface IAuthService {
   initialize(): Promise<AuthState>;
-  login(username: string, password: string): Promise<User>;
+  login(usernameOrEmail: string, password: string): Promise<User>;
   logout(): Promise<void>;
   switchOrganization(orgId: string): Promise<void>;
   switchRole(role: Role): Promise<void>;
@@ -27,13 +33,14 @@ export interface IAuthService {
   subscribe(listener: (state: AuthState) => void): () => void;
 }
 
-export class MockAuthService implements IAuthService {
+export class FirebaseAuthService implements IAuthService {
   private state: AuthState = {
     status: 'INITIALIZING',
     user: null,
     error: null,
   };
   private listeners: Set<(state: AuthState) => void> = new Set();
+  private unsubAuthObserver: (() => void) | null = null;
   
   constructor(private storage: SessionStorageAdapter = new LocalStorageAdapter()) {}
 
@@ -52,78 +59,116 @@ export class MockAuthService implements IAuthService {
 
   subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.add(listener);
-    // Call immediately with current state
     listener(this.state);
     return () => this.listeners.delete(listener);
   }
 
   async initialize(): Promise<AuthState> {
     this.updateState({ status: 'INITIALIZING' });
-    try {
-      // Small delay to simulate async check
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const user = this.storage.getUserData();
-      
-      if (user) {
-        this.updateState({ status: 'LOGGED_IN', user, error: null });
-        eventBus.publish('SessionRestored', { userId: user.id });
-      } else {
-        this.updateState({ status: 'LOGGED_OUT', user: null, error: null });
+
+    return new Promise((resolve) => {
+      try {
+        if (this.unsubAuthObserver) {
+          this.unsubAuthObserver();
+        }
+
+        this.unsubAuthObserver = onAuthStateChanged(
+          auth,
+          async (firebaseUser: FirebaseUser | null) => {
+            if (firebaseUser) {
+              try {
+                const token = await firebaseUser.getIdToken();
+                this.storage.setToken(token);
+                
+                const userObj: User = {
+                  id: firebaseUser.uid,
+                  name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Admin User',
+                  email: firebaseUser.email || '',
+                  role: 'admin',
+                  addresses: [],
+                  wishlist: [],
+                  status: 'active',
+                  createdAt: new Date().toISOString()
+                };
+                
+                this.storage.setUserData(userObj);
+                this.updateState({ status: 'LOGGED_IN', user: userObj, error: null });
+                eventBus.publish('SessionRestored', { userId: userObj.id });
+              } catch (e: any) {
+                this.updateState({ status: 'ERROR', error: e.message, user: null });
+              }
+            } else {
+              const cachedUser = this.storage.getUserData();
+              const cachedToken = this.storage.getToken();
+
+              if (cachedUser && cachedToken) {
+                this.updateState({ status: 'LOGGED_IN', user: cachedUser, error: null });
+              } else {
+                this.storage.clear();
+                this.updateState({ status: 'LOGGED_OUT', user: null, error: null });
+              }
+            }
+            resolve(this.state);
+          },
+          (error) => {
+            this.updateState({ status: 'ERROR', error: error.message, user: null });
+            resolve(this.state);
+          }
+        );
+      } catch {
+        const cachedUser = this.storage.getUserData();
+        if (cachedUser) {
+          this.updateState({ status: 'LOGGED_IN', user: cachedUser, error: null });
+        } else {
+          this.updateState({ status: 'LOGGED_OUT', user: null, error: null });
+        }
+        resolve(this.state);
       }
-    } catch (error: any) {
-      this.updateState({ status: 'ERROR', error: error.message, user: null });
-      this.storage.clear();
-    }
-    return this.state;
+    });
   }
 
-  async login(username: string, password: string): Promise<User> {
+  async login(usernameOrEmail: string, password: string): Promise<User> {
     this.updateState({ status: 'AUTHENTICATING', error: null });
     
     try {
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const userCredential = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
+      const token = await userCredential.user.getIdToken();
       
-      if (username === 'Admin' && (password === '12345' || password === '123456')) {
-        let adminUser = null;
-        try {
-          const res = await userService.getUsers({ limit: 1 });
-          adminUser = res.data.find(u => u.role === 'admin') || res.data[0];
-        } catch (e) {
-          console.warn('Failed to fetch user from API, falling back to local dummy admin', e);
-        }
-        
-        if (!adminUser || adminUser.role !== 'admin') {
-          adminUser = {
-            id: 'mock-admin-1',
-            name: 'Admin User',
-            email: 'admin@kitchenbots.com',
-            role: 'admin' as Role,
-            addresses: [],
-            wishlist: [],
-            status: 'active',
-            createdAt: new Date().toISOString()
-          } as User;
-        }
-        
-        this.storage.setToken('mock-jwt-token');
-        this.storage.setUserData(adminUser);
-        
-        this.updateState({ status: 'LOGGED_IN', user: adminUser, error: null });
-        eventBus.publish('UserLoggedIn', { userId: adminUser.id, role: adminUser.role });
-        return adminUser;
-      } else {
-        throw new Error('Invalid username or password');
-      }
+      const adminUser: User = {
+        id: userCredential.user.uid,
+        name: userCredential.user.displayName || userCredential.user.email?.split('@')[0] || 'Admin User',
+        email: userCredential.user.email || usernameOrEmail,
+        role: 'admin',
+        addresses: [],
+        wishlist: [],
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+      
+      this.storage.setToken(token);
+      this.storage.setUserData(adminUser);
+      
+      this.updateState({ status: 'LOGGED_IN', user: adminUser, error: null });
+      eventBus.publish('UserLoggedIn', { userId: adminUser.id, role: adminUser.role });
+      return adminUser;
     } catch (error: any) {
-      this.updateState({ status: 'ERROR', error: error.message });
-      throw error;
+      let message = error.message || 'Failed to sign in with Firebase Auth';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        message = 'Invalid email or password';
+      }
+      const err = new Error(message);
+      (err as any).cause = error;
+      throw err;
     }
   }
 
   async logout(): Promise<void> {
     this.updateState({ status: 'LOGGING_OUT' });
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      await firebaseSignOut(auth);
+    } catch {
+      // Ignore firebase signout error
+    }
     this.storage.clear();
     this.updateState({ status: 'LOGGED_OUT', user: null, error: null });
     eventBus.publish('UserLoggedOut', undefined as void);
@@ -150,4 +195,5 @@ export class MockAuthService implements IAuthService {
   }
 }
 
-export const authService = new MockAuthService();
+export const authService = new FirebaseAuthService();
+export const MockAuthService = FirebaseAuthService;

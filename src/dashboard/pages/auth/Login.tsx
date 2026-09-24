@@ -74,7 +74,7 @@ export function Login() {
               className="w-16 h-16 rounded-2xl shadow-md mb-4 object-contain"
             />
             <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted mt-2 text-center">Enter your credentials to access the dashboard</p>
+            <p className="text-muted mt-2 text-center">Enter your email and password to access the dashboard</p>
           </div>
 
           <Form {...form}>
@@ -90,10 +90,11 @@ export function Login() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter username"
+                        type="email"
+                        placeholder="admin@kitchenbots.com"
                         leftIcon={<User className="h-5 w-5" />}
                         {...field}
                       />
@@ -158,11 +159,6 @@ export function Login() {
                 Sign in
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
-              
-              <div className="mt-6 text-center text-sm text-muted bg-secondary/50 rounded-lg p-3 border border-border">
-                <p>Test Credentials:</p>
-                <p className="font-medium text-foreground mt-1">Admin / 123456</p>
-              </div>
             </form>
           </Form>
         </div>
