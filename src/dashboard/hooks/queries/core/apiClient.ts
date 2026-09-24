@@ -12,8 +12,7 @@ export const apiClient = axios.create({
 // Request Interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Inject auth token here in the future
-    const token = localStorage.getItem('kb_auth_token');
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

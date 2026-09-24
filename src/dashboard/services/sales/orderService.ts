@@ -1,4 +1,4 @@
-import { Order, OrderStatus, OrderLineItem, Quote } from '../../types/sales';
+import { Order, OrderStatus, OrderLineItem, Quote, Address } from '../../types/sales';
 import { domainEvents as EventBus } from '../../utils/eventBus';
 import { InventoryReservationService } from './inventoryReservation';
 import { EventFactory } from '../../utils/eventFactory';
@@ -6,6 +6,94 @@ import { EventType, EventCategory, AggregateType } from '../../types/events';
 import { QuoteService } from './quoteService';
 
 import { TimelineService } from './timelineService';
+
+export function mapFirestoreOrderToSalesOrder(raw: any): Order {
+  const totalPrice = Number(raw.totalPrice || raw.grandTotal || 0);
+  const items: OrderLineItem[] = Array.isArray(raw.items)
+    ? raw.items.map((it: any, index: number) => {
+        const itemPrice = Number(it.pricePaise ? it.pricePaise / 100 : (it.price || it.unitPrice || 0));
+        const itemQty = Number(it.quantity || 1);
+        const lineTotal = Number(it.lineTotal || itemPrice * itemQty);
+        return {
+          id: it.id || `line-${index + 1}-${raw.id}`,
+          productId: it.productId || `prod-${index + 1}`,
+          variantId: it.variantId || `v-${it.productId || index}`,
+          productName: it.name || it.productName || 'Kitchen Equipment',
+          sku: it.sku || `KB-${(it.productId || 'PROD').toUpperCase()}`,
+          pricing: {
+            unitPrice: itemPrice,
+            quantity: itemQty,
+            discountAmount: Number(it.discountAmount || 0),
+            taxRate: Number(it.taxRate || 0),
+            taxAmount: Number(it.taxAmount || 0),
+            subtotal: lineTotal,
+            total: lineTotal,
+          },
+          fulfilledQuantity: it.fulfilledQuantity || 0,
+          fulfillmentStatus: it.fulfillmentStatus || 'Unfulfilled',
+        };
+      })
+    : [];
+
+  const shippingAddr: Address = {
+    street: raw.shippingAddress?.street || raw.shippingAddress?.addressLine1 || '123 Main St',
+    city: raw.shippingAddress?.city || 'Bangalore',
+    state: raw.shippingAddress?.state || 'Karnataka',
+    postalCode: raw.shippingAddress?.pincode || raw.shippingAddress?.postalCode || '560001',
+    country: raw.shippingAddress?.country || 'India',
+  };
+
+  const billingAddr: Address = raw.billingAddress ? {
+    street: raw.billingAddress.street || raw.billingAddress.addressLine1 || shippingAddr.street,
+    city: raw.billingAddress.city || shippingAddr.city,
+    state: raw.billingAddress.state || shippingAddr.state,
+    postalCode: raw.billingAddress.pincode || raw.billingAddress.postalCode || shippingAddr.postalCode,
+    country: raw.billingAddress.country || 'India',
+  } : shippingAddr;
+
+  const rawStatus = raw.status || 'Pending';
+  let mappedStatus: OrderStatus = 'Pending Approval';
+  if (rawStatus === 'Approved') mappedStatus = 'Approved';
+  else if (rawStatus === 'Processing') mappedStatus = 'Processing';
+  else if (rawStatus === 'Shipped') mappedStatus = 'Shipped';
+  else if (rawStatus === 'Delivered') mappedStatus = 'Delivered';
+  else if (rawStatus === 'Cancelled') mappedStatus = 'Cancelled';
+  else if (rawStatus === 'Draft') mappedStatus = 'Draft';
+
+  return {
+    id: raw.id,
+    orderNumber: raw.orderNumber || raw.id.toUpperCase(),
+    quoteId: raw.quoteId,
+    customerId: raw.customerId || 'guest',
+    companyName: raw.companyName || raw.customer?.name || (raw.customerId === 'guest' ? 'Store Customer' : raw.customerId),
+    contactPerson: raw.contactPerson || raw.customer?.name || 'Store Customer',
+    email: raw.email || raw.customer?.email || 'orders@kitchenbots.com',
+    phone: raw.phone || raw.customer?.phone || '+91 9490701421',
+    gstDetails: raw.gstDetails,
+    billingAddress: billingAddr,
+    shippingAddress: shippingAddr,
+    salesRepId: raw.salesRepId || 'online-ecommerce',
+    status: mappedStatus,
+    paymentStatus: raw.paymentStatus || (raw.paymentMethod ? 'Paid' : 'Unpaid'),
+    shippingStatus: raw.shippingStatus || (mappedStatus === 'Shipped' || mappedStatus === 'Delivered' ? 'Shipped' : 'Unshipped'),
+    inventoryStatus: raw.inventoryStatus || 'Pending',
+    orderSource: raw.orderSource || (raw.customerId === 'guest' ? 'Ecommerce' : 'API'),
+    priority: raw.priority || 'Normal',
+    currency: raw.currency || 'INR',
+    items,
+    subtotal: totalPrice,
+    totalDiscount: Number(raw.totalDiscount || 0),
+    totalTax: Number(raw.totalTax || 0),
+    shippingCost: Number(raw.shippingCost || 0),
+    grandTotal: totalPrice,
+    notes: raw.notes,
+    internalNotes: raw.internalNotes,
+    documents: raw.documents || [],
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+  };
+}
+
 
 const INITIAL_COMMERCIAL_ORDERS: Order[] = [
   {
@@ -292,6 +380,61 @@ export class OrderService {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
+
+  static async fetchOrders(): Promise<Order[]> {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
+    try {
+      const res = await fetch(`${apiUrl}/v1/admin/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const json = await res.json() as { success: boolean; data: any[] };
+        if (json.success && Array.isArray(json.data)) {
+          const mappedOrders = json.data.map(mapFirestoreOrderToSalesOrder);
+          mappedOrders.forEach((o) => this.orders.set(o.id, o));
+          return mappedOrders;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch orders from backend API, falling back to local store', err);
+    }
+
+    return this.getAllOrders();
+  }
+
+  static async fetchOrderById(id: string): Promise<Order | undefined> {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
+    try {
+      const res = await fetch(`${apiUrl}/v1/admin/orders/${encodeURIComponent(id)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const json = await res.json() as { success: boolean; data: any };
+        if (json.success && json.data) {
+          const mapped = mapFirestoreOrderToSalesOrder(json.data);
+          this.orders.set(mapped.id, mapped);
+          return mapped;
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch order ${id} from API`, err);
+    }
+
+    return this.getOrder(id);
+  }
+
 
   static registerDirectOrder(data: {
     id?: string;

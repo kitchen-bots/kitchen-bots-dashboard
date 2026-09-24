@@ -5,14 +5,14 @@ export const enquiriesAdminRouter = new Hono();
 
 // GET /v1/admin/enquiries
 enquiriesAdminRouter.get('/', async (c) => {
-  const enquiries = await getCollection('enquiries');
+  const enquiries = await getCollection('enquiries', c.env);
   return c.json({ success: true, data: enquiries });
 });
 
 // GET /v1/admin/enquiries/:id
 enquiriesAdminRouter.get('/:id', async (c) => {
   const id = c.req.param('id');
-  const enquiry = await getDocument('enquiries', id);
+  const enquiry = await getDocument('enquiries', id, c.env);
   if (!enquiry) {
     return c.json({ success: false, message: 'Enquiry not found' }, 404);
   }
@@ -31,7 +31,7 @@ enquiriesAdminRouter.post('/', async (c) => {
     id,
     status: body.status || 'New',
     source: body.source || 'Direct'
-  });
+  }, c.env);
   return c.json({ success: true, data: newEnquiry }, 201);
 });
 
@@ -39,20 +39,21 @@ enquiriesAdminRouter.post('/', async (c) => {
 enquiriesAdminRouter.patch('/:id/status', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
-  const existing = await getDocument('enquiries', id);
+  const existing = await getDocument('enquiries', id, c.env);
   if (!existing) {
     return c.json({ success: false, message: 'Enquiry not found' }, 404);
   }
-  const updated = await setDocument('enquiries', id, { ...existing, status: body.status });
+  const updated = await setDocument('enquiries', id, { ...existing, status: body.status }, c.env);
   return c.json({ success: true, data: updated });
 });
 
 // DELETE /v1/admin/enquiries/:id
 enquiriesAdminRouter.delete('/:id', async (c) => {
   const id = c.req.param('id');
-  const deleted = await deleteDocument('enquiries', id);
+  const deleted = await deleteDocument('enquiries', id, c.env);
   if (!deleted) {
     return c.json({ success: false, message: 'Enquiry not found' }, 404);
   }
   return c.json({ success: true, message: 'Enquiry deleted' });
 });
+

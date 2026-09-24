@@ -5,14 +5,14 @@ export const productsAdminRouter = new Hono();
 
 // GET /v1/admin/products
 productsAdminRouter.get('/', async (c) => {
-  const products = await getCollection('products');
+  const products = await getCollection('products', c.env);
   return c.json({ success: true, data: products });
 });
 
 // GET /v1/admin/products/:id
 productsAdminRouter.get('/:id', async (c) => {
   const id = c.req.param('id');
-  const product = await getDocument('products', id);
+  const product = await getDocument('products', id, c.env);
   if (!product) {
     return c.json({ success: false, message: 'Product not found' }, 404);
   }
@@ -33,27 +33,27 @@ productsAdminRouter.post('/', async (c) => {
     pricePaise,
     status: body.status || 'Active',
     isFeatured: Boolean(body.isFeatured)
-  });
+  }, c.env);
   return c.json({ success: true, data: newProduct }, 201);
 });
 
 // PUT /v1/admin/products/:id
 productsAdminRouter.put('/:id', async (c) => {
   const id = c.req.param('id');
-  const existing = await getDocument('products', id);
+  const existing = await getDocument('products', id, c.env);
   if (!existing) {
     return c.json({ success: false, message: 'Product not found' }, 404);
   }
   const body = await c.req.json();
   const pricePaise = body.price !== undefined ? Math.round(Number(body.price) * 100) : existing.pricePaise;
-  const updated = await setDocument('products', id, { ...existing, ...body, pricePaise });
+  const updated = await setDocument('products', id, { ...existing, ...body, pricePaise }, c.env);
   return c.json({ success: true, data: updated });
 });
 
 // DELETE /v1/admin/products/:id
 productsAdminRouter.delete('/:id', async (c) => {
   const id = c.req.param('id');
-  const deleted = await deleteDocument('products', id);
+  const deleted = await deleteDocument('products', id, c.env);
   if (!deleted) {
     return c.json({ success: false, message: 'Product not found' }, 404);
   }
@@ -64,11 +64,11 @@ productsAdminRouter.delete('/:id', async (c) => {
 productsAdminRouter.patch('/:id/status', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
-  const existing = await getDocument('products', id);
+  const existing = await getDocument('products', id, c.env);
   if (!existing) {
     return c.json({ success: false, message: 'Product not found' }, 404);
   }
-  const updated = await setDocument('products', id, { ...existing, status: body.status });
+  const updated = await setDocument('products', id, { ...existing, status: body.status }, c.env);
   return c.json({ success: true, data: updated });
 });
 
@@ -76,10 +76,11 @@ productsAdminRouter.patch('/:id/status', async (c) => {
 productsAdminRouter.patch('/:id/featured', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
-  const existing = await getDocument('products', id);
+  const existing = await getDocument('products', id, c.env);
   if (!existing) {
     return c.json({ success: false, message: 'Product not found' }, 404);
   }
-  const updated = await setDocument('products', id, { ...existing, isFeatured: Boolean(body.isFeatured) });
+  const updated = await setDocument('products', id, { ...existing, isFeatured: Boolean(body.isFeatured) }, c.env);
   return c.json({ success: true, data: updated });
 });
+

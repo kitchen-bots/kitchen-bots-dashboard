@@ -9,9 +9,13 @@ export async function idempotencyMiddleware(c: Context, next: Next) {
     return;
   }
 
-  const existing = await getDocument('idempotencyKeys', idempotencyKey);
-  if (existing) {
-    return c.json(existing.response, existing.statusCode || 200);
+  try {
+    const existing = await getDocument('idempotencyRecords', idempotencyKey, c.env);
+    if (existing) {
+      return c.json(existing.response, existing.statusCode || 200);
+    }
+  } catch {
+    // If idempotency lookup fails, proceed safely
   }
 
   await next();
@@ -21,12 +25,12 @@ export async function idempotencyMiddleware(c: Context, next: Next) {
     try {
       const clonedRes = c.res.clone();
       const body = await clonedRes.json();
-      await setDocument('idempotencyKeys', idempotencyKey, {
+      await setDocument('idempotencyRecords', idempotencyKey, {
         response: body,
         statusCode: c.res.status
-      });
+      }, c.env);
     } catch {
-      // Ignore cloning error if body is non-json
+      // Ignore cloning/saving error if body is non-json or write is non-fatal
     }
   }
 }

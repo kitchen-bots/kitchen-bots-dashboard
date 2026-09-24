@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { authMiddleware, requireRole } from './middleware/auth';
+import { authMiddleware, requireRole, optionalAuthMiddleware } from './middleware/auth';
 import { idempotencyMiddleware } from './middleware/idempotency';
 import { productsAdminRouter } from './routes/admin/products';
 import { ordersAdminRouter } from './routes/admin/orders';
@@ -29,8 +29,9 @@ app.route('/v1/catalog', catalogRouter);
 app.use('/v1/enquiries/*', idempotencyMiddleware);
 app.route('/v1/enquiries', enquiriesPublicRouter);
 
-// Authenticated Orders Endpoint
-app.use('/v1/orders/*', authMiddleware);
+// Orders Endpoint (Supports verified customer auth and guest submissions)
+app.use('/v1/orders', optionalAuthMiddleware);
+app.use('/v1/orders/*', optionalAuthMiddleware);
 app.use('/v1/orders/*', idempotencyMiddleware);
 app.route('/v1/orders', ordersPublicRouter);
 

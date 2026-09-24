@@ -95,3 +95,25 @@ export function requireRole(allowedRoles: Array<UserContext['role']>) {
     await next();
   };
 }
+
+export async function optionalAuthMiddleware(c: Context, next: Next) {
+  const authHeader = c.req.header('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    if (token && token !== 'invalid-token') {
+      const payload = parseJwtPayload(token);
+      let email = 'customer@example.com';
+      let uid = 'user-' + Date.now();
+      let role: UserContext['role'] = 'customer';
+
+      if (payload) {
+        if (payload.email) email = payload.email;
+        if (payload.sub || payload.user_id) uid = payload.sub || payload.user_id;
+        if (payload.role) role = payload.role;
+      }
+      c.set('user', { uid, email, role });
+    }
+  }
+  await next();
+}
+

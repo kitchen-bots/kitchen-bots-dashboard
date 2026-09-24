@@ -1,7 +1,69 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import app from '../worker/src/index';
 
 describe('Hono Worker API Suite', () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    // Intercept Firestore API calls in unit tests to simulate authenticated server-side Firestore
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: any, init?: any) => {
+      const urlStr = url.toString();
+
+      if (urlStr.includes('firestore.googleapis.com')) {
+        // Document fetch/get
+        if (!init || !init.method || init.method === 'GET') {
+          if (urlStr.includes('/products/p-1') || urlStr.includes('/products/prod-1')) {
+            return new Response(JSON.stringify({
+              name: 'projects/kitchen-bots/databases/(default)/documents/products/p-1',
+              fields: {
+                id: { stringValue: 'p-1' },
+                name: { stringValue: 'Automatic Biryani Master 50L' },
+                price: { integerValue: '45000' },
+                status: { stringValue: 'Active' }
+              }
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          if (urlStr.endsWith('/products')) {
+            return new Response(JSON.stringify({
+              documents: [
+                {
+                  name: 'projects/kitchen-bots/databases/(default)/documents/products/p-1',
+                  fields: {
+                    id: { stringValue: 'p-1' },
+                    name: { stringValue: 'Automatic Biryani Master 50L' },
+                    price: { integerValue: '45000' },
+                    status: { stringValue: 'Active' }
+                  }
+                }
+              ]
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          return new Response(JSON.stringify({ error: { code: 404, message: 'Not found' } }), { status: 404 });
+        }
+
+        // Document PATCH / write
+        if (init.method === 'PATCH') {
+          const body = JSON.parse(init.body || '{}');
+          return new Response(JSON.stringify({
+            name: urlStr.replace('https://firestore.googleapis.com/v1/', ''),
+            fields: body.fields || {}
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+
+        // Document DELETE
+        if (init.method === 'DELETE') {
+          return new Response(JSON.stringify({}), { status: 200 });
+        }
+      }
+
+      return originalFetch(url, init);
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('GET /health returns 200 OK', async () => {
     const res = await app.request('/health');
     expect(res.status).toBe(200);
@@ -86,6 +148,46 @@ describe('Hono Worker API Suite', () => {
     expect(body.data.items[0].price).toBe(45000);
   });
 
+  it('POST /v1/orders returns 500 if Firestore write fails', async () => {
+    // Override fetch mock for this test to simulate Firestore 403 / failure
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: any, init?: any) => {
+      const urlStr = url.toString();
+      if (urlStr.includes('firestore.googleapis.com')) {
+        if (!init || !init.method || init.method === 'GET') {
+          return new Response(JSON.stringify({
+            name: 'projects/kitchen-bots/databases/(default)/documents/products/p-1',
+            fields: {
+              id: { stringValue: 'p-1' },
+              name: { stringValue: 'Automatic Biryani Master 50L' },
+              price: { integerValue: '45000' },
+              status: { stringValue: 'Active' }
+            }
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+        }
+        if (init.method === 'PATCH') {
+          return new Response(JSON.stringify({
+            error: { code: 403, message: 'Missing or insufficient permissions.' }
+          }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+        }
+      }
+      return originalFetch(url, init);
+    });
+
+    const res = await app.request('/v1/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: [{ productId: 'p-1', quantity: 1, price: 45000 }],
+        customer: { name: 'John Doe', email: 'john@example.com' }
+      })
+    });
+
+    expect(res.status).toBe(500);
+    const body = await res.json() as any;
+    expect(body.success).toBe(false);
+    expect(body.message).toContain('Missing or insufficient permissions');
+  });
+
   it('POST /v1/enquiries creates lead and respects Idempotency-Key', async () => {
     const idempotencyKey = `test-enq-${Date.now()}`;
     const payload = JSON.stringify({
@@ -118,3 +220,4 @@ describe('Hono Worker API Suite', () => {
     expect(body2.id).toBe(body1.id);
   });
 });
+

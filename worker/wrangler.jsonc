@@ -5,16 +5,8 @@
   "compatibility_date": "2024-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
+    "FIREBASE_PROJECT_ID": "kitchen-bots",
     "ALLOWED_ADMIN_EMAILS": "admin@kitchenbots.com,admin@kitchenbots.in"
-  },
-  "r2_buckets": [
-    {
-      "binding": "PUBLIC_MEDIA",
-      "bucket_name": "kitchen-bots-public-media"
-    },
-    {
-      "binding": "PRIVATE_DOCUMENTS",
-      "bucket_name": "kitchen-bots-private-documents"
-    }
-  ]
+  }
 }
+

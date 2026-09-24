@@ -1,4 +1,3 @@
-import { api } from './base.api';
 import { Lead } from '../types';
 import { PaginationParams, PaginatedResponse } from '../services/types';
 
@@ -284,18 +283,99 @@ export const INITIAL_CRM_ACTIVITIES: CRMActivity[] = [
   },
 ];
 
+export function mapFirestoreEnquiryToLead(raw: any): Lead {
+  const firstName = raw.firstName || (raw.name ? raw.name.split(' ')[0] : 'Prospect');
+  const lastName = raw.lastName || (raw.name && raw.name.split(' ').length > 1 ? raw.name.split(' ').slice(1).join(' ') : 'Customer');
+  const companyName = raw.company || raw.companyName || (raw.organization ? raw.organization : 'Direct Enquiry');
+  const email = raw.email || 'enquiry@kitchenbots.com';
+  const phone = raw.phone || '+91 9490701421';
+
+  let source: 'Bulk Enquiry' | 'Contact Form' | 'Cold Call' | 'Referral' = 'Contact Form';
+  if (raw.source === 'bulk' || raw.source === 'Bulk Enquiry' || (raw.items && raw.items.length > 0)) {
+    source = 'Bulk Enquiry';
+  } else if (raw.source === 'Referral') {
+    source = 'Referral';
+  } else if (raw.source === 'Cold Call') {
+    source = 'Cold Call';
+  }
+
+  let status: Lead['status'] = 'New';
+  const rawStatus = (raw.status || '').toLowerCase();
+  if (rawStatus === 'contacted') status = 'Contacted';
+  else if (rawStatus === 'requirement gathering' || rawStatus === 'in_progress') status = 'Requirement Gathering';
+  else if (rawStatus === 'proposal sent' || rawStatus === 'quoted') status = 'Proposal Sent';
+  else if (rawStatus === 'negotiation') status = 'Negotiation';
+  else if (rawStatus === 'converted' || rawStatus === 'won') status = 'Converted';
+  else if (rawStatus === 'lost' || rawStatus === 'closed') status = 'Lost';
+  else status = 'New';
+
+  const equipmentNeeded = raw.equipmentNeeded || (raw.items && raw.items.length > 0
+    ? raw.items.map((i: any) => `${i.productId || 'Equipment'} (${i.quantity || 1})`).join(', ')
+    : raw.productName || raw.message || 'Commercial Kitchen Equipment');
+
+  const quantity = Number(raw.quantity || (raw.items && raw.items.length > 0 ? raw.items.reduce((s: number, i: any) => s + (Number(i.quantity) || 1), 0) : 1));
+
+  return {
+    id: raw.id,
+    source,
+    firstName,
+    lastName,
+    companyName,
+    email,
+    phone,
+    equipmentNeeded,
+    quantity,
+    timeline: raw.timeline || 'Immediate',
+    message: raw.message || 'Customer submitted enquiry via website.',
+    status,
+    score: Number(raw.score || (source === 'Bulk Enquiry' ? 90 : 75)),
+    followUpDate: raw.followUpDate || raw.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+    assignedTo: raw.assignedTo || {
+      name: 'Rohan Sharma',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
+      email: 'rohan.s@kitchenbots.com',
+      phone: '+91 98111 22233',
+      load: 4,
+      status: 'Available',
+    },
+    notes: raw.notes || {
+      sales: raw.message ? [raw.message] : ['Inbound enquiry from website'],
+      admin: raw.reference ? [`Reference: ${raw.reference}`] : [],
+      followUp: ['Initial customer outreach required'],
+    },
+    createdAt: raw.createdAt || new Date().toISOString(),
+  };
+}
+
 let localLeads = [...INITIAL_LEADS];
 
 export const leadsApi = {
   getLeads: async (params?: PaginationParams): Promise<PaginatedResponse<Lead>> => {
-    let records: Lead[];
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
+    let records: Lead[] = [];
     try {
-      records = await api.request<Lead[]>({
-        module: 'leads',
-        action: 'getAll',
+      const res = await fetch(`${apiUrl}/v1/admin/enquiries`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+
+      if (res.ok) {
+        const json = (await res.json()) as { success: boolean; data: any[] };
+        if (json.success && Array.isArray(json.data)) {
+          const apiRecords = json.data.map(mapFirestoreEnquiryToLead);
+          localLeads = [...apiRecords, ...INITIAL_LEADS.filter((il) => !apiRecords.some((r) => r.id === il.id))];
+          records = [...localLeads];
+        }
+      }
     } catch (err) {
       console.warn('Failed to fetch leads from API, falling back to local CRM leads', err);
+    }
+
+    if (records.length === 0) {
       records = [...localLeads];
     }
 
@@ -310,10 +390,10 @@ export const leadsApi = {
           (l.equipmentNeeded && l.equipmentNeeded.toLowerCase().includes(q))
       );
     }
-    if (params?.status) {
+    if (params?.status && params.status !== 'All') {
       records = records.filter((l) => l.status === params.status);
     }
-    if (params?.source) {
+    if (params?.source && params.source !== 'All') {
       records = records.filter((l) => l.source === params.source);
     }
 
@@ -326,67 +406,139 @@ export const leadsApi = {
   },
 
   getLeadById: async (id: string): Promise<Lead> => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
     try {
-      return await api.request<Lead>({
-        module: 'leads',
-        action: 'getById',
-        id,
+      const res = await fetch(`${apiUrl}/v1/admin/enquiries/${encodeURIComponent(id)}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+
+      if (res.ok) {
+        const json = (await res.json()) as { success: boolean; data: any };
+        if (json.success && json.data) {
+          return mapFirestoreEnquiryToLead(json.data);
+        }
+      }
     } catch {
-      const lead = localLeads.find((l) => l.id === id);
-      if (!lead) throw new Error(`Lead ${id} not found`);
-      return lead;
+      // fallback
     }
+
+    const lead = localLeads.find((l) => l.id === id) || INITIAL_LEADS.find((l) => l.id === id);
+    if (!lead) throw new Error(`Lead ${id} not found`);
+    return lead;
   },
 
   createLead: async (data: Omit<Lead, 'id'>): Promise<Lead> => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
     try {
-      return await api.request<Lead>({
-        module: 'leads',
-        action: 'create',
-        data,
+      const res = await fetch(`${apiUrl}/v1/admin/enquiries`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (res.ok) {
+        const json = (await res.json()) as { success: boolean; data: any };
+        if (json.success && json.data) {
+          const mapped = mapFirestoreEnquiryToLead(json.data);
+          localLeads.unshift(mapped);
+          return mapped;
+        }
+      }
     } catch {
-      const newLead: Lead = {
-        ...data,
-        id: `L-${Math.floor(510 + Math.random() * 400)}`,
-        notes: data.notes || { sales: [], admin: [], followUp: [] },
-      };
-      localLeads.unshift(newLead);
-      return newLead;
+      // fallback
     }
+
+    const newLead: Lead = {
+      ...data,
+      id: `enq-${Date.now()}`,
+      notes: data.notes || { sales: [], admin: [], followUp: [] },
+    };
+    localLeads.unshift(newLead);
+    return newLead;
   },
 
   updateLead: async (id: string, data: Partial<Lead>): Promise<Lead> => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
     try {
-      return await api.request<Lead>({
-        module: 'leads',
-        action: 'update',
-        id,
-        data,
+      const res = await fetch(`${apiUrl}/v1/admin/enquiries/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+
+      if (res.ok) {
+        const json = (await res.json()) as { success: boolean; data: any };
+        if (json.success && json.data) {
+          return mapFirestoreEnquiryToLead(json.data);
+        }
+      }
     } catch {
-      const index = localLeads.findIndex((l) => l.id === id);
-      if (index === -1) throw new Error(`Lead ${id} not found`);
-      localLeads[index] = { ...localLeads[index], ...data };
-      return localLeads[index];
+      // fallback
     }
+
+    let index = localLeads.findIndex((l) => l.id === id);
+    if (index === -1) {
+      const initial = INITIAL_LEADS.find((l) => l.id === id);
+      if (initial) {
+        localLeads.push({ ...initial });
+        index = localLeads.length - 1;
+      }
+    }
+    if (index === -1) throw new Error(`Lead ${id} not found`);
+    localLeads[index] = { ...localLeads[index], ...data };
+    return localLeads[index];
   },
 
   updateLeadStatus: async (id: string, status: Lead['status']): Promise<Lead> => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
+    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
+
     try {
-      return await api.request<Lead>({
-        module: 'leads',
-        action: 'update',
-        id,
-        data: { status },
+      const res = await fetch(`${apiUrl}/v1/admin/enquiries/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
       });
+
+      if (res.ok) {
+        const json = (await res.json()) as { success: boolean; data: any };
+        if (json.success && json.data) {
+          return mapFirestoreEnquiryToLead(json.data);
+        }
+      }
     } catch {
-      const index = localLeads.findIndex((l) => l.id === id);
-      if (index === -1) throw new Error(`Lead ${id} not found`);
-      localLeads[index] = { ...localLeads[index], status };
-      return localLeads[index];
+      // fallback
     }
+
+    let index = localLeads.findIndex((l) => l.id === id);
+    if (index === -1) {
+      const initial = INITIAL_LEADS.find((l) => l.id === id);
+      if (initial) {
+        localLeads.push({ ...initial });
+        index = localLeads.length - 1;
+      }
+    }
+    if (index === -1) throw new Error(`Lead ${id} not found`);
+    localLeads[index] = { ...localLeads[index], status };
+    return localLeads[index];
   },
 
   getQuotationsByLead: async (leadId: string, _params?: PaginationParams): Promise<PaginatedResponse<Quotation>> => {
@@ -416,3 +568,4 @@ export const leadsApi = {
     return { data: INITIAL_FOLLOW_UP_TASKS, total: INITIAL_FOLLOW_UP_TASKS.length };
   },
 };
+

@@ -20,7 +20,7 @@ ordersPublicRouter.post('/', async (c) => {
     if (!item.productId || !item.quantity || item.quantity <= 0) {
       return c.json({ success: false, message: 'Invalid item quantity or product ID' }, 400);
     }
-    const product = await getDocument('products', item.productId);
+    const product = await getDocument('products', item.productId, c.env);
     if (!product || product.status !== 'Active') {
       return c.json({ success: false, message: `Product ${item.productId} is unavailable` }, 400);
     }
@@ -39,16 +39,21 @@ ordersPublicRouter.post('/', async (c) => {
   }
 
   const id = `ord-${Date.now()}`;
-  const newOrder = await setDocument('orders', id, {
-    id,
-    customerId: user?.uid || body.customerId || 'guest',
-    items: verifiedItems,
-    totalPrice: authoritativeSubtotal,
-    status: 'Pending',
-    paymentMethod: body.paymentMethod || 'Online',
-    shippingAddress: body.shippingAddress || {},
-    createdAt: new Date().toISOString()
-  });
+  try {
+    const newOrder = await setDocument('orders', id, {
+      id,
+      customerId: user?.uid || body.customerId || 'guest',
+      items: verifiedItems,
+      totalPrice: authoritativeSubtotal,
+      status: 'Pending',
+      paymentMethod: body.paymentMethod || 'Online',
+      shippingAddress: body.shippingAddress || {},
+      createdAt: new Date().toISOString()
+    }, c.env);
 
-  return c.json({ success: true, data: newOrder, id: newOrder.id }, 201);
+    return c.json({ success: true, data: newOrder, id: newOrder.id }, 201);
+  } catch (err: any) {
+    return c.json({ success: false, message: err?.message || 'Failed to persist order to database' }, 500);
+  }
 });
+
