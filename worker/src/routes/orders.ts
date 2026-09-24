@@ -21,11 +21,24 @@ ordersPublicRouter.post('/', async (c) => {
       return c.json({ success: false, message: 'Invalid item quantity or product ID' }, 400);
     }
     const product = await getDocument('products', item.productId, c.env);
-    if (!product || product.status !== 'Active') {
+    const isAvailable =
+      product &&
+      (product.status === 'Active' ||
+        product.status === 'active' ||
+        product.publicationStatus === 'published' ||
+        !product.status);
+
+    if (!isAvailable) {
       return c.json({ success: false, message: `Product ${item.productId} is unavailable` }, 400);
     }
 
-    const price = Number(product.price);
+    const price =
+      product.price !== undefined && product.price !== null
+        ? Number(product.price)
+        : product.pricePaise !== undefined
+        ? Number(product.pricePaise) / 100
+        : 0;
+
     const lineTotal = price * Number(item.quantity);
     authoritativeSubtotal += lineTotal;
 
@@ -47,7 +60,7 @@ ordersPublicRouter.post('/', async (c) => {
       totalPrice: authoritativeSubtotal,
       status: 'Pending',
       paymentMethod: body.paymentMethod || 'Online',
-      shippingAddress: body.shippingAddress || {},
+      shippingAddress: body.shippingAddress || body.delivery || {},
       createdAt: new Date().toISOString()
     }, c.env);
 
