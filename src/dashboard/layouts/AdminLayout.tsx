@@ -41,7 +41,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
 
         <main
           className={cn(
-            'flex-1 p-4 lg:p-6 w-full max-w-7xl mx-auto custom-scrollbar',
+            'flex-1 p-4 lg:p-6 w-full max-w-screen-2xl mx-auto custom-scrollbar',
             isGlobalSearchOpen || isCommandPaletteOpen
               ? 'overflow-hidden select-none pointer-events-none'
               : 'overflow-y-auto'
