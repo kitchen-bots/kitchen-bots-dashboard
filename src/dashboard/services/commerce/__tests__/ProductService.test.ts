@@ -20,7 +20,7 @@ describe('CommerceProductService', () => {
     const product = await CommerceProductService.getProductById('prod-1');
     expect(product).toBeDefined();
     expect(product.id).toBe('prod-1');
-    expect(product.sku).toBe('KB-SM-001');
+    expect(product.sku).toBe('KB-CBBQ-001');
   });
 
   it('should throw an error for non-existent product ID', async () => {
