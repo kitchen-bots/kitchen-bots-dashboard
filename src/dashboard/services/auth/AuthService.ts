@@ -156,6 +156,7 @@ export class FirebaseAuthService implements IAuthService {
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         message = 'Invalid email or password';
       }
+      this.updateState({ status: 'ERROR', error: message });
       const err = new Error(message);
       (err as any).cause = error;
       throw err;
