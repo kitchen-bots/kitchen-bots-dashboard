@@ -124,7 +124,7 @@ export function AdminDashboard() {
       className="h-full pb-10"
     >
       <motion.div
-        className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1"
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-w-0"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -182,12 +182,12 @@ export function AdminDashboard() {
         </div>
 
         {/* Main Content Area */}
-        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+        <div className="lg:col-span-8 space-y-6 min-w-0">
 
           {/* Revenue Analytics Chart */}
           <motion.div variants={itemVariants}>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
                   <CardTitle className="text-base font-semibold">Monthly Revenue</CardTitle>
                   <CardDescription>Fiscal commercial performance</CardDescription>
@@ -245,48 +245,48 @@ export function AdminDashboard() {
             </Card>
           </motion.div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
             {/* Recent Orders */}
             <motion.div variants={itemVariants}>
               <Card className="h-full flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-base font-semibold">Recent Orders</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3.5 sm:px-6 sm:py-4 border-b border-border/50">
+                  <CardTitle className="text-base font-semibold whitespace-nowrap">Recent Orders</CardTitle>
                   <Button
                     variant="link"
                     size="sm"
                     onClick={() => navigate('/admin/orders')}
-                    className="px-0 h-auto text-xs gap-1 group"
+                    className="px-0 h-auto text-xs text-primary gap-1 group shrink-0"
                   >
                     <span>View all orders</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </CardHeader>
                 <CardContent className="flex-1 p-0">
-                  <Table wrapperClassName="overflow-x-hidden">
+                  <Table wrapperClassName="overflow-x-auto custom-scrollbar">
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Order ID</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Customer</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Status</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold text-right">Action</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Order ID</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Customer</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Status</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold text-right whitespace-nowrap">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentOrders.map((order) => (
                         <TableRow key={order.id} className="group border-b border-border/50 hover:bg-muted/30">
                           <TableCell
-                            className="py-2.5 px-3 font-mono text-xs font-medium text-primary cursor-pointer hover:underline whitespace-nowrap"
+                            className="py-2.5 px-4 font-mono text-xs font-medium text-primary cursor-pointer hover:underline whitespace-nowrap"
                             onClick={() => navigate(`/admin/orders`)}
                           >
                             {order.id}
                           </TableCell>
                           <TableCell
-                            className="py-2.5 px-3 text-muted-foreground text-xs font-medium whitespace-nowrap truncate max-w-[120px]"
+                            className="py-2.5 px-4 text-muted-foreground text-xs font-medium whitespace-nowrap truncate max-w-[140px]"
                             title={order.customer}
                           >
                             {order.customer}
                           </TableCell>
-                          <TableCell className="py-2.5 px-3 whitespace-nowrap">
+                          <TableCell className="py-2.5 px-4 whitespace-nowrap">
                             <Badge
                               variant={
                                 order.status === 'Pending'
@@ -301,7 +301,7 @@ export function AdminDashboard() {
                               {order.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-2.5 px-3 text-right">
+                          <TableCell className="py-2.5 px-4 text-right whitespace-nowrap">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -323,45 +323,45 @@ export function AdminDashboard() {
             {/* Recent Leads */}
             <motion.div variants={itemVariants}>
               <Card className="h-full flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-base font-semibold">Commercial Leads</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3.5 sm:px-6 sm:py-4 border-b border-border/50">
+                  <CardTitle className="text-base font-semibold whitespace-nowrap">Commercial Leads</CardTitle>
                   <Button
                     variant="link"
                     size="sm"
                     onClick={() => navigate('/admin/leads')}
-                    className="px-0 h-auto text-xs gap-1 group"
+                    className="px-0 h-auto text-xs text-primary gap-1 group shrink-0"
                   >
                     <span>View CRM</span>
                     <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </CardHeader>
                 <CardContent className="flex-1 p-0">
-                  <Table wrapperClassName="overflow-x-hidden">
+                  <Table wrapperClassName="overflow-x-auto custom-scrollbar">
                     <TableHeader>
                       <TableRow className="border-b border-border hover:bg-transparent">
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Contact</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Company</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold">Status</TableHead>
-                        <TableHead className="h-8 px-3 text-xs font-semibold text-right">Action</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Contact</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Company</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold whitespace-nowrap">Status</TableHead>
+                        <TableHead className="h-9 px-4 text-xs font-semibold text-right whitespace-nowrap">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentLeads.map((lead) => (
                         <TableRow key={lead.id} className="group border-b border-border/50 hover:bg-muted/30">
                           <TableCell
-                            className="py-2.5 px-3 font-medium text-xs text-primary cursor-pointer hover:underline whitespace-nowrap truncate max-w-[100px]"
+                            className="py-2.5 px-4 font-medium text-xs text-primary cursor-pointer hover:underline whitespace-nowrap truncate max-w-[120px]"
                             onClick={() => navigate('/admin/leads')}
                             title={lead.name}
                           >
                             {lead.name}
                           </TableCell>
                           <TableCell
-                            className="py-2.5 px-3 text-muted-foreground text-xs whitespace-nowrap truncate max-w-[110px]"
+                            className="py-2.5 px-4 text-muted-foreground text-xs whitespace-nowrap truncate max-w-[120px]"
                             title={lead.company}
                           >
                             {lead.company}
                           </TableCell>
-                          <TableCell className="py-2.5 px-3 whitespace-nowrap">
+                          <TableCell className="py-2.5 px-4 whitespace-nowrap">
                             <Badge
                               variant={
                                 lead.status === 'New'
@@ -376,7 +376,7 @@ export function AdminDashboard() {
                               {lead.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-2.5 px-3 text-right">
+                          <TableCell className="py-2.5 px-4 text-right whitespace-nowrap">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -398,11 +398,11 @@ export function AdminDashboard() {
         </div>
 
         {/* Right Sidebar Area */}
-        <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+        <div className="lg:col-span-4 space-y-6 min-w-0">
           {/* Quick Actions Panel */}
           <motion.div variants={itemVariants}>
             <Card>
-              <CardHeader className="pb-3">
+              <CardHeader className="space-y-1 pb-3">
                 <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
                 <CardDescription>Rapid operational task creation</CardDescription>
               </CardHeader>
@@ -442,7 +442,7 @@ export function AdminDashboard() {
           {/* Activity Feed */}
           <motion.div variants={itemVariants}>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <div>
                   <CardTitle className="text-base font-semibold">Audit Activity</CardTitle>
                   <CardDescription>Recent system events</CardDescription>
@@ -450,7 +450,7 @@ export function AdminDashboard() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 shrink-0"
                   onClick={() => navigate('/admin/settings')}
                   title="View Audit Logs"
                 >
@@ -460,7 +460,7 @@ export function AdminDashboard() {
               <CardContent>
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-3.5 before:h-full before:w-px before:bg-border">
                   {activityFeed.map((activity) => (
-                    <div key={activity.id} className="relative flex items-start gap-3">
+                    <div key={activity.id} className="relative flex items-start gap-3 min-w-0">
                       <div className="flex items-center justify-center w-7 h-7 rounded-md border border-border bg-card text-muted-foreground shrink-0 z-10 mt-0.5 shadow-2xs">
                         {activity.type === 'order' && <ShoppingCart className="w-3.5 h-3.5" />}
                         {activity.type === 'product' && <Box className="w-3.5 h-3.5" />}
@@ -468,11 +468,11 @@ export function AdminDashboard() {
                         {activity.type === 'invoice' && <FileText className="w-3.5 h-3.5" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="flex items-center justify-between gap-1.5 mb-0.5">
                           <span className="text-xs font-semibold text-foreground truncate">{activity.user}</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{activity.timestamp}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{activity.description}</p>
-                        <p className="text-[11px] text-muted-foreground/80 mt-1">{activity.timestamp}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed break-words">{activity.description}</p>
                       </div>
                     </div>
                   ))}
@@ -484,7 +484,7 @@ export function AdminDashboard() {
           {/* Service Ticket Status */}
           <motion.div variants={itemVariants}>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <div>
                   <CardTitle className="text-base font-semibold">Support Status</CardTitle>
                   <CardDescription>Field service tickets</CardDescription>
@@ -493,7 +493,7 @@ export function AdminDashboard() {
                   variant="link"
                   size="sm"
                   onClick={() => navigate('/admin/services')}
-                  className="px-0 h-auto text-xs gap-1 group"
+                  className="px-0 h-auto text-xs text-primary gap-1 group shrink-0"
                 >
                   <span>Manage</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -506,11 +506,11 @@ export function AdminDashboard() {
                     className="flex items-center justify-between p-2.5 bg-destructive/10 hover:bg-destructive/15 rounded-lg border border-destructive/20 text-destructive cursor-pointer transition-colors"
                     title="View High Priority Tickets"
                   >
-                    <div className="flex items-center gap-2.5 text-xs font-medium">
+                    <div className="flex items-center gap-2.5 text-xs font-medium min-w-0">
                       <Bell className="w-4 h-4 shrink-0" />
-                      <span>High Priority</span>
+                      <span className="truncate">High Priority</span>
                     </div>
-                    <span className="font-bold text-xs">{ticketOverview?.highPriority || 0}</span>
+                    <span className="font-bold text-xs ml-2 shrink-0">{ticketOverview?.highPriority || 0}</span>
                   </div>
 
                   <div
@@ -518,11 +518,11 @@ export function AdminDashboard() {
                     className="flex items-center justify-between p-2.5 bg-secondary hover:bg-accent rounded-lg border border-border text-foreground cursor-pointer transition-colors"
                     title="View Assigned Field Engineers"
                   >
-                    <div className="flex items-center gap-2.5 text-xs font-medium">
+                    <div className="flex items-center gap-2.5 text-xs font-medium min-w-0">
                       <Users className="w-4 h-4 shrink-0 text-muted-foreground" />
-                      <span>Assigned Engineers</span>
+                      <span className="truncate">Assigned Engineers</span>
                     </div>
-                    <span className="font-bold text-xs">{ticketOverview?.assignedEngineers || 0}</span>
+                    <span className="font-bold text-xs ml-2 shrink-0">{ticketOverview?.assignedEngineers || 0}</span>
                   </div>
 
                   <div
@@ -530,11 +530,11 @@ export function AdminDashboard() {
                     className="flex items-center justify-between p-2.5 bg-secondary hover:bg-accent rounded-lg border border-border text-foreground cursor-pointer transition-colors"
                     title="View Maintenance Schedule"
                   >
-                    <div className="flex items-center gap-2.5 text-xs font-medium">
+                    <div className="flex items-center gap-2.5 text-xs font-medium min-w-0">
                       <Calendar className="w-4 h-4 shrink-0 text-muted-foreground" />
-                      <span>Upcoming Maintenance</span>
+                      <span className="truncate">Upcoming Maintenance</span>
                     </div>
-                    <span className="font-bold text-xs">{ticketOverview?.upcomingMaintenance || 0}</span>
+                    <span className="font-bold text-xs ml-2 shrink-0">{ticketOverview?.upcomingMaintenance || 0}</span>
                   </div>
                 </div>
               </CardContent>
