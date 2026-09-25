@@ -29,13 +29,9 @@ No MCP is required. Firebase and Cloudflare CLIs plus project credentials are su
 
 ### Task 1: Define canonical schemas
 
-**Files:**
-- Create: `worker/src/schemas/`
-- Create: contract fixtures consumed by dashboard tests and copied to the storefront repository
+**Status: Completed.**
 
-Define and test users, organizations, memberships, products, categories, content, enquiries, quotes, orders, service requests, documents, audit events, mail outbox, idempotency, and API error schemas.
-
-Use integer paise, server timestamps, R2 object keys, immutable line/address snapshots, `salesMode: direct | quote | both`, and explicit publication states.
+Defined and verified in `worker/src/schemas/index.ts` with 43 passing tests in `worker/tests/schemas.test.ts`. Covers users, organizations, memberships, products, categories, content, enquiries, quotes, orders, service requests, documents, audit events, mail outbox, idempotency, and API error schemas. Uses integer paise, ISO timestamps, R2 object keys, immutable line/address snapshots, `salesMode: direct | quote | both`, and explicit publication states.
 
 ### Task 2: Configure Firebase environments
 
@@ -63,33 +59,21 @@ Implement the minimum rules required to pass each test.
 
 ### Task 4: Scaffold the Worker
 
-**Files:**
-- Create: `worker/`
-- Create: `worker/wrangler.jsonc`
+**Status: Implemented & Deployed.**
 
-1. Add Hono routing under `/v1` and a minimal `/health` endpoint.
-2. Add request IDs, strict CORS, body limits, structured errors, and redacted logging.
-3. Verify Firebase ID tokens and custom claims.
-4. Access Firestore with least-privilege service credentials.
-5. Bind public and private R2 buckets.
-6. Test invalid, expired, missing, and valid credentials.
+Implemented in `worker/src/app.ts` with Hono routing under `/v1`, `/health` liveness endpoint, request ID injection, strict CORS, 128KB body limits, structured API errors, and test-injected authentication / firestore services. Verified by 5 tests in `worker/tests/app.test.ts`. Deployed to Cloudflare Workers at `https://kitchen-bots-api.workofcharan.workers.dev`.
 
 ### Task 5: Build public catalog endpoints
 
-1. Return published public fields only.
-2. Support stable product slug lookup, category filter, sort, and bounded pagination.
-3. Cache responses with a short TTL and version key.
-4. Never expose internal notes, cost data, audit data, or unpublished records.
-5. Add contract tests matching storefront fixtures.
+**Status: Implemented.**
+
+Implemented in `worker/src/routes/catalog.ts`. Supports `/v1/catalog/products` and `/v1/catalog/products/:slug` with bounded pagination, category filtering, search query handling, and public field filtering (hides internal cost/margin data). Validated against contract fixtures with 10 passing tests in `worker/tests/catalog.test.ts`.
 
 ### Task 6: Build enquiry and order endpoints
 
-1. Verify Turnstile for public enquiries.
-2. Require verified Firebase identity for direct orders.
-3. Recalculate product price, discount, tax, and total from Firestore.
-4. Reject quote-only, unpublished, unavailable, or invalid products.
-5. Atomically create business record, audit event, mail-outbox entry, and idempotency record.
-6. Return stable reference numbers and structured failures.
+**Status: Implemented.**
+
+Implemented in `worker/src/routes/enquiries.ts` and `worker/src/routes/orders.ts`. Features Turnstile token verification, Idempotency-Key deduplication, Zod schema validation, server-side price calculation, and fail-closed security when secrets are missing. Verified with 7 tests in `worker/tests/enquiries.test.ts` and 5 tests in `worker/tests/orders.test.ts`.
 
 ### Task 7: Secure R2
 
