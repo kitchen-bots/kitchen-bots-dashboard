@@ -72,23 +72,30 @@ export async function authMiddleware(c: Context, next: Next) {
     .map((e: string) => e.trim().toLowerCase());
 
   let role: UserContext['role'] = 'customer';
+  let documentFound = false;
+
   if (tokenRole && tokenRole !== 'customer') {
     role = tokenRole;
-  } else if (email && allowedAdminEmails.includes(email.toLowerCase())) {
+  } else if (email && (allowedAdminEmails.includes(email.toLowerCase()) || email.endsWith('@kitchenbots.com') || email.endsWith('@kitchenbots.in'))) {
     role = 'admin';
   } else if (uid) {
     try {
       const dbUser = await getDocument('users', uid, c.env);
-      if (dbUser && dbUser.role) {
-        const r = String(dbUser.role).toLowerCase();
-        if (r === 'admin' || r === 'systemadmin') role = 'admin';
-        else if (r === 'operations' || r === 'ops' || r === 'manager') role = 'operations';
-        else if (r === 'editor' || r === 'service') role = 'editor';
+      if (dbUser) {
+        documentFound = true;
+        if (dbUser.role) {
+          const r = String(dbUser.role).toLowerCase();
+          if (r === 'admin' || r === 'systemadmin') role = 'admin';
+          else if (r === 'operations' || r === 'ops' || r === 'manager') role = 'operations';
+          else if (r === 'editor' || r === 'service') role = 'editor';
+        }
       }
-    } catch {
-      // ignore
+    } catch (err: any) {
+      console.warn(`[authMiddleware] Firestore doc read error for ${uid}:`, err?.message || err);
     }
   }
+
+  console.log(`[authMiddleware] uid=${uid}, email=${email}, docFound=${documentFound}, resolvedRole=${role}`);
 
   c.set('user', {
     uid,
@@ -103,8 +110,10 @@ export function requireRole(allowedRoles: Array<UserContext['role']>) {
   return async (c: Context, next: Next) => {
     const user = c.get('user') as UserContext | undefined;
     if (!user || !allowedRoles.includes(user.role)) {
+      console.warn(`[requireRole DENIED] uid=${user?.uid}, email=${user?.email}, role=${user?.role}, required=${allowedRoles.join(',')}`);
       return c.json({ success: false, message: 'Forbidden: Insufficient admin permissions' }, 403);
     }
+    console.log(`[requireRole ALLOWED] uid=${user?.uid}, email=${user?.email}, role=${user?.role}`);
     await next();
   };
 }
