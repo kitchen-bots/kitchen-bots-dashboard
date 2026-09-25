@@ -54,7 +54,7 @@ function pemToBinary(pem: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-async function getServiceAccountToken(clientEmail: string, privateKeyPem: string): Promise<string> {
+export async function getServiceAccountToken(clientEmail: string, privateKeyPem: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   if (tokenCache && tokenCache.expiresAt > now + 60) {
     return tokenCache.token;
@@ -76,7 +76,7 @@ async function getServiceAccountToken(clientEmail: string, privateKeyPem: string
     aud: 'https://oauth2.googleapis.com/token',
     iat: now,
     exp: now + 3600,
-    scope: 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/cloud-platform'
+    scope: 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/identitytoolkit https://www.googleapis.com/auth/cloud-platform'
   };
 
   const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
