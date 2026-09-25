@@ -28,6 +28,8 @@ usersAdminRouter.get('/', async (c) => {
   // 2. Fetch Firebase Auth users
   const authUsers = await listFirebaseAuthUsers(c.env);
 
+  console.log(`[usersAdminRouter] GET /v1/admin/users: firestoreCount=${firestoreUsers.length}, authCount=${authUsers.length}`);
+
   // 3. Backfill/sync Auth users to Firestore if missing
   for (const authUser of authUsers) {
     const uid = authUser.localId;
@@ -59,22 +61,24 @@ usersAdminRouter.get('/', async (c) => {
         const created = await setDocument('users', uid, newDoc, c.env);
         existingMap.set(uid, created);
         if (email) existingMap.set(email, created);
-      } catch (err) {
-        console.error(`[usersAdminRouter] Failed to sync Auth user ${uid} to Firestore:`, err);
+        console.log(`[usersAdminRouter] Synced Auth user ${uid} (${email}) to Firestore as ${newDoc.role}`);
+      } catch (err: any) {
+        console.error(`[usersAdminRouter] Failed to sync Auth user ${uid} to Firestore:`, err?.message || err);
       }
     } else if (existing && email && allowedAdminEmails.includes(email) && existing.role !== 'admin') {
       // Ensure admin email has admin role
       try {
         const updated = await setDocument('users', existing.id || uid, { ...existing, role: 'admin' }, c.env);
         existingMap.set(existing.id || uid, updated);
-      } catch (err) {
-        console.error(`[usersAdminRouter] Failed to update admin role for ${email}:`, err);
+      } catch (err: any) {
+        console.error(`[usersAdminRouter] Failed to update admin role for ${email}:`, err?.message || err);
       }
     }
   }
 
   // Re-query collection after sync or compile list from existingMap
   firestoreUsers = await getCollection<any>('users', c.env);
+  console.log(`[usersAdminRouter] Final users count returned=${firestoreUsers.length}`);
   return c.json({ success: true, data: firestoreUsers });
 });
 
