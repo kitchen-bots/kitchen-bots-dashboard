@@ -67,7 +67,7 @@ export function Modal({
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: "spring", duration: 0.4, bounce: 0.2 }}
               className={cn(
-                "w-full max-w-lg max-h-[min(90vh,760px)] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl pointer-events-auto my-auto",
+                "w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl pointer-events-auto my-auto",
                 className
               )}
             >
@@ -103,9 +103,9 @@ export function Modal({
                   </Button>
                 </div>
               )}
-              <div className="p-5 sm:p-6 overflow-y-auto flex-1">{children}</div>
+              <div className="p-5 sm:p-6 overflow-y-auto min-h-0 flex-1 overscroll-contain">{children}</div>
               {footer && (
-                <div className="flex items-center justify-end space-x-2 border-t border-border bg-muted/30 px-5 sm:px-6 py-4 shrink-0">
+                <div className="flex items-center justify-end space-x-2 border-t border-border bg-muted/30 px-5 sm:px-6 py-4 shrink-0 sticky bottom-0 z-10">
                   {footer}
                 </div>
               )}

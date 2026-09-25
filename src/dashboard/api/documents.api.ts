@@ -1,6 +1,6 @@
-import { api } from './base.api';
 import { Document } from '../types';
 import { PaginationParams, PaginatedResponse } from '../services/types';
+import { adminFetch } from './adminClient';
 
 export const INITIAL_DOCUMENTS: Document[] = [
   {
@@ -50,27 +50,43 @@ export const INITIAL_DOCUMENTS: Document[] = [
   },
 ];
 
-let localDocuments: Document[] = [...INITIAL_DOCUMENTS];
+
+function normalizeDocument(d: any): Document {
+  const title = d.title || d.name || d.fileName || 'Document';
+  let type: Document['type'];
+  const rawType = (d.type || d.documentType || '').toUpperCase();
+  if (rawType.includes('INVOICE')) type = 'Invoice';
+  else if (rawType.includes('CERT')) type = 'Certificate';
+  else if (rawType.includes('GUIDE') || rawType.includes('INSTALL')) type = 'Installation Guide';
+  else if (rawType.includes('WARRANTY')) type = 'Warranty Document';
+  else type = 'Manual';
+
+  return {
+    id: d.id,
+    title,
+    type: (d.type as Document['type']) || type,
+    url: d.url || d.fileUrl || '',
+    size: d.size || (d.fileSize ? `${(d.fileSize / (1024 * 1024)).toFixed(1)} MB` : '1.0 MB'),
+    relatedOrderId: d.relatedOrderId || '',
+    relatedProductId: d.relatedProductId || '',
+    uploadedAt: d.uploadedAt || d.createdAt || new Date().toISOString(),
+  };
+}
 
 export const documentsApi = {
-  getDocuments: async (params?: PaginationParams): Promise<PaginatedResponse<Document>> => {
-    let records: Document[];
-    try {
-      records = await api.request<Document[]>({
-        module: 'documents',
-        action: 'getAll'
-      });
-    } catch (err) {
-      console.warn('Failed to fetch documents from API, falling back to local documents', err);
-      records = [...localDocuments];
+  getDocuments: async (params?: PaginationParams & { type?: string }): Promise<PaginatedResponse<Document>> => {
+    const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/documents');
+    let records: Document[] = [];
+    if (json && json.success && Array.isArray(json.data)) {
+      records = json.data.map(normalizeDocument);
     }
 
     if (params?.search) {
       const q = params.search.toLowerCase();
       records = records.filter(d => d.title.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
     }
-    if (params?.type) {
-      records = records.filter(d => d.type === params.type);
+    if (params?.type && params.type !== 'ALL') {
+      records = records.filter(d => d.type.toLowerCase() === params.type?.toLowerCase() || (params.type === 'CERT' && d.type === 'Certificate') || (params.type === 'MANUAL' && (d.type === 'Manual' || d.type === 'Installation Guide')));
     }
 
     const total = records.length;
@@ -79,60 +95,42 @@ export const documentsApi = {
       records = records.slice(start, start + params.limit);
     }
     return { data: records, total };
+  },
+
+  getDocumentById: async (id: string): Promise<Document | undefined> => {
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/documents/${encodeURIComponent(id)}`);
+    if (json && json.success && json.data) {
+      return normalizeDocument(json.data);
+    }
+    return undefined;
+  },
+
+  createDocument: async (docData: Partial<Document> & { name?: string; product?: string; owner?: string; version?: string }): Promise<Document> => {
+    const json = await adminFetch<{ success: boolean; data: any }>('/v1/admin/documents', {
+      method: 'POST',
+      body: JSON.stringify(docData)
+    });
+    if (json && json.success && json.data) {
+      return normalizeDocument(json.data);
+    }
+    throw new Error('Backend failed to create document record in Firestore.');
   },
 
   getDocumentsByOrderId: async (orderId: string, params?: PaginationParams): Promise<PaginatedResponse<Document>> => {
-    let records: Document[];
-    try {
-      records = await api.request<Document[]>({
-        module: 'documents',
-        action: 'getAll'
-      });
-    } catch {
-      records = [...localDocuments];
-    }
-    records = records.filter(d => d.relatedOrderId === orderId);
-    
-    const total = records.length;
-    if (params?.page && params?.limit) {
-      const start = (params.page - 1) * params.limit;
-      records = records.slice(start, start + params.limit);
-    }
-    return { data: records, total };
+    const res = await documentsApi.getDocuments(params);
+    const records = res.data.filter(d => d.relatedOrderId === orderId);
+    return { data: records, total: records.length };
   },
 
   getDocumentsByProductId: async (productId: string, params?: PaginationParams): Promise<PaginatedResponse<Document>> => {
-    let records: Document[];
-    try {
-      records = await api.request<Document[]>({
-        module: 'documents',
-        action: 'getAll'
-      });
-    } catch {
-      records = [...localDocuments];
-    }
-    records = records.filter(d => d.relatedProductId === productId);
-
-    const total = records.length;
-    if (params?.page && params?.limit) {
-      const start = (params.page - 1) * params.limit;
-      records = records.slice(start, start + params.limit);
-    }
-    return { data: records, total };
+    const res = await documentsApi.getDocuments(params);
+    const records = res.data.filter(d => d.relatedProductId === productId);
+    return { data: records, total: records.length };
   },
 
   deleteDocument: async (id: string): Promise<void> => {
-    try {
-      await api.request<void>({
-        module: 'documents',
-        action: 'delete',
-        id
-      });
-    } catch {
-      const index = localDocuments.findIndex(d => d.id === id);
-      if (index !== -1) {
-        localDocuments.splice(index, 1);
-      }
-    }
+    await adminFetch(`/v1/admin/documents/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
   }
 };

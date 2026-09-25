@@ -3,8 +3,16 @@ import { PaginationParams, PaginatedResponse } from './types';
 import { documentsApi } from '../api/documents.api';
 
 export const documentService = {
-  getDocuments: async (params?: PaginationParams): Promise<PaginatedResponse<Document>> => {
+  getDocuments: async (params?: PaginationParams & { type?: string }): Promise<PaginatedResponse<Document>> => {
     return await documentsApi.getDocuments(params);
+  },
+
+  getDocumentById: async (id: string): Promise<Document | undefined> => {
+    return await documentsApi.getDocumentById(id);
+  },
+
+  createDocument: async (docData: Partial<Document> & { name?: string; product?: string; owner?: string; version?: string }): Promise<Document> => {
+    return await documentsApi.createDocument(docData);
   },
 
   getDocumentsByOrderId: async (orderId: string, params?: PaginationParams): Promise<PaginatedResponse<Document>> => {
