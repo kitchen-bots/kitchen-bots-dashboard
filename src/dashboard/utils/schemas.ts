@@ -44,7 +44,7 @@ export const UserSchema = z.object({
   gstin: z.string().optional(), // Legacy support
   avatar: z.string().optional(),
   addresses: z.array(AddressSchema).default([]),
-  status: z.enum(['active', 'inactive']).default('active'),
+  status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   branchId: z.string().optional(),
   preferences: z.record(z.string(), z.any()).optional(),
   lastLogin: z.string().optional(),

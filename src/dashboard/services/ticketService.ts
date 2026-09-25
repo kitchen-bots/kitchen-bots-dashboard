@@ -1,18 +1,32 @@
 import { PaginationParams, PaginatedResponse } from './types';
-import { api } from '../api/base.api';
+import { adminFetch } from '../api/adminClient';
 
 export interface ServiceTicket {
   id: string;
+  ticketId?: string;
+  customerId?: string;
   customerName: string;
+  clientName?: string;
+  restaurantName?: string;
   customerAvatar?: string;
   customerInitials: string;
   customerColor: string;
   productName: string;
+  equipmentModel?: string;
   engineerName: string;
+  assignedEngineerId?: string;
+  assignedEngineerName?: string;
   engineerColor?: string;
-  status: 'Open' | 'Assigned' | 'In Progress' | 'Completed';
+  status: 'Open' | 'Assigned' | 'In Progress' | 'Completed' | 'Resolved';
+  priority?: 'Normal' | 'High' | 'Urgent';
   date: string;
   isUrgent?: boolean;
+  issue?: string;
+  description?: string;
+  scheduledAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  resolvedAt?: string;
 }
 
 export const INITIAL_SERVICE_TICKETS: ServiceTicket[] = [
@@ -25,6 +39,7 @@ export const INITIAL_SERVICE_TICKETS: ServiceTicket[] = [
     engineerName: 'Vikram R.',
     engineerColor: 'bg-green-500',
     status: 'Assigned',
+    priority: 'Normal',
     date: 'Today, 11:20 AM',
     isUrgent: false,
   },
@@ -37,6 +52,7 @@ export const INITIAL_SERVICE_TICKETS: ServiceTicket[] = [
     engineerName: 'Priya D.',
     engineerColor: 'bg-yellow-500',
     status: 'In Progress',
+    priority: 'Urgent',
     date: 'Today, 10:45 AM',
     isUrgent: true,
   },
@@ -49,6 +65,7 @@ export const INITIAL_SERVICE_TICKETS: ServiceTicket[] = [
     engineerName: 'Amit K.',
     engineerColor: 'bg-slate-400',
     status: 'Open',
+    priority: 'Urgent',
     date: 'Today, 09:15 AM',
     isUrgent: true,
   },
@@ -61,22 +78,54 @@ export const INITIAL_SERVICE_TICKETS: ServiceTicket[] = [
     engineerName: 'Vikram R.',
     engineerColor: 'bg-green-500',
     status: 'Completed',
+    priority: 'Normal',
     date: 'Yesterday, 04:30 PM',
     isUrgent: false,
   },
 ];
 
+
+function normalizeTicket(t: any): ServiceTicket {
+  const customerName = t.customerName || t.clientName || t.restaurantName || 'Customer';
+  const productName = t.productName || t.equipmentModel || 'Kitchen Equipment';
+  const isUrgent = Boolean(t.isUrgent || t.priority === 'Urgent');
+  const initials = t.customerInitials || customerName.split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2) || 'KB';
+
+  return {
+    id: t.id,
+    ticketId: t.ticketId || t.id,
+    customerId: t.customerId || '',
+    customerName,
+    clientName: customerName,
+    restaurantName: customerName,
+    customerAvatar: t.customerAvatar,
+    customerInitials: initials,
+    customerColor: t.customerColor || 'bg-primary/10 text-primary',
+    productName,
+    equipmentModel: productName,
+    engineerName: t.engineerName || t.assignedEngineerName || 'Unassigned',
+    assignedEngineerName: t.engineerName || t.assignedEngineerName || 'Unassigned',
+    assignedEngineerId: t.assignedEngineerId || '',
+    engineerColor: t.engineerColor || (t.engineerName ? 'bg-emerald-500' : 'bg-slate-400'),
+    status: t.status || 'Open',
+    priority: t.priority || (isUrgent ? 'Urgent' : 'Normal'),
+    date: t.date || 'Today',
+    isUrgent,
+    issue: t.issue || t.description || '',
+    description: t.description || t.issue || '',
+    scheduledAt: t.scheduledAt,
+    createdAt: t.createdAt || new Date().toISOString(),
+    updatedAt: t.updatedAt || new Date().toISOString(),
+    resolvedAt: t.resolvedAt,
+  };
+}
+
 export const ticketService = {
   getTickets: async (params?: PaginationParams): Promise<PaginatedResponse<ServiceTicket>> => {
-    let records: ServiceTicket[];
-    try {
-      records = await api.request<ServiceTicket[]>({
-        module: 'services',
-        action: 'getAll',
-      });
-    } catch (err) {
-      console.warn('Failed to fetch tickets from API, falling back to local service tickets', err);
-      records = [...INITIAL_SERVICE_TICKETS];
+    const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/services');
+    let records: ServiceTicket[] = [];
+    if (json && json.success && Array.isArray(json.data)) {
+      records = json.data.map(normalizeTicket);
     }
 
     if (params?.status && params.status !== 'All Status') {
@@ -103,40 +152,52 @@ export const ticketService = {
   },
 
   getTicketById: async (id: string): Promise<ServiceTicket | undefined> => {
-    const res = await ticketService.getTickets();
-    return res.data.find((t) => t.id === id);
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/services/${encodeURIComponent(id)}`);
+    if (json && json.success && json.data) {
+      return normalizeTicket(json.data);
+    }
+    return undefined;
   },
 
   createTicket: async (ticket: Omit<ServiceTicket, 'id'>): Promise<ServiceTicket> => {
-    try {
-      return await api.request<ServiceTicket>({
-        module: 'services',
-        action: 'create',
-        data: ticket,
-      });
-    } catch {
-      const newTicket: ServiceTicket = {
-        ...ticket,
-        id: `SR-${Math.floor(9825 + Math.random() * 200)}`,
-      };
-      INITIAL_SERVICE_TICKETS.unshift(newTicket);
-      return newTicket;
+    const json = await adminFetch<{ success: boolean; data: any }>('/v1/admin/services', {
+      method: 'POST',
+      body: JSON.stringify(ticket),
+    });
+
+    if (json && json.success && json.data) {
+      return normalizeTicket(json.data);
     }
+    throw new Error('Backend failed to create service ticket in Firestore.');
   },
 
   updateTicketStatus: async (id: string, status: ServiceTicket['status']): Promise<ServiceTicket> => {
-    try {
-      return await api.request<ServiceTicket>({
-        module: 'services',
-        action: 'update',
-        id,
-        data: { status },
-      });
-    } catch {
-      const ticket = INITIAL_SERVICE_TICKETS.find((t) => t.id === id);
-      if (!ticket) throw new Error(`Ticket ${id} not found`);
-      ticket.status = status;
-      return ticket;
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/services/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+
+    if (json && json.success && json.data) {
+      return normalizeTicket(json.data);
     }
+    throw new Error(`Failed to update status for ticket ${id}`);
   },
+
+  updateTicket: async (id: string, data: Partial<ServiceTicket>): Promise<ServiceTicket> => {
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/services/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+
+    if (json && json.success && json.data) {
+      return normalizeTicket(json.data);
+    }
+    throw new Error(`Failed to update ticket ${id}`);
+  },
+
+  deleteTicket: async (id: string): Promise<void> => {
+    await adminFetch(`/v1/admin/services/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
 };

@@ -1,4 +1,4 @@
-import { Order, OrderStatus, OrderLineItem, Quote } from '../../types/sales';
+import { Order, OrderStatus, OrderLineItem, Quote, Address } from '../../types/sales';
 import { domainEvents as EventBus } from '../../utils/eventBus';
 import { InventoryReservationService } from './inventoryReservation';
 import { EventFactory } from '../../utils/eventFactory';
@@ -7,189 +7,97 @@ import { QuoteService } from './quoteService';
 
 import { TimelineService } from './timelineService';
 
-const INITIAL_COMMERCIAL_ORDERS: Order[] = [
-  {
-    id: 'ord-comm-1',
-    orderNumber: 'ORD-9801',
-    customerId: 'user-cust-1',
-    companyName: 'Curry Cloud Kitchens',
-    contactPerson: 'Rohan Das',
-    email: 'rohan.das@currycloud.com',
-    phone: '+91 98765 01234',
-    billingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
-    shippingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Pending Approval',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Unshipped',
-    inventoryStatus: 'Pending',
-    orderSource: 'Quote Conversion',
-    priority: 'High',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-101',
-        productId: 'p-1',
-        variantId: 'v-p1-1',
-        productName: 'Commercial BBQ Grill',
-        sku: 'KB-BBQ-001',
-        pricing: {
-          unitPrice: 85000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 15300,
-          subtotal: 85000,
-          total: 100300,
-        },
-        fulfilledQuantity: 0,
-        fulfillmentStatus: 'Unfulfilled',
-      },
-    ],
-    subtotal: 85000,
-    totalDiscount: 0,
-    totalTax: 15300,
-    shippingCost: 2500,
-    grandTotal: 102800,
-    documents: [],
-    createdAt: '2024-10-18T10:30:00.000Z',
-    updatedAt: '2024-10-18T10:30:00.000Z',
-  },
-  {
-    id: 'ord-comm-2',
-    orderNumber: 'ORD-9802',
-    customerId: 'user-cust-2',
-    companyName: 'Blue Door Cafe',
-    contactPerson: 'Vikram Singh',
-    email: 'vikram@bluedoorcafe.in',
-    phone: '+91 98765 43210',
-    billingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
-    shippingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Approved',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Unshipped',
-    inventoryStatus: 'Reserved',
-    orderSource: 'Manual',
-    priority: 'Normal',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-102',
-        productId: 'p-8',
-        variantId: 'v-p8-1',
-        productName: 'Industrial 4-Burner Gas Range',
-        sku: 'KB-RNG-008',
-        pricing: {
-          unitPrice: 68000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 12240,
-          subtotal: 68000,
-          total: 80240,
-        },
-        fulfilledQuantity: 0,
-        fulfillmentStatus: 'Unfulfilled',
-      },
-    ],
-    subtotal: 68000,
-    totalDiscount: 0,
-    totalTax: 12240,
-    shippingCost: 1500,
-    grandTotal: 81740,
-    documents: [],
-    createdAt: '2024-10-16T14:20:00.000Z',
-    updatedAt: '2024-10-17T09:15:00.000Z',
-  },
-  {
-    id: 'ord-comm-3',
-    orderNumber: 'ORD-9803',
-    customerId: 'user-cust-3',
-    companyName: 'Cloud Kitchens India',
-    contactPerson: 'Anita Desai',
-    email: 'anita@cloudkitchens.co.in',
-    phone: '+91 98222 33445',
-    billingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
-    shippingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Shipped',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Shipped',
-    inventoryStatus: 'Deducted',
-    orderSource: 'Ecommerce',
-    priority: 'Urgent',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-103',
-        productId: 'p-6',
-        variantId: 'v-p6-1',
-        productName: 'Commercial Exhaust Hood 6ft',
-        sku: 'KB-HOD-006',
-        pricing: {
-          unitPrice: 52000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 9360,
-          subtotal: 52000,
-          total: 61360,
-        },
-        fulfilledQuantity: 1,
-        fulfillmentStatus: 'Fulfilled',
-      },
-    ],
-    subtotal: 52000,
-    totalDiscount: 0,
-    totalTax: 9360,
-    shippingCost: 3000,
-    grandTotal: 64360,
-    documents: [],
-    createdAt: '2024-10-14T11:00:00.000Z',
-    updatedAt: '2024-10-18T16:45:00.000Z',
-  },
-];
+export function mapFirestoreOrderToSalesOrder(raw: any): Order {
+  const totalPrice = Number(raw.totalPrice || raw.grandTotal || 0);
+  const items: OrderLineItem[] = Array.isArray(raw.items)
+    ? raw.items.map((it: any, index: number) => {
+        const itemPrice = Number(it.pricePaise ? it.pricePaise / 100 : (it.price || it.unitPrice || 0));
+        const itemQty = Number(it.quantity || 1);
+        const lineTotal = Number(it.lineTotal || itemPrice * itemQty);
+        return {
+          id: it.id || `line-${index + 1}-${raw.id}`,
+          productId: it.productId || `prod-${index + 1}`,
+          variantId: it.variantId || `v-${it.productId || index}`,
+          productName: it.name || it.productName || 'Kitchen Equipment',
+          sku: it.sku || `KB-${(it.productId || 'PROD').toUpperCase()}`,
+          pricing: {
+            unitPrice: itemPrice,
+            quantity: itemQty,
+            discountAmount: Number(it.discountAmount || 0),
+            taxRate: Number(it.taxRate || 0),
+            taxAmount: Number(it.taxAmount || 0),
+            subtotal: lineTotal,
+            total: lineTotal,
+          },
+          fulfilledQuantity: it.fulfilledQuantity || 0,
+          fulfillmentStatus: it.fulfillmentStatus || 'Unfulfilled',
+        };
+      })
+    : [];
 
-INITIAL_COMMERCIAL_ORDERS.forEach((order) => {
-  TimelineService.addTimelineEntry({
-    id: `tl-${order.id}-1`,
-    entityId: order.id,
-    entityType: 'ORDER',
-    type: 'CREATED',
-    userId: order.salesRepId,
-    userName: 'Sales System',
-    description: `Order ${order.orderNumber} placed for ${order.companyName} with ${order.items.length} item(s)`,
-    timestamp: order.createdAt,
-  });
-  if (order.status === 'Approved' || order.status === 'Shipped') {
-    TimelineService.addTimelineEntry({
-      id: `tl-${order.id}-2`,
-      entityId: order.id,
-      entityType: 'ORDER',
-      type: 'APPROVED',
-      userId: order.salesRepId,
-      userName: 'Commercial Operations',
-      description: `Order approved and verified for fulfillment`,
-      timestamp: order.updatedAt,
-    });
-  }
-  if (order.status === 'Shipped') {
-    TimelineService.addTimelineEntry({
-      id: `tl-${order.id}-3`,
-      entityId: order.id,
-      entityType: 'ORDER',
-      type: 'SHIPPED',
-      userId: order.salesRepId,
-      userName: 'Logistics Dispatch',
-      description: `Dispatched via BlueDart Express to ${order.shippingAddress.city}`,
-      timestamp: order.updatedAt,
-    });
-  }
-});
+  const shippingAddr: Address = {
+    street: raw.shippingAddress?.street || raw.shippingAddress?.addressLine1 || '123 Main St',
+    city: raw.shippingAddress?.city || 'Bangalore',
+    state: raw.shippingAddress?.state || 'Karnataka',
+    postalCode: raw.shippingAddress?.pincode || raw.shippingAddress?.postalCode || '560001',
+    country: raw.shippingAddress?.country || 'India',
+  };
+
+  const billingAddr: Address = raw.billingAddress ? {
+    street: raw.billingAddress.street || raw.billingAddress.addressLine1 || shippingAddr.street,
+    city: raw.billingAddress.city || shippingAddr.city,
+    state: raw.billingAddress.state || shippingAddr.state,
+    postalCode: raw.billingAddress.pincode || raw.billingAddress.postalCode || shippingAddr.postalCode,
+    country: raw.billingAddress.country || 'India',
+  } : shippingAddr;
+
+  const rawStatus = raw.status || 'Pending';
+  let mappedStatus: OrderStatus = 'Pending Approval';
+  if (rawStatus === 'Approved') mappedStatus = 'Approved';
+  else if (rawStatus === 'Processing') mappedStatus = 'Processing';
+  else if (rawStatus === 'Shipped') mappedStatus = 'Shipped';
+  else if (rawStatus === 'Delivered') mappedStatus = 'Delivered';
+  else if (rawStatus === 'Cancelled') mappedStatus = 'Cancelled';
+  else if (rawStatus === 'Draft') mappedStatus = 'Draft';
+
+  return {
+    id: raw.id,
+    orderNumber: raw.orderNumber || raw.id.toUpperCase(),
+    quoteId: raw.quoteId,
+    customerId: raw.customerId || 'guest',
+    companyName: raw.companyName || raw.customer?.name || (raw.customerId === 'guest' ? 'Store Customer' : raw.customerId),
+    contactPerson: raw.contactPerson || raw.customer?.name || 'Store Customer',
+    email: raw.email || raw.customer?.email || 'orders@kitchenbots.com',
+    phone: raw.phone || raw.customer?.phone || '+91 9490701421',
+    gstDetails: raw.gstDetails,
+    billingAddress: billingAddr,
+    shippingAddress: shippingAddr,
+    salesRepId: raw.salesRepId || 'online-ecommerce',
+    status: mappedStatus,
+    paymentStatus: raw.paymentStatus || (raw.paymentMethod ? 'Paid' : 'Unpaid'),
+    shippingStatus: raw.shippingStatus || (mappedStatus === 'Shipped' || mappedStatus === 'Delivered' ? 'Shipped' : 'Unshipped'),
+    inventoryStatus: raw.inventoryStatus || 'Pending',
+    orderSource: raw.orderSource || (raw.customerId === 'guest' ? 'Ecommerce' : 'API'),
+    priority: raw.priority || 'Normal',
+    currency: raw.currency || 'INR',
+    items,
+    subtotal: totalPrice,
+    totalDiscount: Number(raw.totalDiscount || 0),
+    totalTax: Number(raw.totalTax || 0),
+    shippingCost: Number(raw.shippingCost || 0),
+    grandTotal: totalPrice,
+    notes: raw.notes,
+    internalNotes: raw.internalNotes,
+    documents: raw.documents || [],
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+  };
+}
+
+import { adminFetch } from '../../api/adminClient';
 
 export class OrderService {
-  private static orders: Map<string, Order> = new Map(INITIAL_COMMERCIAL_ORDERS.map((o) => [o.id, o]));
+  private static orders: Map<string, Order> = new Map();
   public static lastEventId: Map<string, string> = new Map(); // Expose for inter-service causation
 
   static createOrderFromQuote(quote: Quote, userId: string, userName: string): Order {
@@ -292,6 +200,88 @@ export class OrderService {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
+
+  static async fetchOrders(): Promise<Order[]> {
+    try {
+      const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/orders');
+      if (json && json.success && Array.isArray(json.data)) {
+        const mappedOrders = json.data.map(mapFirestoreOrderToSalesOrder);
+        this.orders.clear();
+        mappedOrders.forEach((o) => {
+          this.orders.set(o.id, o);
+          if (TimelineService.getEventsForEntity(o.id).length === 0) {
+            TimelineService.addTimelineEntry({
+              id: `tl-${o.id}-1`,
+              entityId: o.id,
+              entityType: 'ORDER',
+              type: 'CREATED',
+              userId: o.salesRepId,
+              userName: 'System Operations',
+              description: `Order ${o.orderNumber} placed for ${o.companyName} (${o.items.length} item(s))`,
+              timestamp: o.createdAt,
+            });
+            if (o.status === 'Approved' || o.status === 'Shipped' || o.status === 'Delivered') {
+              TimelineService.addTimelineEntry({
+                id: `tl-${o.id}-2`,
+                entityId: o.id,
+                entityType: 'ORDER',
+                type: 'APPROVED',
+                userId: o.salesRepId,
+                userName: 'Operations Admin',
+                description: 'Order approved and verified for fulfillment',
+                timestamp: o.updatedAt,
+              });
+            }
+            if (o.status === 'Shipped' || o.status === 'Delivered') {
+              TimelineService.addTimelineEntry({
+                id: `tl-${o.id}-3`,
+                entityId: o.id,
+                entityType: 'ORDER',
+                type: 'SHIPPED',
+                userId: o.salesRepId,
+                userName: 'Logistics Dispatch',
+                description: `Dispatched to ${o.shippingAddress.city}`,
+                timestamp: o.updatedAt,
+              });
+            }
+          }
+        });
+        return mappedOrders;
+      }
+    } catch (err) {
+      console.error('[OrderService.fetchOrders Error]', err);
+    }
+
+    return this.getAllOrders();
+  }
+
+  static async fetchOrderById(id: string): Promise<Order | undefined> {
+    try {
+      const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/orders/${encodeURIComponent(id)}`);
+      if (json && json.success && json.data) {
+        const mapped = mapFirestoreOrderToSalesOrder(json.data);
+        this.orders.set(mapped.id, mapped);
+        if (TimelineService.getEventsForEntity(mapped.id).length === 0) {
+          TimelineService.addTimelineEntry({
+            id: `tl-${mapped.id}-1`,
+            entityId: mapped.id,
+            entityType: 'ORDER',
+            type: 'CREATED',
+            userId: mapped.salesRepId,
+            userName: 'System Operations',
+            description: `Order ${mapped.orderNumber} placed for ${mapped.companyName}`,
+            timestamp: mapped.createdAt,
+          });
+        }
+        return mapped;
+      }
+    } catch (err) {
+      console.error(`[OrderService.fetchOrderById Error] ${id}:`, err);
+    }
+
+    return this.getOrder(id);
+  }
+
 
   static registerDirectOrder(data: {
     id?: string;
@@ -454,7 +444,7 @@ export class OrderService {
     this.orders.set(id, updatedOrder);
 
     let eventType: EventType | null = null;
-    let payload: any = { orderId: id };
+    const payload: any = { orderId: id };
 
     if (newStatus === 'Approved') {
         eventType = EventType.OrderApproved;

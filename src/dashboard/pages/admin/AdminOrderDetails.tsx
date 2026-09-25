@@ -19,10 +19,46 @@ export const AdminOrderDetails: React.FC = () => {
   const { toast } = useToast();
 
   const [order, setOrder] = useState(() => OrderService.getOrder(id || ''));
+  const [isLoading, setIsLoading] = useState(!order);
   const [events, setEvents] = useState(() => TimelineService.getEventsForEntity(id || ''));
   const [showApproveDrawer, setShowApproveDrawer] = useState(false);
   const [showShippingDrawer, setShowShippingDrawer] = useState(false);
   const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (id) {
+      let isMounted = true;
+      OrderService.fetchOrderById(id)
+        .then((fetched) => {
+          if (isMounted && fetched) {
+            setOrder(fetched);
+          }
+        })
+        .catch(() => {
+          // ignore
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <PageContainer title="Loading Order..." breadcrumbs={[{ label: 'Orders', href: '/admin/orders' }, { label: 'Loading' }]}>
+        <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="text-xs">Fetching order details from server...</span>
+        </div>
+      </PageContainer>
+    );
+  }
 
   if (!order) {
     return (
@@ -36,6 +72,7 @@ export const AdminOrderDetails: React.FC = () => {
       </PageContainer>
     );
   }
+
 
   const handleStatusChange = (newStatus: OrderStatus) => {
     try {

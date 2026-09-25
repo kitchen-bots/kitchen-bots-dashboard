@@ -31,59 +31,9 @@ import {
   UploadDocumentModal,
   DocumentItem,
 } from '../../components/Modals/UploadDocumentModal';
+import { documentService } from '../../services/documentService';
 
-const initialDocuments: DocumentItem[] = [
-  {
-    id: 'doc-1',
-    name: 'Maintenance_Guide_V2.pdf',
-    size: '4.2 MB',
-    type: 'MANUAL',
-    product: 'Commercial BBQ Grill',
-    date: 'Oct 24, 2023',
-    version: 'v2.1',
-    owner: 'Rahul Sharma',
-  },
-  {
-    id: 'doc-2',
-    name: 'Installation_Invoice_7721.pdf',
-    size: '1.8 MB',
-    type: 'INVOICE',
-    product: 'Rocket Stove (Single Burner)',
-    date: 'Oct 22, 2023',
-    version: 'v1.0',
-    owner: 'Ops Billing',
-  },
-  {
-    id: 'doc-3',
-    name: 'ISO_9001_Certification.pdf',
-    size: '2.1 MB',
-    type: 'CERT',
-    product: 'Industrial 4-Burner Gas Range',
-    date: 'Oct 15, 2023',
-    version: 'v3.0',
-    owner: 'Quality Assurance',
-  },
-  {
-    id: 'doc-4',
-    name: 'Quarterly_Service_Report_Q3.pdf',
-    size: '3.4 MB',
-    type: 'SERVICE',
-    product: 'Commercial Exhaust Hood 6ft',
-    date: 'Sep 30, 2023',
-    version: 'v1.1',
-    owner: 'Field Engineering',
-  },
-  {
-    id: 'doc-5',
-    name: 'Electrical_Schematics_RevC.pdf',
-    size: '5.6 MB',
-    type: 'MANUAL',
-    product: 'Food Processing Machine',
-    date: 'Sep 18, 2023',
-    version: 'v2.4',
-    owner: 'Hardware Team',
-  },
-];
+
 
 export const DocumentManagement: React.FC = () => {
   const location = useLocation();
@@ -91,14 +41,60 @@ export const DocumentManagement: React.FC = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   const { showToast } = useToast();
 
-  const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('ALL');
-  const [selectedDoc, setSelectedDoc] = useState<DocumentItem>(initialDocuments[0]);
+  const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const homePath = isAdmin ? '/admin' : '/dashboard';
+
+  const loadDocuments = async () => {
+    try {
+      setIsLoading(true);
+      const res = await documentService.getDocuments();
+      if (res && Array.isArray(res.data)) {
+        const mapped: DocumentItem[] = res.data.map((d: any) => {
+          let docType: DocumentItem['type'];
+          const t = (d.type || d.documentType || '').toUpperCase();
+          if (t.includes('INVOICE')) docType = 'INVOICE';
+          else if (t.includes('CERT')) docType = 'CERT';
+          else if (t.includes('SERVICE')) docType = 'SERVICE';
+          else docType = 'MANUAL';
+
+          return {
+            id: d.id,
+            name: d.title || d.name || d.fileName || 'Untitled Document.pdf',
+            size: d.size || (d.fileSize ? `${(d.fileSize / (1024 * 1024)).toFixed(1)} MB` : '1.0 MB'),
+            type: docType,
+            product: d.product || d.relatedProductName || (d.relatedProductId ? `Product #${d.relatedProductId}` : 'General Commercial Fleet'),
+            date: d.date || (d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'),
+            version: d.version || 'v1.0',
+            owner: d.owner || d.uploadedBy || 'Operations',
+            url: d.url || d.fileUrl || '',
+          };
+        });
+        setDocuments(mapped);
+        if (mapped.length > 0 && !selectedDoc) {
+          setSelectedDoc(mapped[0]);
+        }
+      } else {
+        setDocuments([]);
+      }
+    } catch (err: any) {
+      console.error('Failed to load live documents from backend', err);
+      setDocuments([]);
+      showToast('Error', err.message || 'Failed to load documents from backend.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
 
   // Handle URL action parameter (e.g. from Quick Actions or Dashboard navigation)
   useEffect(() => {
@@ -167,14 +163,45 @@ export const DocumentManagement: React.FC = () => {
     showToast('Link Copied', `Secure access link copied for ${doc.name}`, 'success');
   };
 
-  const handleUploadSuccess = (newDoc: DocumentItem) => {
-    setDocuments((prev) => [newDoc, ...prev]);
-    setSelectedDoc(newDoc);
-    showToast(
-      'Document Uploaded',
-      `${newDoc.name} has been added to the repository.`,
-      'success'
-    );
+  const handleUploadSuccess = async (newDoc: DocumentItem) => {
+    try {
+      const created = await documentService.createDocument({
+        id: newDoc.id,
+        title: newDoc.name,
+        name: newDoc.name,
+        type: newDoc.type === 'INVOICE' ? 'Invoice'
+          : newDoc.type === 'CERT' ? 'Certificate'
+          : 'Manual',
+        product: newDoc.product,
+        size: newDoc.size,
+        version: newDoc.version,
+        owner: newDoc.owner,
+        url: newDoc.url || '',
+      });
+
+      const mappedDoc: DocumentItem = {
+        id: created.id,
+        name: created.title || newDoc.name,
+        size: created.size || newDoc.size,
+        type: newDoc.type,
+        product: newDoc.product,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        version: newDoc.version,
+        owner: newDoc.owner,
+        url: created.url || newDoc.url || '',
+      };
+
+      setDocuments((prev) => [mappedDoc, ...prev]);
+      setSelectedDoc(mappedDoc);
+      showToast(
+        'Document Uploaded',
+        `${mappedDoc.name} metadata has been saved to the repository.`,
+        'success'
+      );
+    } catch (err: any) {
+      console.error('Failed to persist document to backend', err);
+      showToast('Upload Failed', err.message || 'Could not persist document to backend.', 'error');
+    }
   };
 
   const filteredDocs = documents.filter((doc) => {
@@ -212,6 +239,14 @@ export const DocumentManagement: React.FC = () => {
         return <Badge variant="secondary">{type}</Badge>;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full min-h-[50vh] items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <PageContainer
@@ -409,7 +444,7 @@ export const DocumentManagement: React.FC = () => {
                   </tr>
                 ) : (
                   filteredDocs.map((doc) => {
-                    const isSelected = selectedDoc.id === doc.id;
+                    const isSelected = selectedDoc?.id === doc.id;
                     return (
                       <tr
                         key={doc.id}
@@ -499,69 +534,79 @@ export const DocumentManagement: React.FC = () => {
                 className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={() => setIsPreviewModalOpen(true)}
                 title="Full Preview"
+                disabled={!selectedDoc}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="p-4 space-y-4 text-xs flex-1 flex flex-col justify-between">
-            {/* File Header Preview Card */}
-            <div className="p-3 rounded-lg border border-border/70 bg-muted/30 flex items-start gap-2.5">
-              <div className="h-9 w-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-foreground truncate text-xs" title={selectedDoc.name}>
-                  {selectedDoc.name}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
-                    {selectedDoc.type}
-                  </Badge>
-                  <span className="text-[11px] text-muted-foreground font-mono">{selectedDoc.size}</span>
+            {selectedDoc ? (
+              <>
+                {/* File Header Preview Card */}
+                <div className="p-3 rounded-lg border border-border/70 bg-muted/30 flex items-start gap-2.5">
+                  <div className="h-9 w-9 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground truncate text-xs" title={selectedDoc.name}>
+                      {selectedDoc.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+                        {selectedDoc.type}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground font-mono">{selectedDoc.size}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Metadata Rows */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
-                <span className="text-muted-foreground">Version</span>
-                <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
-                  {selectedDoc.version}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
-                <span className="text-muted-foreground">Owner</span>
-                <span className="font-medium text-foreground truncate max-w-[140px]">{selectedDoc.owner}</span>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
-                <span className="text-muted-foreground">Hardware Unit</span>
-                <span className="font-medium text-foreground truncate max-w-[140px]" title={selectedDoc.product}>
-                  {selectedDoc.product}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
-                <span className="text-muted-foreground">Date Indexed</span>
-                <span className="font-medium text-foreground">{selectedDoc.date}</span>
-              </div>
-            </div>
+                {/* Metadata Rows */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                    <span className="text-muted-foreground">Version</span>
+                    <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
+                      {selectedDoc.version}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                    <span className="text-muted-foreground">Owner</span>
+                    <span className="font-medium text-foreground truncate max-w-[140px]">{selectedDoc.owner}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                    <span className="text-muted-foreground">Hardware Unit</span>
+                    <span className="font-medium text-foreground truncate max-w-[140px]" title={selectedDoc.product}>
+                      {selectedDoc.product}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-1.5 border-b border-border/40 text-xs">
+                    <span className="text-muted-foreground">Date Indexed</span>
+                    <span className="font-medium text-foreground">{selectedDoc.date}</span>
+                  </div>
+                </div>
 
-            {/* Action Footer */}
-            <div className="pt-2">
-              <Button
-                onClick={() => handleDownload(selectedDoc)}
-                className="w-full gap-2 cursor-pointer text-xs font-semibold py-2.5 h-10 shadow-sm"
-                size="sm"
-                title={`Download ${selectedDoc.name}`}
-              >
-                <Download className="w-4 h-4 shrink-0" />
-                <span>Download File</span>
-                <span className="text-[10px] opacity-80 ml-auto font-mono bg-primary-foreground/15 px-1.5 py-0.5 rounded">
-                  {selectedDoc.size}
-                </span>
-              </Button>
-            </div>
+                {/* Action Footer */}
+                <div className="pt-2">
+                  <Button
+                    onClick={() => handleDownload(selectedDoc)}
+                    className="w-full gap-2 cursor-pointer text-xs font-semibold py-2.5 h-10 shadow-sm"
+                    size="sm"
+                    title={`Download ${selectedDoc.name}`}
+                  >
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span>Download File</span>
+                    <span className="text-[10px] opacity-80 ml-auto font-mono bg-primary-foreground/15 px-1.5 py-0.5 rounded">
+                      {selectedDoc.size}
+                    </span>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center gap-2 py-8">
+                <FileText className="w-8 h-8 text-muted-foreground/40" />
+                <p className="text-xs text-muted-foreground">Select a document to preview details</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -574,78 +619,80 @@ export const DocumentManagement: React.FC = () => {
       />
 
       {/* Document Full Preview Modal */}
-      <Modal
-        isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
-        title={selectedDoc.name}
-        description={`Classification: ${selectedDoc.type} | Hardware: ${selectedDoc.product}`}
-      >
-        <div className="space-y-4 py-2">
-          {selectedDoc.file && selectedDoc.file.type.startsWith('image/') ? (
-            <div className="rounded-lg overflow-hidden border border-border bg-muted/20 p-2 flex items-center justify-center">
-              <img
-                src={selectedDoc.url}
-                alt={selectedDoc.name}
-                className="max-h-80 object-contain rounded"
-              />
-            </div>
-          ) : (
-            <div className="p-6 rounded-lg border border-border bg-muted/20 flex flex-col items-center justify-center text-center space-y-3">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-                <FileText className="w-6 h-6" />
+      {selectedDoc && (
+        <Modal
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          title={selectedDoc.name}
+          description={`Classification: ${selectedDoc.type} | Hardware: ${selectedDoc.product}`}
+        >
+          <div className="space-y-4 py-2">
+            {selectedDoc.file && selectedDoc.file.type.startsWith('image/') ? (
+              <div className="rounded-lg overflow-hidden border border-border bg-muted/20 p-2 flex items-center justify-center">
+                <img
+                  src={selectedDoc.url}
+                  alt={selectedDoc.name}
+                  className="max-h-80 object-contain rounded"
+                />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">{selectedDoc.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {selectedDoc.size} • {selectedDoc.version}
+            ) : (
+              <div className="p-6 rounded-lg border border-border bg-muted/20 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{selectedDoc.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {selectedDoc.size} • {selectedDoc.version}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground max-w-sm">
+                  This document is managed under the Kitchen Bots commercial equipment repository and
+                  assigned to {selectedDoc.owner}.
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground max-w-sm">
-                This document is managed under the Kitchen Bots commercial equipment repository and
-                assigned to {selectedDoc.owner}.
-              </p>
-            </div>
-          )}
+            )}
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-lg border border-border bg-muted/30">
-              <span className="text-muted-foreground block mb-1">Equipment Unit</span>
-              <span className="font-semibold text-foreground">{selectedDoc.product}</span>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <span className="text-muted-foreground block mb-1">Equipment Unit</span>
+                <span className="font-semibold text-foreground">{selectedDoc.product}</span>
+              </div>
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <span className="text-muted-foreground block mb-1">Custodian</span>
+                <span className="font-semibold text-foreground">{selectedDoc.owner}</span>
+              </div>
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <span className="text-muted-foreground block mb-1">Version</span>
+                <span className="font-semibold text-foreground">{selectedDoc.version}</span>
+              </div>
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <span className="text-muted-foreground block mb-1">Date Indexed</span>
+                <span className="font-semibold text-foreground">{selectedDoc.date}</span>
+              </div>
             </div>
-            <div className="p-3 rounded-lg border border-border bg-muted/30">
-              <span className="text-muted-foreground block mb-1">Custodian</span>
-              <span className="font-semibold text-foreground">{selectedDoc.owner}</span>
-            </div>
-            <div className="p-3 rounded-lg border border-border bg-muted/30">
-              <span className="text-muted-foreground block mb-1">Version</span>
-              <span className="font-semibold text-foreground">{selectedDoc.version}</span>
-            </div>
-            <div className="p-3 rounded-lg border border-border bg-muted/30">
-              <span className="text-muted-foreground block mb-1">Date Indexed</span>
-              <span className="font-semibold text-foreground">{selectedDoc.date}</span>
+
+            <div className="pt-2 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsPreviewModalOpen(false)}
+                className="cursor-pointer"
+              >
+                Close
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleDownload(selectedDoc)}
+                className="gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download File</span>
+              </Button>
             </div>
           </div>
-
-          <div className="pt-2 flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPreviewModalOpen(false)}
-              className="cursor-pointer"
-            >
-              Close
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => handleDownload(selectedDoc)}
-              className="gap-1.5 cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download File</span>
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
     </PageContainer>
   );
 };

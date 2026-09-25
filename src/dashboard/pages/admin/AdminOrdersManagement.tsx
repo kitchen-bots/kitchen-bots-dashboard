@@ -19,15 +19,31 @@ export const AdminOrdersManagement: React.FC = () => {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    try {
-      const allOrders = OrderService.getAllOrders();
-      setOrders(allOrders);
-    } catch {
-      setOrders([]);
-    } finally {
-      setIsLoading(false);
-    }
+    let isMounted = true;
+    const loadOrders = async () => {
+      setIsLoading(true);
+      try {
+        const liveOrders = await OrderService.fetchOrders();
+        if (isMounted) {
+          setOrders(liveOrders);
+        }
+      } catch {
+        if (isMounted) {
+          setOrders(OrderService.getAllOrders());
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =

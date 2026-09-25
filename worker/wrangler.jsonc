@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kitchen-bots-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "FIREBASE_PROJECT_ID": "kitchen-bots",
+    "ALLOWED_ADMIN_EMAILS": "admin@kitchenbots.com,admin@kitchenbots.in"
+  }
+}
+

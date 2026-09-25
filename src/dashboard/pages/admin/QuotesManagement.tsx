@@ -16,10 +16,10 @@ export const QuotesManagement: React.FC = () => {
   const [selectedQuotes, setSelectedQuotes] = useState<Set<string>>(new Set());
   const [currentView, setCurrentView] = useState('All Quotes');
 
-  const { data: quotes = [], isLoading } = useQuery({
+  const { data: quotes = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['quotes'],
     queryFn: async () => {
-      return QuoteService.getAllQuotes();
+      return QuoteService.fetchQuotes();
     },
   });
 
@@ -195,6 +195,15 @@ export const QuotesManagement: React.FC = () => {
               <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 <span className="text-xs">Loading quotations...</span>
+              </div>
+            ) : isError ? (
+              <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-3">
+                <FileText className="w-10 h-10 text-destructive/70" />
+                <h3 className="text-sm font-semibold text-foreground">Failed to load quotations</h3>
+                <p className="text-xs text-muted-foreground">An error occurred while fetching quotes from the server.</p>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
+                  Retry
+                </Button>
               </div>
             ) : filteredQuotes.length === 0 ? (
               <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center space-y-2">

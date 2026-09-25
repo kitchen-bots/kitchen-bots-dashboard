@@ -15,7 +15,26 @@ export const userService = {
     return await usersApi.getCurrentUser();
   },
 
-  updateUser: async (id: string, updates: Partial<User>): Promise<User> => {
+  createUser: async (payload: {
+    name: string;
+    email: string;
+    role: string;
+    status?: string;
+    businessUnit?: string;
+    hub?: string;
+  }): Promise<User> => {
+    return await usersApi.createUser(payload);
+  },
+
+  updateUser: async (id: string, updates: Partial<User> & { [key: string]: any }): Promise<User> => {
     return await usersApi.updateUser(id, updates);
-  }
+  },
+
+  updateUserStatus: async (id: string, status: 'active' | 'suspended'): Promise<User> => {
+    return await usersApi.updateUserStatus(id, status);
+  },
+
+  deleteUser: async (id: string): Promise<void> => {
+    return await usersApi.deleteUser(id);
+  },
 };

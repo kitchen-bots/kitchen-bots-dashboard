@@ -1,17 +1,42 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { MockAuthService } from '../AuthService';
+import { FirebaseAuthService } from '../AuthService';
 import { LocalStorageAdapter } from '../StorageAdapter';
 import { userService } from '../../userService';
 
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => ({})),
+  connectAuthEmulator: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(async (_auth, email, password) => {
+    if (email === 'admin@kitchenbots.com' && password === 'SecretAdminPass123!') {
+      return {
+        user: {
+          uid: 'uid-admin-1',
+          email: 'admin@kitchenbots.com',
+          displayName: 'Admin User',
+          getIdToken: async () => 'mock-firebase-id-token'
+        }
+      };
+    }
+    const err = new Error('Invalid email or password') as any;
+    err.code = 'auth/invalid-credential';
+    throw err;
+  }),
+  signOut: vi.fn(async () => {}),
+  onAuthStateChanged: vi.fn((_auth, callback) => {
+    callback(null);
+    return () => {};
+  })
+}));
+
 describe('AuthService', () => {
-  let authService: MockAuthService;
+  let authService: FirebaseAuthService;
   let mockStorage: LocalStorageAdapter;
 
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(userService, 'getUsers').mockResolvedValue({ data: [], total: 0 });
     mockStorage = new LocalStorageAdapter();
-    authService = new MockAuthService(mockStorage);
+    authService = new FirebaseAuthService(mockStorage);
   });
 
   afterEach(() => {
@@ -28,27 +53,29 @@ describe('AuthService', () => {
     expect(authService.getState().user).toBeNull();
   });
 
-  it('should transition to LOGGED_IN if session exists', async () => {
+  it('should transition to LOGGED_IN if session exists in storage', async () => {
     mockStorage.setUserData({ id: '123', name: 'Test', role: 'admin' });
+    mockStorage.setToken('existing-token');
     await authService.initialize();
     expect(authService.getState().status).toBe('LOGGED_IN');
     expect(authService.getState().user?.id).toBe('123');
   });
 
-  it('should successfully log in with correct credentials', async () => {
-    const user = await authService.login('Admin', '12345');
+  it('should successfully log in with Firebase Auth credentials', async () => {
+    const user = await authService.login('admin@kitchenbots.com', 'SecretAdminPass123!');
     expect(user.role).toBe('admin');
+    expect(user.email).toBe('admin@kitchenbots.com');
     expect(authService.getState().status).toBe('LOGGED_IN');
     expect(mockStorage.getUserData()?.role).toBe('admin');
   });
 
   it('should fail login with incorrect credentials', async () => {
-    await expect(authService.login('Admin', 'wrong')).rejects.toThrow('Invalid username or password');
+    await expect(authService.login('admin@kitchenbots.com', 'wrong')).rejects.toThrow('Invalid email or password');
     expect(authService.getState().status).toBe('ERROR');
   });
 
   it('should log out successfully', async () => {
-    await authService.login('Admin', '12345');
+    await authService.login('admin@kitchenbots.com', 'SecretAdminPass123!');
     expect(authService.getState().status).toBe('LOGGED_IN');
     
     await authService.logout();
@@ -61,7 +88,6 @@ describe('AuthService', () => {
     const listener = vi.fn();
     const unsubscribe = authService.subscribe(listener);
     
-    // Initial state is emitted immediately
     expect(listener).toHaveBeenCalledWith(expect.objectContaining({ status: 'INITIALIZING' }));
     
     await authService.initialize();

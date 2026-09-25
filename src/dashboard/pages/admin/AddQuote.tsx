@@ -6,32 +6,66 @@ import { useToast } from '../../context/ToastContext';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react';
 
 export const AddQuote: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
     email: '',
     phone: '',
+    gstDetails: '',
+    notes: '',
   });
 
   const [items, setItems] = useState([
     { productId: 'prod-1', variantId: 'VAR-001-NG', productName: 'Commercial BBQ Grill', sku: 'KB-SM-001', unitPrice: 18000, quantity: 1 }
   ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.companyName.trim() || !formData.contactPerson.trim() || !formData.email.trim()) {
+      toast.error('Please fill in all required customer details');
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('Please add at least one line item to the quote');
+      return;
+    }
+
+    for (const item of items) {
+      if (!item.productName.trim()) {
+        toast.error('Product description is required for all line items');
+        return;
+      }
+      if (item.quantity <= 0) {
+        toast.error('Quantity must be greater than 0');
+        return;
+      }
+      if (item.unitPrice < 0) {
+        toast.error('Unit price cannot be negative');
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
     try {
       const quote = QuoteService.createQuote(
         {
-          companyName: formData.companyName,
-          contactPerson: formData.contactPerson,
-          email: formData.email,
-          phone: formData.phone,
+          customerId: `cust-${Date.now()}`,
+          companyName: formData.companyName.trim(),
+          contactPerson: formData.contactPerson.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || undefined,
+          gstDetails: formData.gstDetails.trim() || undefined,
+          notes: formData.notes.trim() || undefined,
           salesRepId: user?.id || 'admin',
           items: items.map(item => ({
             id: crypto.randomUUID(),
@@ -64,6 +98,8 @@ export const AddQuote: React.FC = () => {
       navigate(`/admin/quotes/${quote.id}`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to create quote');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -72,6 +108,10 @@ export const AddQuote: React.FC = () => {
   };
 
   const removeItem = (index: number) => {
+    if (items.length <= 1) {
+      toast.error('Quote must contain at least one line item');
+      return;
+    }
     setItems(items.filter((_, i) => i !== index));
   };
 
@@ -102,7 +142,7 @@ export const AddQuote: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Company Name</label>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Company Name *</label>
                   <input 
                     required 
                     type="text" 
@@ -110,10 +150,11 @@ export const AddQuote: React.FC = () => {
                     className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
                     value={formData.companyName} 
                     onChange={e => setFormData({...formData, companyName: e.target.value})} 
+                    placeholder="e.g. Spice Route Hospitality"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Contact Person</label>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Contact Person *</label>
                   <input 
                     required 
                     type="text" 
@@ -121,10 +162,11 @@ export const AddQuote: React.FC = () => {
                     className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
                     value={formData.contactPerson} 
                     onChange={e => setFormData({...formData, contactPerson: e.target.value})} 
+                    placeholder="e.g. Ramesh Kumar"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Email *</label>
                   <input 
                     required 
                     type="email" 
@@ -132,6 +174,7 @@ export const AddQuote: React.FC = () => {
                     className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
                     value={formData.email} 
                     onChange={e => setFormData({...formData, email: e.target.value})} 
+                    placeholder="e.g. procurement@spiceroute.com"
                   />
                 </div>
                 <div>
@@ -142,6 +185,18 @@ export const AddQuote: React.FC = () => {
                     className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none" 
                     value={formData.phone} 
                     onChange={e => setFormData({...formData, phone: e.target.value})} 
+                    placeholder="e.g. +91 98765 43210"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">GSTIN / Tax ID</label>
+                  <input
+                    type="text"
+                    name="gstDetails"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:ring-1 focus:ring-ring outline-none"
+                    value={formData.gstDetails}
+                    onChange={e => setFormData({...formData, gstDetails: e.target.value})}
+                    placeholder="e.g. 29ABCDE1234F1Z5"
                   />
                 </div>
               </div>
@@ -166,6 +221,7 @@ export const AddQuote: React.FC = () => {
                       <label className="block text-[11px] font-medium text-muted-foreground mb-1">Product Description</label>
                       <input 
                         type="text" 
+                        required
                         className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
                         value={item.productName} 
                         onChange={(e) => {
@@ -180,6 +236,7 @@ export const AddQuote: React.FC = () => {
                       <input 
                         type="number" 
                         min="1" 
+                        required
                         className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
                         value={item.quantity} 
                         onChange={(e) => {
@@ -194,6 +251,7 @@ export const AddQuote: React.FC = () => {
                       <input 
                         type="number" 
                         min="0" 
+                        required
                         className="w-full px-3 py-1.5 bg-background border border-input rounded-md text-sm text-foreground outline-none focus:ring-1 focus:ring-ring" 
                         value={item.unitPrice} 
                         onChange={(e) => {
@@ -209,7 +267,8 @@ export const AddQuote: React.FC = () => {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => removeItem(index)} 
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                        disabled={items.length <= 1}
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 disabled:opacity-30"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -224,8 +283,14 @@ export const AddQuote: React.FC = () => {
             <Button type="button" variant="outline" onClick={() => navigate('/admin/quotes')}>
               Cancel
             </Button>
-            <Button type="submit">
-              Create Quote
+            <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...
+                </>
+              ) : (
+                'Create Quote'
+              )}
             </Button>
           </div>
         </form>
@@ -233,3 +298,5 @@ export const AddQuote: React.FC = () => {
     </PageContainer>
   );
 };
+
+export default AddQuote;

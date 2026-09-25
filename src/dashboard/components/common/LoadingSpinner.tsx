@@ -1,31 +1,40 @@
+import { Spinner05 } from '../ui/Spinner05';
+import { cn } from '../../utils/cn';
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   fullPage?: boolean;
+  label?: string;
+  className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', fullPage = false }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: 'h-6 w-6 border-2',
-    md: 'h-12 w-12 border-2',
-    lg: 'h-16 w-16 border-4'
-  };
-
-  const spinner = (
-    <div className={`animate-spin rounded-full border-b-primary-600 border-gray-200 ${sizeClasses[size]}`} />
-  );
-
+export function LoadingSpinner({
+  size = 'lg',
+  fullPage = false,
+  label = 'Loading...',
+  className
+}: LoadingSpinnerProps) {
   if (fullPage) {
     return (
-      <div className="flex h-full min-h-[400px] w-full items-center justify-center bg-white/50 backdrop-blur-sm z-50">
-        {spinner}
+      <div className={cn(
+        "fixed inset-0 z-50 flex min-h-screen w-screen flex-col items-center justify-center bg-background/80 backdrop-blur-md transition-all duration-300 animate-in fade-in-50",
+        className
+      )}>
+        <div className="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl bg-card/60 border border-border/50 shadow-xl backdrop-blur-lg">
+          <Spinner05 size={size} />
+          {label && (
+            <p className="text-sm font-medium text-foreground tracking-wide">
+              {label}
+            </p>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center p-4">
-      {spinner}
+    <div className={cn("flex items-center justify-center p-6", className)}>
+      <Spinner05 size={size} label={label} />
     </div>
   );
 }

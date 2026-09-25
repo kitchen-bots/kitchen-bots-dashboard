@@ -1,9 +1,71 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && 
+        (request.auth.token.role == 'admin' || 
+         request.auth.token.role == 'operations' || 
+         request.auth.token.role == 'editor');
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    // Default deny all
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Public catalog read, staff edit
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Public enquiries creation, staff management
+    match /enquiries/{enquiryId} {
+      allow create: if true;
+      allow read, update, delete: if isStaff();
+    }
+
+    // Customer orders self access, staff management
+    match /orders/{orderId} {
+      allow read: if isStaff() || isOwner(resource.data.customerId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.customerId);
+      allow update, delete: if isStaff();
+    }
+
+    // Private documents
+    match /documents/{documentId} {
+      allow read: if isStaff() || isOwner(resource.data.customerId);
+      allow write: if isStaff();
+    }
+
+    // Service tickets (staff management)
+    match /serviceTickets/{ticketId} {
+      allow read, write: if isStaff();
+    }
+
+    // Quotes (staff management)
+    match /quotes/{quoteId} {
+      allow read, write: if isStaff();
+    }
+
+    // Global settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

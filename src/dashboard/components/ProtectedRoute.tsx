@@ -1,6 +1,8 @@
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../types';
+import { LoadingSpinner } from './common/LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +14,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const location = useLocation();
 
   if (isLoading) {
-    return null; // AuthProvider handles initial loading spinner
+    return <LoadingSpinner fullPage label="Preparing dashboard..." />;
   }
 
   if (!isAuthenticated) {
