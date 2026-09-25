@@ -1,4 +1,5 @@
 import { Context, Next } from 'hono';
+import { getDocument } from '../services/firestore';
 
 export interface UserContext {
   uid: string;
@@ -71,10 +72,22 @@ export async function authMiddleware(c: Context, next: Next) {
     .map((e: string) => e.trim().toLowerCase());
 
   let role: UserContext['role'] = 'customer';
-  if (tokenRole) {
+  if (tokenRole && tokenRole !== 'customer') {
     role = tokenRole;
   } else if (email && allowedAdminEmails.includes(email.toLowerCase())) {
     role = 'admin';
+  } else if (uid) {
+    try {
+      const dbUser = await getDocument('users', uid, c.env);
+      if (dbUser && dbUser.role) {
+        const r = String(dbUser.role).toLowerCase();
+        if (r === 'admin' || r === 'systemadmin') role = 'admin';
+        else if (r === 'operations' || r === 'ops' || r === 'manager') role = 'operations';
+        else if (r === 'editor' || r === 'service') role = 'editor';
+      }
+    } catch {
+      // ignore
+    }
   }
 
   c.set('user', {
@@ -116,4 +129,3 @@ export async function optionalAuthMiddleware(c: Context, next: Next) {
   }
   await next();
 }
-
