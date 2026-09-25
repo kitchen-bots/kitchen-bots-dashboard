@@ -1,32 +1,21 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, Lock, User } from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../../components/ui/Form';
-import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/ui/Button';
-import { Alert } from '../../components/ui/Alert';
+import { LoginForm } from '@/components/login-form';
+import { getMediaUrl } from '../../lib/cdn';
 
-const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
-  rememberMe: z.boolean(),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+const SLIDES = [
+  { id: 1, name: 'blog-1.png', alt: 'Commercial Kitchen Robotics 1' },
+  { id: 2, name: 'blog-2.png', alt: 'Commercial Kitchen Robotics 2' },
+  { id: 3, name: 'blog-3.png', alt: 'Commercial Kitchen Robotics 3' },
+  { id: 4, name: 'blog-4.png', alt: 'Commercial Kitchen Robotics 4' },
+  { id: 5, name: 'blog-5.png', alt: 'Commercial Kitchen Robotics 5' },
+  { id: 6, name: 'blog-6.png', alt: 'Commercial Kitchen Robotics 6' },
+];
 
 export function Login() {
   const [error, setError] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,20 +24,25 @@ export function Login() {
   const redirect = params.get('redirect');
   const stateFrom = (location.state as any)?.from?.pathname;
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: '',
-      password: '',
-      rememberMe: false,
-    },
-  });
+  // Auto-play slideshow with smooth crossfade
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
 
-  const onSubmit = async (data: any) => {
+  const handleSubmit = async (username: string, password: string) => {
     setError('');
-    
     try {
-      const user = await login(data.username, data.password);
+      const normalized = username.trim();
+      const usernameToSubmit =
+        normalized.toLowerCase() === 'admin' ||
+        normalized.toLowerCase() === 'admin@kitchenbots.com'
+          ? 'Admin'
+          : normalized;
+
+      const user = await login(usernameToSubmit, password);
       const defaultDashboard = user.role === 'admin' ? '/admin' : '/customer';
       const navigateTo = redirect || stateFrom || defaultDashboard;
       navigate(navigateTo, { replace: true });
@@ -58,113 +52,85 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 rounded-full blur-3xl" />
+    <div className="grid min-h-screen lg:grid-cols-2 bg-background">
+      {/* Left Column: Branding and Login Form */}
+      <div className="flex flex-col gap-4 p-6 sm:p-8 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <Link to="/" className="flex items-center gap-2.5 font-semibold text-foreground group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
+              <img
+                src="/kitchenbots-icon.svg"
+                alt="KitchenBots"
+                className="h-5 w-5 object-contain"
+              />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg font-bold tracking-tight">KitchenBots</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                Admin Control Center
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-6 sm:py-8">
+          <div className="w-full max-w-sm">
+            <LoginForm
+              onSubmitLogin={handleSubmit}
+              isLoading={isLoading}
+              error={error}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-xl border border-border p-8 sm:p-10">
-          <div className="flex flex-col items-center mb-8">
-            <img
-              src="/kitchenbots-icon.svg"
-              alt="KitchenBots"
-              className="w-16 h-16 rounded-2xl shadow-md mb-4 object-contain"
+      {/* Right Column: Hero Image Slideshow (blog-1 to blog-6) */}
+      <div className="relative hidden bg-muted lg:block overflow-hidden border-l border-border/40">
+        {SLIDES.map((slide, index) => {
+          const isActive = index === currentSlide;
+          const imageUrl = getMediaUrl(`/images/redesign/${slide.name}`);
+          const fallbackUrl = `/images/redesign/${slide.name}`;
+
+          return (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+              }`}
+            >
+              <img
+                src={imageUrl}
+                alt={slide.alt}
+                className="h-full w-full object-cover dark:brightness-[0.75]"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== fallbackUrl && !target.src.endsWith(fallbackUrl)) {
+                    target.src = fallbackUrl;
+                  }
+                }}
+              />
+            </div>
+          );
+        })}
+
+        {/* Subtle vignette for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none z-20" />
+
+        {/* Slideshow Navigation Indicator Dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+          {SLIDES.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              onClick={() => setCurrentSlide(index)}
+              aria-label={`Go to slide ${index + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide
+                  ? 'w-8 bg-white shadow-md'
+                  : 'w-2 bg-white/50 hover:bg-white/80'
+              }`}
             />
-            <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted mt-2 text-center">Enter your credentials to access the dashboard</p>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {error && (
-                <Alert variant="destructive">
-                  {error}
-                </Alert>
-              )}
-              
-              <FormField
-                control={form.control as any}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter username"
-                        leftIcon={<User className="h-5 w-5" />}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control as any}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        leftIcon={<Lock className="h-5 w-5" />}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-between mt-2">
-                <FormField
-                  control={form.control as any}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-y-0 gap-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm font-normal">
-                        Remember me
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-primary hover:text-primary/80 transition-colors">
-                    Forgot password?
-                  </a>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                isLoading={isLoading}
-                className="w-full mt-6 text-white bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-              >
-                Sign in
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              
-              <div className="mt-6 text-center text-sm text-muted bg-secondary/50 rounded-lg p-3 border border-border">
-                <p>Test Credentials:</p>
-                <p className="font-medium text-foreground mt-1">Admin / 123456</p>
-              </div>
-            </form>
-          </Form>
+          ))}
         </div>
       </div>
     </div>
