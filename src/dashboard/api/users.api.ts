@@ -1,68 +1,34 @@
-import { api } from './base.api';
+import { adminFetch } from './adminClient';
 import { User } from '../types';
 import { PaginationParams, PaginatedResponse } from '../services/types';
 
-export const INITIAL_USERS: User[] = [
-  {
-    id: 'user-admin-1',
-    name: 'Admin User',
-    email: 'admin@kitchenbots.com',
-    role: 'admin',
-    addresses: [],
-    wishlist: [],
-    status: 'active',
-    createdAt: '2024-01-15T08:00:00.000Z',
-  },
-  {
-    id: 'user-manager-1',
-    name: 'Priya Kapoor',
-    email: 'priya.k@foodhubs.in',
-    role: 'manager',
-    addresses: [],
-    wishlist: [],
-    status: 'active',
-    createdAt: '2024-02-10T10:30:00.000Z',
-  },
-  {
-    id: 'user-cust-1',
-    name: 'Rohan Das',
-    email: 'rohan.das@currycloud.com',
-    role: 'customer',
-    addresses: [],
-    wishlist: [],
-    status: 'active',
-    createdAt: '2024-03-01T14:15:00.000Z',
-  },
-  {
-    id: 'user-support-1',
-    name: 'Vikram R.',
-    email: 'vikram.r@kitchenbots.com',
-    role: 'Service',
-    addresses: [],
-    wishlist: [],
-    status: 'active',
-    createdAt: '2024-03-12T09:00:00.000Z',
-  },
-];
-
-let localUsers: User[] = [...INITIAL_USERS];
+function normalizeUser(u: any): User {
+  return {
+    ...u,
+    id: u.id,
+    name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'User',
+    email: u.email || '',
+    role: u.role || 'customer',
+    addresses: u.addresses || [],
+    wishlist: u.wishlist || [],
+    status: u.status || 'active',
+    createdAt: u.createdAt || new Date().toISOString(),
+  };
+}
 
 export const usersApi = {
   getUsers: async (params?: PaginationParams): Promise<PaginatedResponse<User>> => {
-    let records: User[];
-    try {
-      records = await api.request<User[]>({
-        module: 'users',
-        action: 'getAll',
-      });
-    } catch (err) {
-      console.warn('Failed to fetch users from API, falling back to local users', err);
-      records = [...localUsers];
-    }
+    const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/users');
+    let records: User[] = (json?.data || []).map(normalizeUser);
 
     if (params?.search) {
       const q = params.search.toLowerCase();
-      records = records.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+      records = records.filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          ((u as any).businessUnit || '').toLowerCase().includes(q)
+      );
     }
     if (params?.role) {
       records = records.filter((u) => u.role === params.role);
@@ -77,50 +43,51 @@ export const usersApi = {
   },
 
   getUserById: async (id: string): Promise<User> => {
-    let user: User | null = null;
-    try {
-      user = await api.request<User>({
-        module: 'users',
-        action: 'getById',
-        id,
-      });
-    } catch (err) {
-      console.warn(`Failed to fetch user ${id} from API, falling back to local users`, err);
-    }
-    const found = user || localUsers.find((u) => u.id === id);
-    if (!found) throw new Error(`User not found: ${id}`);
-    return found;
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/users/${encodeURIComponent(id)}`);
+    if (!json?.success || !json?.data) throw new Error(`User not found: ${id}`);
+    return normalizeUser(json.data);
   },
 
+  createUser: async (payload: {
+    name: string;
+    email: string;
+    role: string;
+    status?: string;
+    businessUnit?: string;
+    hub?: string;
+  }): Promise<User> => {
+    const id = `user-${Date.now()}`;
+    const json = await adminFetch<{ success: boolean; data: any }>('/v1/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ ...payload, id, createdAt: new Date().toISOString() }),
+    });
+    if (!json?.success || !json?.data) throw new Error('Failed to create user');
+    return normalizeUser(json.data);
+  },
+
+  updateUser: async (id: string, updates: Partial<User> & { [key: string]: any }): Promise<User> => {
+    const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    });
+    if (!json?.success || !json?.data) throw new Error(`Failed to update user ${id}`);
+    return normalizeUser(json.data);
+  },
+
+  updateUserStatus: async (id: string, status: 'active' | 'suspended'): Promise<User> => {
+    return usersApi.updateUser(id, { status });
+  },
+
+  deleteUser: async (id: string): Promise<void> => {
+    await adminFetch<{ success: boolean }>(`/v1/admin/users/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // getCurrentUser is used by dashboardService; returns first user or throws
   getCurrentUser: async (): Promise<User> => {
-    try {
-      const records = await api.request<User[]>({
-        module: 'users',
-        action: 'getAll',
-      });
-      if (records && records.length > 0) return records[0];
-    } catch (err) {
-      console.warn('Failed to fetch current user from API, falling back to default admin', err);
-    }
-    return localUsers[0];
-  },
-
-  updateUser: async (id: string, updates: Partial<User>): Promise<User> => {
-    try {
-      const updated = await api.request<User>({
-        module: 'users',
-        action: 'update',
-        id,
-        data: updates,
-      });
-      localUsers = localUsers.map((u) => (u.id === id ? updated : u));
-      return updated;
-    } catch (err) {
-      console.warn(`Failed to update user ${id} on API, updating locally`, err);
-      localUsers = localUsers.map((u) => (u.id === id ? { ...u, ...updates } : u));
-    }
-    const found = localUsers.find((u) => u.id === id);
-    if (!found) throw new Error(`User not found: ${id}`);
-    return found;
+    const result = await usersApi.getUsers();
+    if (result.data.length > 0) return result.data[0];
+    throw new Error('No users found');
   },
 };

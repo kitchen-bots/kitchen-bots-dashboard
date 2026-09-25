@@ -1,4 +1,9 @@
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { OrderService } from './sales/orderService';
+import { leadsApi } from '../api/leads.api';
+import { productService } from './productService';
+import { userService } from './userService';
+import { ticketService } from './ticketService';
+import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 
 export interface RevenueData {
   month: string;
@@ -9,7 +14,7 @@ export interface OrderData {
   id: string;
   customer: string;
   amount: number;
-  status: 'Pending' | 'Processing' | 'Manufacturing' | 'Delivered';
+  status: string;
   date: string;
 }
 
@@ -18,7 +23,7 @@ export interface LeadData {
   name: string;
   company: string;
   equipment: string;
-  status: 'New' | 'Contacted' | 'Proposal Sent' | 'Converted';
+  status: string;
 }
 
 export interface ActivityData {
@@ -37,62 +42,324 @@ export interface TicketOverview {
   upcomingMaintenance: number;
 }
 
+export interface KPIMetric {
+  value: string;
+  numericValue: number;
+  trend: string;
+  isPositive: boolean;
+}
+
+export interface DashboardKPISummary {
+  revenue: KPIMetric;
+  orders: KPIMetric;
+  products: KPIMetric;
+  users: KPIMetric;
+  leads: KPIMetric;
+  tickets: KPIMetric;
+}
+
+export interface DashboardOverviewData {
+  kpis: DashboardKPISummary;
+  revenueData: RevenueData[];
+  previousYearRevenueData: RevenueData[];
+  recentOrders: OrderData[];
+  recentLeads: LeadData[];
+  activityFeed: ActivityData[];
+  ticketOverview: TicketOverview;
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function formatCurrencyINR(amount: number): string {
+  if (amount >= 100000) {
+    const inLakhs = amount / 100000;
+    return `₹${inLakhs >= 10 ? inLakhs.toFixed(1) : inLakhs.toFixed(2)}L`;
+  }
+  return `₹${amount.toLocaleString('en-IN')}`;
+}
+
+function calculateTrend(current: number, previous: number): { trend: string; isPositive: boolean } {
+  if (previous === 0) {
+    if (current > 0) return { trend: '+100%', isPositive: true };
+    return { trend: '0%', isPositive: true };
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  return {
+    trend: `${pct >= 0 ? '+' : ''}${pct}%`,
+    isPositive: pct >= 0,
+  };
+}
+
+function safeRelativeTime(dateStr?: string): string {
+  if (!dateStr) return 'Recently';
+  try {
+    const d = parseISO(dateStr);
+    if (isValid(d)) {
+      return `${formatDistanceToNow(d, { addSuffix: true })}`;
+    }
+  } catch {
+    // fallback
+  }
+  return 'Recently';
+}
+
 export const dashboardService = {
+  getDashboardOverview: async (): Promise<DashboardOverviewData> => {
+    const [ordersResult, leadsResult, productsResult, usersResult, ticketsResult] = await Promise.allSettled([
+      OrderService.fetchOrders(),
+      leadsApi.getLeads(),
+      productService.getProducts(),
+      userService.getUsers(),
+      ticketService.getTickets(),
+    ]);
+
+    const orders = ordersResult.status === 'fulfilled' ? ordersResult.value : [];
+    const leads = leadsResult.status === 'fulfilled' ? leadsResult.value.data : [];
+    const products = productsResult.status === 'fulfilled' ? productsResult.value.data : [];
+    const users = usersResult.status === 'fulfilled' ? usersResult.value.data : [];
+    const tickets = ticketsResult.status === 'fulfilled' ? ticketsResult.value.data : [];
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const previousYear = currentYear - 1;
+    const currentMonth = now.getMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    // 1. Revenue Calculations
+    let totalRevenue = 0;
+    let currentMonthRevenue = 0;
+    let previousMonthRevenue = 0;
+
+    const monthlyRevenueMap: Record<number, number> = {};
+    const prevYearMonthlyRevenueMap: Record<number, number> = {};
+    for (let i = 0; i < 12; i++) {
+      monthlyRevenueMap[i] = 0;
+      prevYearMonthlyRevenueMap[i] = 0;
+    }
+
+    let currentMonthOrdersCount = 0;
+    let previousMonthOrdersCount = 0;
+
+    orders.forEach((o) => {
+      const orderAmount = Number(o.grandTotal || o.subtotal || (o as any).totalPrice || 0);
+      if (o.status !== 'Cancelled') {
+        totalRevenue += orderAmount;
+      }
+
+      if (o.createdAt) {
+        try {
+          const d = parseISO(o.createdAt);
+          if (isValid(d)) {
+            const yr = d.getFullYear();
+            const mo = d.getMonth();
+
+            if (yr === currentYear) {
+              monthlyRevenueMap[mo] = (monthlyRevenueMap[mo] || 0) + orderAmount;
+              if (mo === currentMonth) {
+                currentMonthRevenue += orderAmount;
+                currentMonthOrdersCount++;
+              }
+            } else if (yr === previousYear) {
+              prevYearMonthlyRevenueMap[mo] = (prevYearMonthlyRevenueMap[mo] || 0) + orderAmount;
+            }
+
+            if (yr === previousMonthYear && mo === previousMonth) {
+              previousMonthRevenue += orderAmount;
+              previousMonthOrdersCount++;
+            }
+          }
+        } catch {
+          // ignore date parse errors
+        }
+      }
+    });
+
+    const revenueData: RevenueData[] = MONTH_NAMES.map((month, idx) => ({
+      month,
+      revenue: monthlyRevenueMap[idx] || 0,
+    }));
+
+    const previousYearRevenueData: RevenueData[] = MONTH_NAMES.map((month, idx) => ({
+      month,
+      revenue: prevYearMonthlyRevenueMap[idx] || 0,
+    }));
+
+    // 2. Leads Calculations
+    let currentMonthLeads = 0;
+    let previousMonthLeads = 0;
+    leads.forEach((l) => {
+      if (l.createdAt) {
+        try {
+          const d = parseISO(l.createdAt);
+          if (isValid(d)) {
+            const yr = d.getFullYear();
+            const mo = d.getMonth();
+            if (yr === currentYear && mo === currentMonth) currentMonthLeads++;
+            if (yr === previousMonthYear && mo === previousMonth) previousMonthLeads++;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    // 3. Ticket Calculations
+    const openTicketsList = tickets.filter((t) => t.status !== 'Completed');
+    const highPriorityCount = tickets.filter((t) => t.isUrgent && t.status !== 'Completed').length;
+    const assignedEngineersSet = new Set(
+      tickets.filter((t) => t.engineerName && t.status !== 'Completed').map((t) => t.engineerName)
+    );
+
+    const ticketOverview: TicketOverview = {
+      open: openTicketsList.length,
+      highPriority: highPriorityCount,
+      assignedEngineers: assignedEngineersSet.size,
+      upcomingMaintenance: 0,
+    };
+
+    // 4. KPI Summaries
+    const revenueTrend = calculateTrend(currentMonthRevenue, previousMonthRevenue);
+    const ordersTrend = calculateTrend(currentMonthOrdersCount, previousMonthOrdersCount);
+    const leadsTrend = calculateTrend(currentMonthLeads, previousMonthLeads);
+
+    const kpis: DashboardKPISummary = {
+      revenue: {
+        value: formatCurrencyINR(totalRevenue),
+        numericValue: totalRevenue,
+        trend: revenueTrend.trend,
+        isPositive: revenueTrend.isPositive,
+      },
+      orders: {
+        value: orders.length.toString(),
+        numericValue: orders.length,
+        trend: ordersTrend.trend,
+        isPositive: ordersTrend.isPositive,
+      },
+      products: {
+        value: products.length.toString(),
+        numericValue: products.length,
+        trend: `${products.filter((p) => p.status === 'Active').length} active`,
+        isPositive: true,
+      },
+      users: {
+        value: users.length.toString(),
+        numericValue: users.length,
+        trend: 'Firestore staff accounts',
+        isPositive: true,
+      },
+      leads: {
+        value: leads.length.toString(),
+        numericValue: leads.length,
+        trend: leadsTrend.trend,
+        isPositive: leadsTrend.isPositive,
+      },
+      tickets: {
+        value: openTicketsList.length.toString(),
+        numericValue: openTicketsList.length,
+        trend: `${highPriorityCount} urgent`,
+        isPositive: highPriorityCount === 0,
+      },
+    };
+
+    // 5. Recent Orders
+    const sortedOrders = [...orders].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    const recentOrders: OrderData[] = sortedOrders.slice(0, 4).map((o) => ({
+      id: o.orderNumber || o.id,
+      customer: o.contactPerson || o.companyName || 'Store Customer',
+      amount: Number(o.grandTotal || o.subtotal || (o as any).totalPrice || 0),
+      status: o.status || 'Pending Approval',
+      date: o.createdAt ? o.createdAt.slice(0, 10) : 'Today',
+    }));
+
+    // 6. Recent Leads
+    const sortedLeads = [...leads].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    const recentLeads: LeadData[] = sortedLeads.slice(0, 4).map((l) => ({
+      id: l.id,
+      name: `${l.firstName || ''} ${l.lastName || ''}`.trim() || 'Direct Lead',
+      company: l.companyName || 'Direct Enquiry',
+      equipment: l.equipmentNeeded || 'Commercial Equipment',
+      status: l.status || 'New',
+    }));
+
+    // 7. Synthesize Real Audit Activity Feed
+    const activities: ActivityData[] = [];
+
+    sortedOrders.slice(0, 3).forEach((o) => {
+      activities.push({
+        id: `act-ord-${o.id}`,
+        type: 'order',
+        description: `Order ${o.orderNumber || o.id} placed for ${o.companyName || 'Store Customer'} (₹${Number(o.grandTotal || (o as any).totalPrice || 0).toLocaleString('en-IN')})`,
+        timestamp: safeRelativeTime(o.createdAt),
+        user: o.contactPerson || o.companyName || 'Customer',
+      });
+    });
+
+    sortedLeads.slice(0, 3).forEach((l) => {
+      activities.push({
+        id: `act-lead-${l.id}`,
+        type: 'lead',
+        description: `New commercial lead from ${l.companyName || 'Direct Enquiry'} for ${l.equipmentNeeded || 'Equipment'}`,
+        timestamp: safeRelativeTime(l.createdAt),
+        user: `${l.firstName || ''} ${l.lastName || ''}`.trim() || 'Prospect',
+      });
+    });
+
+    products.slice(0, 2).forEach((p) => {
+      activities.push({
+        id: `act-prod-${p.id}`,
+        type: 'product',
+        description: `Catalog item ${p.name} (${p.status || 'Active'})`,
+        timestamp: safeRelativeTime(p.updatedAt || p.createdAt),
+        user: 'Admin',
+      });
+    });
+
+    const activityFeed = activities.slice(0, 5);
+
+    return {
+      kpis,
+      revenueData,
+      previousYearRevenueData,
+      recentOrders,
+      recentLeads,
+      activityFeed,
+      ticketOverview,
+    };
+  },
+
   getRevenueData: async (): Promise<RevenueData[]> => {
-    await delay(300);
-    return [
-      { month: 'Jan', revenue: 650000 },
-      { month: 'Feb', revenue: 720000 },
-      { month: 'Mar', revenue: 680000 },
-      { month: 'Apr', revenue: 850000 },
-      { month: 'May', revenue: 920000 },
-      { month: 'Jun', revenue: 890000 },
-      { month: 'Jul', revenue: 950000 },
-      { month: 'Aug', revenue: 1050000 },
-      { month: 'Sep', revenue: 1100000 },
-      { month: 'Oct', revenue: 1150000 },
-      { month: 'Nov', revenue: 1240000 },
-      { month: 'Dec', revenue: 0 },
-    ];
+    const overview = await dashboardService.getDashboardOverview();
+    return overview.revenueData;
   },
 
   getRecentOrders: async (): Promise<OrderData[]> => {
-    await delay(300);
-    return [
-      { id: 'ORD-1024', customer: 'Raj Kumar', amount: 145000, status: 'Manufacturing', date: '2024-10-15' },
-      { id: 'ORD-1025', customer: 'Taj Hotels', amount: 450000, status: 'Processing', date: '2024-10-14' },
-      { id: 'ORD-1026', customer: 'Spice Route', amount: 85000, status: 'Pending', date: '2024-10-14' },
-      { id: 'ORD-1027', customer: 'Oberoi Group', amount: 890000, status: 'Delivered', date: '2024-10-12' },
-    ];
+    const overview = await dashboardService.getDashboardOverview();
+    return overview.recentOrders;
   },
 
   getRecentLeads: async (): Promise<LeadData[]> => {
-    await delay(300);
-    return [
-      { id: 'L-501', name: 'Vikram Singh', company: 'Blue Door Cafe', equipment: 'Smart Fryer Pro', status: 'New' },
-      { id: 'L-502', name: 'Anita Desai', company: 'Cloud Kitchens India', equipment: 'Auto-Wok 3000', status: 'Proposal Sent' },
-      { id: 'L-503', name: 'Rahul Verma', company: 'Verma Sweets', equipment: 'Commercial Mixer', status: 'Contacted' },
-      { id: 'L-504', name: 'Sanjay Gupta', company: 'Gupta Traders', equipment: 'Commercial Stand Mixer', status: 'Converted' },
-    ];
+    const overview = await dashboardService.getDashboardOverview();
+    return overview.recentLeads;
   },
 
   getActivityFeed: async (): Promise<ActivityData[]> => {
-    await delay(300);
-    return [
-      { id: 'ACT-1', type: 'order', description: 'created order #1024', timestamp: '2 hours ago', user: 'Raj Kumar', userAvatar: 'https://i.pravatar.cc/150?img=11' },
-      { id: 'ACT-2', type: 'product', description: 'updated product BBQ Grill', timestamp: '4 hours ago', user: 'Admin', userAvatar: 'https://i.pravatar.cc/150?img=8' },
-      { id: 'ACT-3', type: 'lead', description: 'converted into customer', timestamp: '5 hours ago', user: 'Sanjay Gupta', userAvatar: 'https://i.pravatar.cc/150?img=12' },
-      { id: 'ACT-4', type: 'invoice', description: 'generated for Taj Hotels', timestamp: '1 day ago', user: 'System' },
-    ];
+    const overview = await dashboardService.getDashboardOverview();
+    return overview.activityFeed;
   },
 
   getTicketOverview: async (): Promise<TicketOverview> => {
-    await delay(300);
-    return {
-    open: 18,
-    highPriority: 4,
-    assignedEngineers: 12,
-    upcomingMaintenance: 24,
-  };
+    const overview = await dashboardService.getDashboardOverview();
+    return overview.ticketOverview;
   },
 };
