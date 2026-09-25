@@ -59,6 +59,14 @@ describe('Login Page (shadcn login-02)', () => {
     expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Login$/i })).toBeInTheDocument();
     expect(screen.getByText(/Test Credentials/i)).toBeInTheDocument();
+
+    // Verify slideshow dots are rendered
+    expect(screen.getByLabelText('Go to slide 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Go to slide 6')).toBeInTheDocument();
+
+    // Verify old quote card text has been removed
+    expect(screen.queryByText(/Enterprise Kitchen Automation/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Intelligent robotics and automated culinary systems/i)).not.toBeInTheDocument();
   });
 
   it('allows auto-filling test admin credentials', async () => {
