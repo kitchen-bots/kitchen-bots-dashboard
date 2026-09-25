@@ -1060,7 +1060,7 @@ export function LeadsManagement() {
             <Input
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="e.g. Blue Door Cafe"
+              placeholder="e.g. Metro Cloud Kitchens"
               className="text-xs"
               required
             />
@@ -1073,7 +1073,7 @@ export function LeadsManagement() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vikram@bluedoor.in"
+                placeholder="operations@company.com"
                 className="text-xs"
                 required
               />

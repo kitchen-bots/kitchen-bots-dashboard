@@ -7,6 +7,9 @@ import { ordersAdminRouter } from './routes/admin/orders';
 import { enquiriesAdminRouter } from './routes/admin/enquiries';
 import { documentsAdminRouter } from './routes/admin/documents';
 import { settingsAdminRouter } from './routes/admin/settings';
+import { usersAdminRouter } from './routes/admin/users';
+import { servicesAdminRouter } from './routes/admin/services';
+import { quotesAdminRouter } from './routes/admin/quotes';
 import { catalogRouter } from './routes/catalog';
 import { enquiriesPublicRouter } from './routes/enquiries';
 import { ordersPublicRouter } from './routes/orders';
@@ -44,6 +47,9 @@ app.route('/v1/admin/orders', ordersAdminRouter);
 app.route('/v1/admin/enquiries', enquiriesAdminRouter);
 app.route('/v1/admin/documents', documentsAdminRouter);
 app.route('/v1/admin/settings', settingsAdminRouter);
+app.route('/v1/admin/users', usersAdminRouter);
+app.route('/v1/admin/services', servicesAdminRouter);
+app.route('/v1/admin/quotes', quotesAdminRouter);
 
 // Global Error Handler
 app.onError((err, c) => {

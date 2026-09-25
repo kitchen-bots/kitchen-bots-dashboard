@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getDocument, setDocument } from '../services/firestore';
+import { setDocument } from '../services/firestore';
 
 export const enquiriesPublicRouter = new Hono();
 

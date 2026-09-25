@@ -116,7 +116,8 @@ export const ServicesManagement = () => {
       Open: 'In Progress',
       Assigned: 'In Progress',
       'In Progress': 'Completed',
-      Completed: 'Open',
+      Completed: 'Resolved',
+      Resolved: 'Open',
     };
     const newStatus = nextStatusMap[ticket.status];
 

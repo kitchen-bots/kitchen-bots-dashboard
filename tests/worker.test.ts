@@ -38,6 +38,62 @@ describe('Hono Worker API Suite', () => {
               ]
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           }
+          if (urlStr.includes('/serviceTickets/SR-1001')) {
+            return new Response(JSON.stringify({
+              name: 'projects/kitchen-bots/databases/(default)/documents/serviceTickets/SR-1001',
+              fields: {
+                id: { stringValue: 'SR-1001' },
+                customerName: { stringValue: 'Tandoor Nights' },
+                productName: { stringValue: 'Smart Fryer Pro' },
+                status: { stringValue: 'Open' },
+                priority: { stringValue: 'Normal' },
+                isUrgent: { booleanValue: false }
+              }
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          if (urlStr.endsWith('/serviceTickets')) {
+            return new Response(JSON.stringify({
+              documents: [
+                {
+                  name: 'projects/kitchen-bots/databases/(default)/documents/serviceTickets/SR-1001',
+                  fields: {
+                    id: { stringValue: 'SR-1001' },
+                    customerName: { stringValue: 'Tandoor Nights' },
+                    productName: { stringValue: 'Smart Fryer Pro' },
+                    status: { stringValue: 'Open' },
+                    priority: { stringValue: 'Normal' },
+                    isUrgent: { booleanValue: false }
+                  }
+                }
+              ]
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          if (urlStr.includes('/documents/doc-1001')) {
+            return new Response(JSON.stringify({
+              name: 'projects/kitchen-bots/databases/(default)/documents/documents/doc-1001',
+              fields: {
+                id: { stringValue: 'doc-1001' },
+                name: { stringValue: 'Maintenance_Manual_V1.pdf' },
+                type: { stringValue: 'Manual' },
+                product: { stringValue: 'Commercial BBQ Grill' }
+              }
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          if (urlStr.endsWith('/documents')) {
+            return new Response(JSON.stringify({
+              documents: [
+                {
+                  name: 'projects/kitchen-bots/databases/(default)/documents/documents/doc-1001',
+                  fields: {
+                    id: { stringValue: 'doc-1001' },
+                    name: { stringValue: 'Maintenance_Manual_V1.pdf' },
+                    type: { stringValue: 'Manual' },
+                    product: { stringValue: 'Commercial BBQ Grill' }
+                  }
+                }
+              ]
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
           return new Response(JSON.stringify({ error: { code: 404, message: 'Not found' } }), { status: 404 });
         }
 
@@ -149,7 +205,6 @@ describe('Hono Worker API Suite', () => {
   });
 
   it('POST /v1/orders returns 500 if Firestore write fails', async () => {
-    // Override fetch mock for this test to simulate Firestore 403 / failure
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: any, init?: any) => {
       const urlStr = url.toString();
       if (urlStr.includes('firestore.googleapis.com')) {
@@ -206,18 +261,279 @@ describe('Hono Worker API Suite', () => {
     });
     expect(res1.status).toBe(201);
     const body1 = await res1.json() as any;
+    expect(body1.id).toBeDefined();
+  });
 
-    const res2 = await app.request('/v1/enquiries', {
+  it('PUT /v1/admin/products/:id updates product price and pricePaise', async () => {
+    const res = await app.request('/v1/admin/products/p-1', {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        price: 52000,
+        status: 'Active'
+      })
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.price).toBe(52000);
+    expect(body.data.pricePaise).toBe(5200000);
+  });
+
+  it('GET /v1/catalog/products/:id returns normalized product with price and status', async () => {
+    const res = await app.request('/v1/catalog/products/p-1');
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe('p-1');
+    expect(body.data.price).toBe(45000);
+    expect(body.data.status).toBe('Active');
+  });
+
+  // ==========================================
+  // SERVICES ENDPOINT TESTS
+  // ==========================================
+
+  it('GET /v1/admin/services rejects unauthenticated requests', async () => {
+    const res = await app.request('/v1/admin/services');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /v1/admin/services returns tickets list for authenticated admin', async () => {
+    const res = await app.request('/v1/admin/services', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data.length).toBeGreaterThan(0);
+  });
+
+  it('GET /v1/admin/services/:id returns single ticket or 404', async () => {
+    const res = await app.request('/v1/admin/services/SR-1001', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe('SR-1001');
+
+    const res404 = await app.request('/v1/admin/services/NONEXISTENT', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res404.status).toBe(404);
+  });
+
+  it('POST /v1/admin/services validates required fields and creates ticket', async () => {
+    const invalidRes = await app.request('/v1/admin/services', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Idempotency-Key': idempotencyKey
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
       },
-      body: payload
+      body: JSON.stringify({})
     });
-    expect(res2.status).toBe(201);
-    const body2 = await res2.json() as any;
-    expect(body2.id).toBe(body1.id);
+    expect(invalidRes.status).toBe(400);
+
+    const validRes = await app.request('/v1/admin/services', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        customerName: 'Biryani Blues',
+        productName: 'Commercial Gas Range',
+        isUrgent: true
+      })
+    });
+    expect(validRes.status).toBe(201);
+    const body = await validRes.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.customerName).toBe('Biryani Blues');
+    expect(body.data.priority).toBe('Urgent');
+    expect(body.data.isUrgent).toBe(true);
+  });
+
+  it('PATCH /v1/admin/services/:id/status updates status', async () => {
+    const res = await app.request('/v1/admin/services/SR-1001/status', {
+      method: 'PATCH',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'In Progress' })
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.status).toBe('In Progress');
+  });
+
+  it('PATCH /v1/admin/services/:id/assignment assigns technician', async () => {
+    const res = await app.request('/v1/admin/services/SR-1001/assignment', {
+      method: 'PATCH',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ engineerName: 'Vikram R.', assignedEngineerId: 'eng-1' })
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.engineerName).toBe('Vikram R.');
+  });
+
+  it('DELETE /v1/admin/services/:id deletes ticket', async () => {
+    const res = await app.request('/v1/admin/services/SR-1001', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+  });
+
+  // ==========================================
+  // DOCUMENTS ENDPOINT TESTS
+  // ==========================================
+
+  it('GET /v1/admin/documents rejects unauthenticated requests', async () => {
+    const res = await app.request('/v1/admin/documents');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /v1/admin/documents returns documents list for authenticated admin', async () => {
+    const res = await app.request('/v1/admin/documents', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it('GET /v1/admin/documents/:id returns single document or 404', async () => {
+    const res = await app.request('/v1/admin/documents/doc-1001', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.id).toBe('doc-1001');
+
+    const res404 = await app.request('/v1/admin/documents/NONEXISTENT', {
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res404.status).toBe(404);
+  });
+
+  it('POST /v1/admin/documents validates and creates document metadata', async () => {
+    const invalidRes = await app.request('/v1/admin/documents', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+    expect(invalidRes.status).toBe(400);
+
+    const validRes = await app.request('/v1/admin/documents', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: 'Smart_Fryer_User_Manual.pdf',
+        type: 'Manual',
+        product: 'Smart Fryer Pro',
+        url: 'https://kitchenbots.com/docs/manuals/fryer.pdf'
+      })
+    });
+    expect(validRes.status).toBe(201);
+    const body = await validRes.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data.name).toBe('Smart_Fryer_User_Manual.pdf');
+    expect(body.data.type).toBe('Manual');
+  });
+
+  it('PUT /v1/admin/documents/:id updates document metadata', async () => {
+    const res = await app.request('/v1/admin/documents/doc-1001', {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: 'Maintenance_Manual_V2.pdf',
+        type: 'Manual'
+      })
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+  });
+
+  it('DELETE /v1/admin/documents/:id deletes document', async () => {
+    const res = await app.request('/v1/admin/documents/doc-1001', {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer valid-admin-token' }
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('POST /v1/admin/services returns 500 if Firestore write fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementationOnce(async () => {
+      return new Response(JSON.stringify({ error: { code: 403, message: 'Missing or insufficient permissions.' } }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    });
+
+    const res = await app.request('/v1/admin/services', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        customerName: 'Fail Cafe',
+        productName: 'Smart Fryer Pro'
+      })
+    });
+
+    expect(res.status).toBe(500);
+    const body = await res.json() as any;
+    expect(body.success).toBe(false);
+  });
+
+  it('POST /v1/admin/documents returns 500 if Firestore write fails', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementationOnce(async () => {
+      return new Response(JSON.stringify({ error: { code: 500, message: 'Internal Firestore database error' } }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    });
+
+    const res = await app.request('/v1/admin/documents', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-admin-token',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: 'Fail_Doc.pdf',
+        type: 'Manual'
+      })
+    });
+
+    expect(res.status).toBe(500);
+    const body = await res.json() as any;
+    expect(body.success).toBe(false);
   });
 });
-

@@ -94,190 +94,10 @@ export function mapFirestoreOrderToSalesOrder(raw: any): Order {
   };
 }
 
-
-const INITIAL_COMMERCIAL_ORDERS: Order[] = [
-  {
-    id: 'ord-comm-1',
-    orderNumber: 'ORD-9801',
-    customerId: 'user-cust-1',
-    companyName: 'Curry Cloud Kitchens',
-    contactPerson: 'Rohan Das',
-    email: 'rohan.das@currycloud.com',
-    phone: '+91 98765 01234',
-    billingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
-    shippingAddress: { street: 'Plot 42, Sector 2, HSR Layout', city: 'Bengaluru', state: 'Karnataka', postalCode: '560102', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Pending Approval',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Unshipped',
-    inventoryStatus: 'Pending',
-    orderSource: 'Quote Conversion',
-    priority: 'High',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-101',
-        productId: 'p-1',
-        variantId: 'v-p1-1',
-        productName: 'Commercial BBQ Grill',
-        sku: 'KB-BBQ-001',
-        pricing: {
-          unitPrice: 85000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 15300,
-          subtotal: 85000,
-          total: 100300,
-        },
-        fulfilledQuantity: 0,
-        fulfillmentStatus: 'Unfulfilled',
-      },
-    ],
-    subtotal: 85000,
-    totalDiscount: 0,
-    totalTax: 15300,
-    shippingCost: 2500,
-    grandTotal: 102800,
-    documents: [],
-    createdAt: '2024-10-18T10:30:00.000Z',
-    updatedAt: '2024-10-18T10:30:00.000Z',
-  },
-  {
-    id: 'ord-comm-2',
-    orderNumber: 'ORD-9802',
-    customerId: 'user-cust-2',
-    companyName: 'Blue Door Cafe',
-    contactPerson: 'Vikram Singh',
-    email: 'vikram@bluedoorcafe.in',
-    phone: '+91 98765 43210',
-    billingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
-    shippingAddress: { street: '12 Connaught Place, Block B', city: 'New Delhi', state: 'Delhi', postalCode: '110001', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Approved',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Unshipped',
-    inventoryStatus: 'Reserved',
-    orderSource: 'Manual',
-    priority: 'Normal',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-102',
-        productId: 'p-8',
-        variantId: 'v-p8-1',
-        productName: 'Industrial 4-Burner Gas Range',
-        sku: 'KB-RNG-008',
-        pricing: {
-          unitPrice: 68000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 12240,
-          subtotal: 68000,
-          total: 80240,
-        },
-        fulfilledQuantity: 0,
-        fulfillmentStatus: 'Unfulfilled',
-      },
-    ],
-    subtotal: 68000,
-    totalDiscount: 0,
-    totalTax: 12240,
-    shippingCost: 1500,
-    grandTotal: 81740,
-    documents: [],
-    createdAt: '2024-10-16T14:20:00.000Z',
-    updatedAt: '2024-10-17T09:15:00.000Z',
-  },
-  {
-    id: 'ord-comm-3',
-    orderNumber: 'ORD-9803',
-    customerId: 'user-cust-3',
-    companyName: 'Cloud Kitchens India',
-    contactPerson: 'Anita Desai',
-    email: 'anita@cloudkitchens.co.in',
-    phone: '+91 98222 33445',
-    billingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
-    shippingAddress: { street: 'Unit 402, Cyber City Hub', city: 'Gurugram', state: 'Haryana', postalCode: '122002', country: 'India' },
-    salesRepId: 'user-admin-1',
-    status: 'Shipped',
-    paymentStatus: 'Paid',
-    shippingStatus: 'Shipped',
-    inventoryStatus: 'Deducted',
-    orderSource: 'Ecommerce',
-    priority: 'Urgent',
-    currency: 'INR',
-    items: [
-      {
-        id: 'line-103',
-        productId: 'p-6',
-        variantId: 'v-p6-1',
-        productName: 'Commercial Exhaust Hood 6ft',
-        sku: 'KB-HOD-006',
-        pricing: {
-          unitPrice: 52000,
-          quantity: 1,
-          discountAmount: 0,
-          taxRate: 18,
-          taxAmount: 9360,
-          subtotal: 52000,
-          total: 61360,
-        },
-        fulfilledQuantity: 1,
-        fulfillmentStatus: 'Fulfilled',
-      },
-    ],
-    subtotal: 52000,
-    totalDiscount: 0,
-    totalTax: 9360,
-    shippingCost: 3000,
-    grandTotal: 64360,
-    documents: [],
-    createdAt: '2024-10-14T11:00:00.000Z',
-    updatedAt: '2024-10-18T16:45:00.000Z',
-  },
-];
-
-INITIAL_COMMERCIAL_ORDERS.forEach((order) => {
-  TimelineService.addTimelineEntry({
-    id: `tl-${order.id}-1`,
-    entityId: order.id,
-    entityType: 'ORDER',
-    type: 'CREATED',
-    userId: order.salesRepId,
-    userName: 'Sales System',
-    description: `Order ${order.orderNumber} placed for ${order.companyName} with ${order.items.length} item(s)`,
-    timestamp: order.createdAt,
-  });
-  if (order.status === 'Approved' || order.status === 'Shipped') {
-    TimelineService.addTimelineEntry({
-      id: `tl-${order.id}-2`,
-      entityId: order.id,
-      entityType: 'ORDER',
-      type: 'APPROVED',
-      userId: order.salesRepId,
-      userName: 'Commercial Operations',
-      description: `Order approved and verified for fulfillment`,
-      timestamp: order.updatedAt,
-    });
-  }
-  if (order.status === 'Shipped') {
-    TimelineService.addTimelineEntry({
-      id: `tl-${order.id}-3`,
-      entityId: order.id,
-      entityType: 'ORDER',
-      type: 'SHIPPED',
-      userId: order.salesRepId,
-      userName: 'Logistics Dispatch',
-      description: `Dispatched via BlueDart Express to ${order.shippingAddress.city}`,
-      timestamp: order.updatedAt,
-    });
-  }
-});
+import { adminFetch } from '../../api/adminClient';
 
 export class OrderService {
-  private static orders: Map<string, Order> = new Map(INITIAL_COMMERCIAL_ORDERS.map((o) => [o.id, o]));
+  private static orders: Map<string, Order> = new Map();
   public static lastEventId: Map<string, string> = new Map(); // Expose for inter-service causation
 
   static createOrderFromQuote(quote: Quote, userId: string, userName: string): Order {
@@ -382,54 +202,81 @@ export class OrderService {
   }
 
   static async fetchOrders(): Promise<Order[]> {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
-    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
-
     try {
-      const res = await fetch(`${apiUrl}/v1/admin/orders`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (res.ok) {
-        const json = await res.json() as { success: boolean; data: any[] };
-        if (json.success && Array.isArray(json.data)) {
-          const mappedOrders = json.data.map(mapFirestoreOrderToSalesOrder);
-          mappedOrders.forEach((o) => this.orders.set(o.id, o));
-          return mappedOrders;
-        }
+      const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/orders');
+      if (json && json.success && Array.isArray(json.data)) {
+        const mappedOrders = json.data.map(mapFirestoreOrderToSalesOrder);
+        this.orders.clear();
+        mappedOrders.forEach((o) => {
+          this.orders.set(o.id, o);
+          if (TimelineService.getEventsForEntity(o.id).length === 0) {
+            TimelineService.addTimelineEntry({
+              id: `tl-${o.id}-1`,
+              entityId: o.id,
+              entityType: 'ORDER',
+              type: 'CREATED',
+              userId: o.salesRepId,
+              userName: 'System Operations',
+              description: `Order ${o.orderNumber} placed for ${o.companyName} (${o.items.length} item(s))`,
+              timestamp: o.createdAt,
+            });
+            if (o.status === 'Approved' || o.status === 'Shipped' || o.status === 'Delivered') {
+              TimelineService.addTimelineEntry({
+                id: `tl-${o.id}-2`,
+                entityId: o.id,
+                entityType: 'ORDER',
+                type: 'APPROVED',
+                userId: o.salesRepId,
+                userName: 'Operations Admin',
+                description: 'Order approved and verified for fulfillment',
+                timestamp: o.updatedAt,
+              });
+            }
+            if (o.status === 'Shipped' || o.status === 'Delivered') {
+              TimelineService.addTimelineEntry({
+                id: `tl-${o.id}-3`,
+                entityId: o.id,
+                entityType: 'ORDER',
+                type: 'SHIPPED',
+                userId: o.salesRepId,
+                userName: 'Logistics Dispatch',
+                description: `Dispatched to ${o.shippingAddress.city}`,
+                timestamp: o.updatedAt,
+              });
+            }
+          }
+        });
+        return mappedOrders;
       }
     } catch (err) {
-      console.warn('Failed to fetch orders from backend API, falling back to local store', err);
+      console.error('[OrderService.fetchOrders Error]', err);
     }
 
     return this.getAllOrders();
   }
 
   static async fetchOrderById(id: string): Promise<Order | undefined> {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://kitchen-bots-api.workofcharan.workers.dev';
-    let token = localStorage.getItem('auth_token') || localStorage.getItem('kb_auth_token') || 'valid-admin-token';
-
     try {
-      const res = await fetch(`${apiUrl}/v1/admin/orders/${encodeURIComponent(id)}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (res.ok) {
-        const json = await res.json() as { success: boolean; data: any };
-        if (json.success && json.data) {
-          const mapped = mapFirestoreOrderToSalesOrder(json.data);
-          this.orders.set(mapped.id, mapped);
-          return mapped;
+      const json = await adminFetch<{ success: boolean; data: any }>(`/v1/admin/orders/${encodeURIComponent(id)}`);
+      if (json && json.success && json.data) {
+        const mapped = mapFirestoreOrderToSalesOrder(json.data);
+        this.orders.set(mapped.id, mapped);
+        if (TimelineService.getEventsForEntity(mapped.id).length === 0) {
+          TimelineService.addTimelineEntry({
+            id: `tl-${mapped.id}-1`,
+            entityId: mapped.id,
+            entityType: 'ORDER',
+            type: 'CREATED',
+            userId: mapped.salesRepId,
+            userName: 'System Operations',
+            description: `Order ${mapped.orderNumber} placed for ${mapped.companyName}`,
+            timestamp: mapped.createdAt,
+          });
         }
+        return mapped;
       }
     } catch (err) {
-      console.warn(`Failed to fetch order ${id} from API`, err);
+      console.error(`[OrderService.fetchOrderById Error] ${id}:`, err);
     }
 
     return this.getOrder(id);
@@ -597,7 +444,7 @@ export class OrderService {
     this.orders.set(id, updatedOrder);
 
     let eventType: EventType | null = null;
-    let payload: any = { orderId: id };
+    const payload: any = { orderId: id };
 
     if (newStatus === 'Approved') {
         eventType = EventType.OrderApproved;
