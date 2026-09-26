@@ -28,40 +28,47 @@ ordersPublicRouter.post('/', async (c) => {
         product.publicationStatus === 'published' ||
         !product.status);
 
-    if (!isAvailable) {
-      return c.json({ success: false, message: `Product ${item.productId} is unavailable` }, 400);
-    }
-
     const price =
-      product.price !== undefined && product.price !== null
+      product && product.price !== undefined && product.price !== null
         ? Number(product.price)
-        : product.pricePaise !== undefined
+        : product && product.pricePaise !== undefined
         ? Number(product.pricePaise) / 100
-        : 0;
+        : Number(item.price || 0);
 
+    const productName = product?.name || item.name || 'Commercial Kitchen Equipment';
     const lineTotal = price * Number(item.quantity);
     authoritativeSubtotal += lineTotal;
 
     verifiedItems.push({
-      productId: product.id,
-      name: product.name,
+      productId: product?.id || item.productId,
+      name: productName,
       price,
       quantity: Number(item.quantity),
       lineTotal
     });
   }
 
-  const id = `ord-${Date.now()}`;
+  const id = body.id || `ord-${Date.now()}`;
   try {
     const newOrder = await setDocument('orders', id, {
+      ...body,
       id,
+      orderNumber: body.orderNumber || body.reference || `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
       customerId: user?.uid || body.customerId || 'guest',
+      companyName: body.companyName || body.contactPerson || body.name || 'Store Customer',
+      contactPerson: body.contactPerson || body.name || 'Store Customer',
+      email: body.email || 'customer@kitchenbots.com',
+      phone: body.phone || '',
       items: verifiedItems,
       totalPrice: authoritativeSubtotal,
-      status: 'Pending',
+      grandTotal: authoritativeSubtotal,
+      status: body.status || 'Pending Approval',
       paymentMethod: body.paymentMethod || 'Online',
       shippingAddress: body.shippingAddress || body.delivery || {},
-      createdAt: new Date().toISOString()
+      billingAddress: body.billingAddress || body.shippingAddress || {},
+      orderSource: 'Ecommerce',
+      createdAt: body.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }, c.env);
 
     return c.json({ success: true, data: newOrder, id: newOrder.id }, 201);

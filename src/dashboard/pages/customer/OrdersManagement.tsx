@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   AlertCircle,
@@ -44,6 +44,30 @@ export const OrdersManagement = () => {
 
   const { data: ordersData, error, refetch, isLoading } = useOrders();
   const deleteOrderMutation = useDeleteOrder();
+
+  useEffect(() => {
+    const handleSync = () => {
+      refetch();
+    };
+    window.addEventListener('storage', handleSync);
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('kitchen-bots-orders');
+        channel.onmessage = () => {
+          refetch();
+        };
+      }
+    } catch {
+      // BroadcastChannel unsupported
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      if (channel) channel.close();
+    };
+  }, [refetch]);
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this order?")) {

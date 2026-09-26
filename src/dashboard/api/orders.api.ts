@@ -2,9 +2,36 @@ import { Order } from '../types';
 import { PaginationParams, PaginatedResponse } from '../services/types';
 import { adminFetch } from './adminClient';
 
+const DASHBOARD_ORDERS_KEY = 'kb_dashboard_orders';
+const COMMERCE_ORDERS_KEY = 'kb_orders';
+
 export const INITIAL_ORDERS: Order[] = [];
 
-let localOrders: Order[] = [];
+function loadStoredOrders(): Order[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const list: Order[] = [];
+    const dashRaw = localStorage.getItem(DASHBOARD_ORDERS_KEY);
+    if (dashRaw) {
+      const parsed = JSON.parse(dashRaw);
+      if (Array.isArray(parsed)) list.push(...parsed);
+    }
+    const ecomRaw = localStorage.getItem(COMMERCE_ORDERS_KEY);
+    if (ecomRaw) {
+      const parsed = JSON.parse(ecomRaw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((raw) => {
+          list.push(mapFirestoreOrderToDashboardOrder(raw));
+        });
+      }
+    }
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+let localOrders: Order[] = loadStoredOrders();
 
 function mapFirestoreOrderToDashboardOrder(raw: any): Order {
   const totalPrice = Number(raw.totalPrice || raw.grandTotal || 0);
@@ -164,6 +191,33 @@ export const ordersApi = {
       fulfillments: order.fulfillments || [],
     };
     localOrders.unshift(newOrder);
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(DASHBOARD_ORDERS_KEY, JSON.stringify(localOrders));
+        localStorage.setItem(COMMERCE_ORDERS_KEY, JSON.stringify(localOrders));
+      } catch (e) {
+        console.warn('Failed to save order to localStorage', e);
+      }
+    }
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('kitchen-bots-orders');
+        bc.postMessage({ type: 'NEW_ORDER', order: newOrder });
+        bc.close();
+      }
+    } catch {
+      // Ignore broadcast error
+    }
+
+    adminFetch('/v1/admin/orders', {
+      method: 'POST',
+      body: JSON.stringify(newOrder),
+    }).catch(() => {
+      // Background sync fallback
+    });
+
     return newOrder;
   },
 };
