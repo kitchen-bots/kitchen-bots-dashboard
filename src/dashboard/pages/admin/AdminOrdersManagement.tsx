@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderService } from '../../services/sales/orderService';
 import { Order } from '../../types/sales';
-import { Plus, Search, Download, Trash, Eye, ShoppingCart, Clock, Truck, ChevronDown } from 'lucide-react';
+import { Plus, Search, Download, Trash, Eye, ShoppingCart, Clock, Truck, ChevronDown, RefreshCw } from 'lucide-react';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -18,31 +18,43 @@ export const AdminOrdersManagement: React.FC = () => {
   const [currentView, setCurrentView] = useState('All Orders');
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadOrders = async () => {
-      setIsLoading(true);
-      try {
-        const liveOrders = await OrderService.fetchOrders();
-        if (isMounted) {
-          setOrders(liveOrders);
-        }
-      } catch {
-        if (isMounted) {
-          setOrders(OrderService.getAllOrders());
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadOrders();
-    return () => {
-      isMounted = false;
-    };
+  const loadOrders = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const liveOrders = await OrderService.fetchOrders();
+      setOrders(liveOrders);
+    } catch {
+      setOrders(OrderService.getAllOrders());
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadOrders();
+
+    const handleSync = () => {
+      loadOrders();
+    };
+    window.addEventListener('storage', handleSync);
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('kitchen-bots-orders');
+        channel.onmessage = () => {
+          loadOrders();
+        };
+      }
+    } catch {
+      // BroadcastChannel unsupported
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      if (channel) channel.close();
+    };
+  }, [loadOrders]);
 
 
   const filteredOrders = orders.filter((order) => {
@@ -103,10 +115,23 @@ export const AdminOrdersManagement: React.FC = () => {
         { label: 'Orders' },
       ]}
       actions={
-        <Button type="button" onClick={() => navigate('/admin/orders/new')} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Create Order
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={loadOrders}
+            className="gap-2"
+            disabled={isLoading}
+            title="Refresh Orders"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button type="button" onClick={() => navigate('/admin/orders/new')} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Create Order
+          </Button>
+        </div>
       }
       className="h-full"
     >

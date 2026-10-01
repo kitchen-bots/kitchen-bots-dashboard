@@ -67,6 +67,28 @@ export function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
+
+    const handleSync = () => {
+      fetchData();
+    };
+    window.addEventListener('storage', handleSync);
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('kitchen-bots-orders');
+        channel.onmessage = () => {
+          fetchData();
+        };
+      }
+    } catch {
+      // BroadcastChannel unsupported
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      if (channel) channel.close();
+    };
   }, [fetchData]);
 
   const displayedRevenueData = useMemo(() => {

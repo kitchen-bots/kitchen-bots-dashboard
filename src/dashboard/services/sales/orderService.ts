@@ -94,11 +94,138 @@ export function mapFirestoreOrderToSalesOrder(raw: any): Order {
   };
 }
 
+const SALES_ORDERS_KEY = 'kb_sales_orders';
+const COMMERCE_ORDERS_KEY = 'kb_orders';
+const DASHBOARD_ORDERS_KEY = 'kb_dashboard_orders';
+
+export function mapLocalEcomOrderToSalesOrder(raw: any): Order {
+  const id = raw.reference || raw.id || `ORD-${Date.now()}`;
+  const items: OrderLineItem[] = Array.isArray(raw.items)
+    ? raw.items.map((it: any, index: number) => {
+        const itemPrice = Number(it.price || 0);
+        const itemQty = Number(it.quantity || 1);
+        const lineTotal = itemPrice * itemQty;
+        return {
+          id: it.id || `line-${index + 1}-${id}`,
+          productId: it.productId || `prod-${index + 1}`,
+          variantId: it.variantId || `v-${it.productId || index}`,
+          productName: it.name || it.productName || 'Commercial Kitchen Equipment',
+          sku: it.sku || `KB-${(it.productId || 'PROD').toUpperCase()}`,
+          pricing: {
+            unitPrice: itemPrice,
+            quantity: itemQty,
+            discountAmount: 0,
+            taxRate: 18,
+            taxAmount: Math.round(lineTotal * 0.18),
+            subtotal: lineTotal,
+            total: lineTotal,
+          },
+          fulfilledQuantity: 0,
+          fulfillmentStatus: 'Unfulfilled',
+        };
+      })
+    : [];
+
+  const shippingAddr: Address = {
+    street: raw.address || raw.shippingAddress?.street || raw.shippingAddress?.addressLine1 || 'Main Facility',
+    city: raw.city || raw.shippingAddress?.city || 'Hyderabad',
+    state: raw.state || raw.shippingAddress?.state || 'Telangana',
+    postalCode: raw.pincode || raw.shippingAddress?.pincode || raw.shippingAddress?.postalCode || '500001',
+    country: raw.country || raw.shippingAddress?.country || 'India',
+  };
+
+  const grandTotal = Number(raw.total || raw.grandTotal || raw.totalPrice || items.reduce((s, i) => s + i.pricing.total, 0));
+
+  return {
+    id,
+    orderNumber: raw.reference || raw.orderNumber || id,
+    customerId: raw.customerId || 'store-customer',
+    companyName: raw.name || raw.companyName || 'Store Customer',
+    contactPerson: raw.name || raw.contactPerson || 'Store Customer',
+    email: raw.email || `${(raw.phone || '9490701421').replace(/\D/g, '')}@customer.kitchenbots.in`,
+    phone: raw.phone || '+91 9490701421',
+    billingAddress: shippingAddr,
+    shippingAddress: shippingAddr,
+    salesRepId: raw.salesRepId || 'online-ecommerce',
+    status: (raw.status === 'Approved' || raw.status === 'Shipped' || raw.status === 'Delivered' ? raw.status : 'Pending Approval') as OrderStatus,
+    paymentStatus: raw.paymentStatus || 'Paid',
+    shippingStatus: raw.shippingStatus || 'Unshipped',
+    inventoryStatus: raw.inventoryStatus || 'Pending',
+    orderSource: 'Ecommerce',
+    priority: raw.priority || 'Normal',
+    currency: 'INR',
+    items,
+    subtotal: grandTotal,
+    totalDiscount: 0,
+    totalTax: 0,
+    shippingCost: 0,
+    grandTotal,
+    documents: [],
+    createdAt: raw.createdAt || raw.date || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+  };
+}
+
 import { adminFetch } from '../../api/adminClient';
 
 export class OrderService {
   private static orders: Map<string, Order> = new Map();
   public static lastEventId: Map<string, string> = new Map(); // Expose for inter-service causation
+
+  private static loadFromStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const salesRaw = localStorage.getItem(SALES_ORDERS_KEY);
+      if (salesRaw) {
+        const parsed = JSON.parse(salesRaw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((o: Order) => {
+            if (o && o.id && !this.orders.has(o.id)) {
+              this.orders.set(o.id, o);
+            }
+          });
+        }
+      }
+
+      const ecomRaw = localStorage.getItem(COMMERCE_ORDERS_KEY);
+      if (ecomRaw) {
+        const parsed = JSON.parse(ecomRaw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item: any) => {
+            const mapped = mapLocalEcomOrderToSalesOrder(item);
+            if (!this.orders.has(mapped.id)) {
+              this.orders.set(mapped.id, mapped);
+            }
+          });
+        }
+      }
+
+      const dashRaw = localStorage.getItem(DASHBOARD_ORDERS_KEY);
+      if (dashRaw) {
+        const parsed = JSON.parse(dashRaw);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((item: any) => {
+            const mapped = mapLocalEcomOrderToSalesOrder(item);
+            if (!this.orders.has(mapped.id)) {
+              this.orders.set(mapped.id, mapped);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[OrderService.loadFromStorage Error]', e);
+    }
+  }
+
+  private static saveToStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      const all = Array.from(this.orders.values());
+      localStorage.setItem(SALES_ORDERS_KEY, JSON.stringify(all));
+    } catch (e) {
+      console.warn('[OrderService.saveToStorage Error]', e);
+    }
+  }
 
   static createOrderFromQuote(quote: Quote, userId: string, userName: string): Order {
     if (quote.status !== 'Customer Accepted') {
@@ -196,17 +323,21 @@ export class OrderService {
   }
 
   static getAllOrders(): Order[] {
+    if (this.orders.size === 0) {
+      this.loadFromStorage();
+    }
     return Array.from(this.orders.values()).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
 
   static async fetchOrders(): Promise<Order[]> {
+    this.loadFromStorage();
+
     try {
       const json = await adminFetch<{ success: boolean; data: any[] }>('/v1/admin/orders');
       if (json && json.success && Array.isArray(json.data)) {
         const mappedOrders = json.data.map(mapFirestoreOrderToSalesOrder);
-        this.orders.clear();
         mappedOrders.forEach((o) => {
           this.orders.set(o.id, o);
           if (TimelineService.getEventsForEntity(o.id).length === 0) {
@@ -246,7 +377,8 @@ export class OrderService {
             }
           }
         });
-        return mappedOrders;
+        this.saveToStorage();
+        return this.getAllOrders();
       }
     } catch (err) {
       console.error('[OrderService.fetchOrders Error]', err);
@@ -359,6 +491,18 @@ export class OrderService {
     };
 
     this.orders.set(id, order);
+    this.saveToStorage();
+
+    // Broadcast across windows / tabs
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('kitchen-bots-orders');
+        bc.postMessage({ type: 'NEW_ORDER', order });
+        bc.close();
+      }
+    } catch {
+      // Ignore broadcast errors
+    }
 
     TimelineService.addTimelineEntry({
       id: crypto.randomUUID(),
@@ -481,5 +625,38 @@ export class OrderService {
     }
 
     return updatedOrder;
+  }
+}
+
+// Listen for orders broadcasted across tabs (e.g. from user dashboard or ecommerce cart)
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    const bc = new BroadcastChannel('kitchen-bots-orders');
+    bc.onmessage = (event) => {
+      if (event.data?.type === 'NEW_ORDER' && event.data?.order) {
+        const raw = event.data.order;
+        const mapped = mapLocalEcomOrderToSalesOrder(raw);
+        OrderService.registerDirectOrder({
+          id: mapped.id,
+          orderNumber: mapped.orderNumber,
+          customerId: mapped.customerId,
+          companyName: mapped.companyName,
+          contactPerson: mapped.contactPerson,
+          email: mapped.email,
+          phone: mapped.phone,
+          totalPrice: mapped.grandTotal,
+          items: mapped.items.map((i) => ({
+            productId: i.productId,
+            name: i.productName,
+            quantity: i.pricing.quantity,
+            price: i.pricing.unitPrice,
+          })),
+          shippingAddress: mapped.shippingAddress,
+          status: mapped.status,
+        });
+      }
+    };
+  } catch {
+    // Ignore BroadcastChannel errors
   }
 }
